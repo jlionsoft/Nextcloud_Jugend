@@ -34,7 +34,7 @@ class NextcloudTalkService {
         if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
             throw new RuntimeException('Nextcloud Talk antwortete mit HTTP ' . $response->getStatusCode() . '.');
         }
-        $data = json_decode($response->getBody(), true);
+        $data = json_decode(is_resource($response->getBody()) ? (string)stream_get_contents($response->getBody()) : (string)$response->getBody(), true);
         if (isset($data['ocs']['meta']['statuscode']) && (int)$data['ocs']['meta']['statuscode'] !== 100) {
             throw new RuntimeException('Nextcloud Talk meldet: ' . (string)($data['ocs']['meta']['message'] ?? 'unbekannter Fehler'));
         }
