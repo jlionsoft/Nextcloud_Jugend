@@ -12,7 +12,7 @@
   <website>https://github.com/jlionsoft/Nextcloud_Jugend</website>
   <bugs>https://github.com/jlionsoft/Nextcloud_Jugend/issues</bugs>
   <dependencies>
-    <nextcloud min-version="28" />
+    <nextcloud min-version="35" />
   </dependencies>
   <navigations>
     <navigation>
