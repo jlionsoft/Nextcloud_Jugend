@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<info>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
   <id>jugend</id>
   <name>Jugend</name>
   <summary>Nachrichten an die Jugendgruppe versenden</summary>
@@ -11,6 +12,7 @@
   <category>organization</category>
   <website>https://github.com/jlionsoft/Nextcloud_Jugend</website>
   <bugs>https://github.com/jlionsoft/Nextcloud_Jugend/issues</bugs>
+  <repository type="git">https://github.com/jlionsoft/Nextcloud_Jugend.git</repository>
   <dependencies>
     <nextcloud min-version="35" />
   </dependencies>

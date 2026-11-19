@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace OCA\Jugend\Service;
 
+use OCA\Jugend\AppInfo\Application;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use RuntimeException;
@@ -22,7 +23,7 @@ class SmsService {
         $gateway = rtrim($this->required('sms_gateway_url'), '/') . '/rest/tool/sms/send';
         $username = $this->required('sms_username');
         $password = $this->required('sms_password');
-        $interface = trim($this->config->getValueString('jugend', 'sms_interface', 'lte1')) ?: 'lte1';
+        $interface = trim($this->config->getValueString(Application::APP_ID, 'sms_interface', 'lte1')) ?: 'lte1';
         $parts = $this->split($message);
         foreach ($parts as $i => $part) {
             $payload = ['port' => $interface, 'phone-number' => $phone, 'message' => count($parts) > 1 ? '[' . ($i + 1) . '] ' . $part : $part];
@@ -43,7 +44,7 @@ class SmsService {
     }
 
     private function required(string $key): string {
-        $value = trim($this->config->getValueString('jugend', $key));
+        $value = trim($this->config->getValueString(Application::APP_ID, $key));
         if ($value === '') { throw new RuntimeException('Einstellung fehlt: ' . $key); }
         return $value;
     }
