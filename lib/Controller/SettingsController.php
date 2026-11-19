@@ -10,6 +10,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
+use OCP\IURLGenerator;
 use OCP\Util;
 
 class SettingsController extends Controller {
@@ -22,6 +23,7 @@ class SettingsController extends Controller {
         private AuthentikService $authentik,
         private NextcloudTalkService $talk,
         private SmsService $sms,
+        private IURLGenerator $urlGenerator,
     ) {
         parent::__construct($appName, $request);
     }
@@ -40,7 +42,11 @@ class SettingsController extends Controller {
         foreach (['authentik_url', 'authentik_group_id', 'talk_url', 'talk_room_token', 'sms_gateway_url', 'sms_username', 'sms_interface'] as $key) {
             $values[$key] = $this->appConfig->getValueString($this->appName, $key);
         }
-        return new TemplateResponse($this->appName, 'settings', ['values' => $values, 'configured' => $configured]);
+        return new TemplateResponse($this->appName, 'settings', [
+            'values' => $values,
+            'configured' => $configured,
+            'backUrl' => $this->urlGenerator->linkToRoute('jugend.page.index'),
+        ]);
     }
 
     /**
@@ -51,18 +57,37 @@ class SettingsController extends Controller {
         string $talk_url = '', string $talk_room_token = '', string $talk_bot_secret = '',
         string $sms_gateway_url = '', string $sms_username = '', string $sms_password = '',
         string $sms_interface = 'lte1',
+        bool $clear_authentik_token = false,
+        bool $clear_talk_bot_secret = false,
+        bool $clear_sms_password = false,
     ): JSONResponse {
+        foreach (['authentik_url' => $authentik_url, 'talk_url' => $talk_url, 'sms_gateway_url' => $sms_gateway_url] as $key => $url) {
+            $url = trim($url);
+            if ($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false) {
+                return new JSONResponse(['saved' => false, 'message' => 'Ungültige URL in ' . $key . '.'], 400);
+            }
+        }
         $plain = [
-            'authentik_url' => trim($authentik_url), 'authentik_group_id' => trim($authentik_group_id),
-            'talk_url' => trim($talk_url), 'talk_room_token' => trim($talk_room_token),
-            'sms_gateway_url' => trim($sms_gateway_url), 'sms_username' => trim($sms_username),
+            'authentik_url' => trim($authentik_url),
+            'authentik_group_id' => trim($authentik_group_id),
+            'talk_url' => trim($talk_url),
+            'talk_room_token' => trim($talk_room_token),
+            'sms_gateway_url' => trim($sms_gateway_url),
+            'sms_username' => trim($sms_username),
             'sms_interface' => trim($sms_interface) ?: 'lte1',
         ];
         foreach ($plain as $key => $value) {
             $this->appConfig->setValueString($this->appName, $key, $value);
         }
-        foreach (['authentik_token' => $authentik_token, 'talk_bot_secret' => $talk_bot_secret, 'sms_password' => $sms_password] as $key => $value) {
-            if ($value !== '') {
+        $secrets = [
+            'authentik_token' => [$authentik_token, $clear_authentik_token],
+            'talk_bot_secret' => [$talk_bot_secret, $clear_talk_bot_secret],
+            'sms_password' => [$sms_password, $clear_sms_password],
+        ];
+        foreach ($secrets as $key => [$value, $clear]) {
+            if ($clear) {
+                $this->appConfig->deleteKey($this->appName, $key);
+            } elseif ($value !== '') {
                 $this->appConfig->setValueString($this->appName, $key, $value, false, true);
             }
         }
