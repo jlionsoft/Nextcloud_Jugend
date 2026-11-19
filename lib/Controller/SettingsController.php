@@ -25,6 +25,9 @@ class SettingsController extends Controller {
         parent::__construct($appName, $request);
     }
 
+    /**
+     * @AdminRequired
+     */
     public function index(): TemplateResponse {
         Util::addScript($this->appName, 'settings');
         Util::addStyle($this->appName, 'main');
@@ -44,6 +47,9 @@ class SettingsController extends Controller {
         ]);
     }
 
+    /**
+     * @AdminRequired
+     */
     public function save(
         string $authentik_url = '',
         string $authentik_group_id = '',
