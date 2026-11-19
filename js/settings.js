@@ -33,15 +33,17 @@
         const field = form.elements[name];
         const clearButton = form.querySelector('[data-secret="' + name + '"]');
         const status = form.querySelector('[data-secret-status="' + name + '"]');
-        const configured = status?.dataset.configured === '1';
-
         clearButton?.addEventListener('click', () => {
+            const configured = status?.dataset.configured === '1';
             const removing = form.elements['clear_' + name].value === '1';
             setSecretState(name, configured, !removing);
             if (removing) field.focus();
         });
         field?.addEventListener('input', () => {
-            if (field.value !== '') setSecretState(name, configured, false);
+            if (field.value !== '') {
+                const configured = status?.dataset.configured === '1';
+                setSecretState(name, configured, false);
+            }
         });
     });
 
