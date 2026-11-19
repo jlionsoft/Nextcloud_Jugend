@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
-namespace OCA\\Jugend\\Service;
+namespace OCA\Jugend\Service;
 
-use OCP\\Http\\Client\\IClientService;
-use OCP\\IAppConfig;
+use OCP\Http\Client\IClientService;
+use OCP\IAppConfig;
 use RuntimeException;
 
 class SmsService {
@@ -45,8 +45,11 @@ class SmsService {
     }
 
     public function split(string $message): array {
-        $basic = "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà";
-        $extended = "^{}\\\\[~]|€";
+        $basic = <<<'GSM'
+@£$¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà
+GSM;
+        $basic .= "\\n\\r";
+        $extended = "^{}\\[~]|€";
         $chars = preg_split('//u', $message, -1, PREG_SPLIT_NO_EMPTY);
         if ($chars === false) { throw new RuntimeException('Nachricht enthält ungültiges UTF-8.'); }
         $parts = []; $current = ''; $slots = 0;
