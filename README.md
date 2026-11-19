@@ -7,19 +7,20 @@ Native Nextcloud app replacing the existing JugendSendClient.
 - Native Nextcloud PHP AppFramework UI and API.
 - Nextcloud session authentication; every user who can open the app can send messages.
 - Technical settings and connection tests are restricted to Nextcloud administrators.
-- Authentik group lookup using a bearer token. Only users with `Sms=true` and a non-empty `PhoneNumber` attribute are SMS recipients.
+- Authentik group lookup using a bearer token. All active group members are Matrix recipients; only users with `sms=true` and a non-empty `phone_number` attribute are SMS recipients.
+- Matrix Client-Server API integration: verify bot identity, detect existing accounts, reuse joined direct rooms from `m.direct`, create and invite to trusted private rooms when needed, update `m.direct`, and send `m.room.message` events. Rate-limit responses are retried with backoff.
 - Nextcloud Talk bot message delivery using the Talk bot HMAC-SHA256 request headers.
 - Signed Talk webhook endpoint (`/apps/jugend/api/v1/talk/webhook`) with raw-body HMAC verification, replay protection, event logging and `!ping` → `🏓 pong`.
 - MikroTik RouterOS REST SMS delivery using HTTP Basic authentication and JSON payloads.
 - GSM-7 validation and multipart SMS splitting (150 septets per part to reserve room for the legacy `[n]` prefixes); unsupported characters fail the SMS delivery for that recipient rather than being silently transliterated.
-- Per-channel result reporting, including failed SMS recipients.
+- Per-channel result reporting for Talk, Matrix and SMS, including per-user Matrix and SMS failures.
 - Explicit connection-test buttons. The Talk test sends a visible test message to the configured room.
 - Settings for all endpoints, IDs, interfaces and credentials. Secrets are never returned to the browser and are marked as sensitive Nextcloud app-config values. This flag excludes them from filtered config listings; it is **not encryption**. Secret fields remain blank on reload, can be left unchanged, or explicitly cleared.
 - GitHub Actions checks PHP syntax, JavaScript syntax and app metadata XML.
 
 ## User interface
 
-The app uses a responsive, full-width layout with Nextcloud theme variables and panel-based content areas. Administrator settings are grouped by integration. Secret values are never displayed; entering a new value replaces the stored secret, leaving the field empty keeps it, and the explicit remove action deletes it. Connection tests save the current form values before testing the selected integration.
+The app uses a responsive, full-width layout with Nextcloud theme variables and panel-based content areas. Administrator settings are grouped by integration, including Matrix homeserver, server name, bot user ID and access token. Secret values are never displayed; entering a new value replaces the stored secret, leaving the field empty keeps it, and the explicit remove action deletes it. Connection tests save the current form values before testing the selected integration.
 
 ## Runtime behavior and limitations
 
@@ -38,6 +39,7 @@ Configure the following under the app's administrator-only settings page:
 |---|---|
 | Authentik | Base URL, group ID, API token |
 | Nextcloud Talk | Nextcloud base URL, room token, bot secret |
+| Matrix | Homeserver URL, server name, bot user ID, bot access token |
 | MikroTik SMS | Gateway base URL, RouterOS username/password, LTE interface (default `lte1`) |
 
 The Nextcloud server must be able to reach both Authentik and the MikroTik gateway. Never commit credentials, tokens, phone numbers or production configuration to this repository.
@@ -46,17 +48,17 @@ The Nextcloud server must be able to reach both Authentik and the MikroTik gatew
 
 1. Place the app directory (the directory containing `appinfo/info.xml`) at `apps-extra/jugend` on the Nextcloud server.
 2. Enable it with `sudo -u www-data php occ app:enable jugend` from the Nextcloud installation directory.
-3. As a Nextcloud administrator, open **Jugend → Einstellungen**, enter the Authentik, Talk and RouterOS settings, and save.
-4. Run the Authentik and SMS gateway connection tests. The Talk test sends a message to the configured room.
+3. As a Nextcloud administrator, open **Jugend → Einstellungen**, enter the Authentik, Matrix, Talk and RouterOS settings, and save.
+4. Run the Authentik, Matrix and SMS gateway connection tests. The Talk test sends a message to the configured room.
 5. Copy the displayed Talk webhook URL into the Talk bot configuration and use the same bot secret.
 6. Test the webhook by sending `!ping` in the Talk room; the bot should answer `🏓 pong`.
-7. Start with a harmless short message and a small test recipient group. Verify the Talk result, SMS opt-in filtering, phone numbers, multipart splitting and failed-recipient display before using the full group.
+7. Start with a harmless short message and a small test recipient group. Verify the Matrix direct messages, Talk result, SMS opt-in filtering, phone numbers, multipart splitting and failed-recipient display before using the full group.
 
 The app must be installed and tested on a staging instance first. The CI workflow checks syntax and metadata only; it does not replace a live Nextcloud app installation test.
 
 ## Deliberately out of scope
 
-- Matrix integration (not required for the replacement).
+- Matrix room encryption is not implemented. The app sends standard unencrypted Matrix room messages; do not use encrypted rooms for the bot.
 - Separate Blazor/Authentik login.
 - App-specific roles and group-to-role mapping.
 - Native mobile client. The API is versioned at `/api/v1` to leave room for one later.
