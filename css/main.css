@@ -187,21 +187,3 @@
     .jugend-form-actions button { width: 100%; }
 }
 
-
-/* Let the document/body own vertical scrolling, as required by Nextcloud's app layout. */
-#content.app-jugend,
-#content.app-jugend #app-content,
-#content.app-jugend #app-content-wrapper {
-    height: auto !important;
-    min-height: 100%;
-}
-.jugend-page {
-    height: auto;
-    min-height: 100%;
-}
-.jugend-secret-status,
-.jugend-test-result,
-.jugend-muted,
-.jugend-field-hint {
-    color: var(--color-main-text);
-}
