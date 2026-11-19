@@ -53,3 +53,32 @@
 .jugend-feedback.warning {
     color: var(--color-warning);
 }
+
+#jugend-settings {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+#jugend-settings h2 {
+    margin: 24px 0 12px;
+}
+
+#jugend-settings input {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    max-width: 680px;
+    margin: 6px 0 16px;
+}
+
+#jugend-settings hr {
+    margin: 24px 0;
+    border: 0;
+    border-top: 1px solid var(--color-border);
+}
+
+.settings-hint {
+    color: var(--color-text-maxcontrast);
+    font-size: 0.9rem;
+}
