@@ -1,0 +1,8 @@
+{
+    "name": "jlionsoft/jugend",
+    "description": "Nextcloud app to send messages to the youth group via Matrix, Nextcloud Talk and SMS",
+    "type": "project",
+    "scripts": {
+        "lint": "find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l"
+    }
+}
