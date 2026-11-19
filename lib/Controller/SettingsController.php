@@ -30,6 +30,7 @@ class SettingsController extends Controller {
 
     /**
      * @AdminRequired
+     * @NoCSRFRequired
      */
     public function index(): TemplateResponse {
         Util::addScript($this->appName, 'settings');

@@ -15,6 +15,7 @@ class PageController extends Controller {
 
     /**
      * @NoAdminRequired
+     * @NoCSRFRequired
      */
     public function index(): TemplateResponse {
         Util::addScript($this->appName, 'main');
