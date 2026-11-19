@@ -3,7 +3,7 @@ declare(strict_types=1);
 /** @var array $_ */
 /** @var \OCP\IL10N\IL10N $l */
 ?>
-<div id="app-content">
+<div id="app-content" class="jugend-app-content">
 <div id="jugend-app" class="jugend-page">
     <header class="jugend-page__header">
         <div>

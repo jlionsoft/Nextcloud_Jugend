@@ -4,18 +4,11 @@ declare(strict_types=1);
 /** @var \OCP\IL10N\IL10N $l */
 $values = $_['values'];
 $configured = $_['configured'];
-$backUrl = $_['backUrl'];
 $talkWebhookUrl = $_['talkWebhookUrl'];
 ?>
-<div id="app-content">
-<div id="jugend-settings" class="jugend-page">
-    <header class="jugend-page__header">
-        <div>
-            <h1><?php p($l->t('Jugend – Einstellungen')); ?></h1>
-            <p><?php p($l->t('Verwalte die Verbindungen und Zugangsdaten für den Nachrichtenversand.')); ?></p>
-        </div>
-        <a class="button" href="<?php p($backUrl); ?>"><?php p($l->t('Zurück zur Nachricht')); ?></a>
-    </header>
+<div id="jugend-settings" class="section jugend-page jugend-page--embedded">
+    <h2><?php p($l->t('Jugend')); ?></h2>
+    <p class="settings-hint"><?php p($l->t('Verwalte die Verbindungen und Zugangsdaten für den Nachrichtenversand.')); ?></p>
 
     <form id="jugend-settings-form" class="jugend-settings-form" novalidate>
         <section class="jugend-panel jugend-settings-section">
@@ -159,5 +152,4 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             <button type="submit" class="primary" id="jugend-save-settings"><?php p($l->t('Alle Einstellungen speichern')); ?></button>
         </div>
     </form>
-</div>
 </div>
