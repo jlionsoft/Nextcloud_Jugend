@@ -9,6 +9,7 @@ Native Nextcloud app replacing the existing JugendSendClient.
 - Technical settings and connection tests are restricted to Nextcloud administrators.
 - Authentik group lookup using a bearer token. Only users with `Sms=true` and a non-empty `PhoneNumber` attribute are SMS recipients.
 - Nextcloud Talk bot message delivery using the Talk bot HMAC-SHA256 request headers.
+- Signed Talk webhook endpoint (`/apps/jugend/api/v1/talk/webhook`) with raw-body HMAC verification, replay protection, event logging and `!ping` → `🏓 pong`.
 - MikroTik RouterOS REST SMS delivery using HTTP Basic authentication and JSON payloads.
 - GSM-7 validation and multipart SMS splitting (150 septets per part to reserve room for the legacy `[n]` prefixes); unsupported characters fail the SMS delivery for that recipient rather than being silently transliterated.
 - Per-channel result reporting, including failed SMS recipients.
