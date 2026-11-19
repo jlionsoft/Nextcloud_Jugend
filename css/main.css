@@ -186,23 +186,3 @@
     .jugend-form-actions { justify-content: stretch; }
     .jugend-form-actions button { width: 100%; }
 }
-
-/* This app has no own navigation/sidebar. Let the page itself grow so Nextcloud's
-   document scrolling works on desktop and mobile alike. */
-#content.app-jugend {
-    display: block !important;
-    height: auto !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-}
-#content.app-jugend > #app-content,
-#content.app-jugend #app-content-wrapper {
-    height: auto !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-}
-#content.app-jugend .jugend-page {
-    height: auto !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-}
