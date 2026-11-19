@@ -24,7 +24,7 @@ class AuthentikService {
         if ($response->getStatusCode() !== 200) {
             throw new RuntimeException('Authentik antwortete mit HTTP ' . $response->getStatusCode() . '.');
         }
-        $data = json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $data = json_decode($this->body($response->getBody()), true, 512, JSON_THROW_ON_ERROR);
         $users = $data['users_obj'] ?? [];
         if (!is_array($users)) {
             throw new RuntimeException('Authentik lieferte keine gültige Benutzerliste.');
@@ -41,7 +41,7 @@ class AuthentikService {
         return $recipients;
     }
 
-    public function testConnection(): array {
+    private function body(mixed $body): string { return is_resource($body) ? (string)stream_get_contents($body) : (string)$body; }\n\n    public function testConnection(): array {
         $recipients = $this->getRecipients();
         return ['ok' => true, 'message' => 'Authentik-Verbindung erfolgreich; ' . count($recipients) . ' SMS-Empfänger mit aktivierter SMS-Option gefunden.'];
     }
