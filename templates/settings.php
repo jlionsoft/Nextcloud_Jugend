@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /** @var array $_ */
-/** @var \\OCP\\IL10N\\IL10N $l */
+/** @var \OCP\IL10N\IL10N $l */
 $values = $_['values']; $configured = $_['configured'];
 ?>
 <div id="jugend-settings" class="section">
@@ -26,7 +26,7 @@ $values = $_['values']; $configured = $_['configured'];
         <label for="sms_password">RouterOS-Passwort</label><input id="sms_password" name="sms_password" type="password" autocomplete="new-password" placeholder="<?php p($configured['sms_password'] ? 'Passwort gespeichert – leer lassen zum Beibehalten' : 'Noch kein Passwort gespeichert'); ?>">
         <label for="sms_interface">LTE-Interface</label><input id="sms_interface" name="sms_interface" value="<?php p($values['sms_interface'] ?: 'lte1'); ?>">
         <button type="button" class="button test-connection" data-channel="sms">SMS-Gateway-Verbindung testen</button>
-        <div class="jugend-actions"><button type="submit" class="primary">Einstellungen speichern</button><a class="button" href="<?php p(\\OC::$server->getURLGenerator()->linkToRoute('jugend.page.index')); ?>">Zurück zu Nachrichten</a></div>
+        <div class="jugend-actions"><button type="submit" class="primary">Einstellungen speichern</button><a class="button" href="<?php p(\OC::$server->getURLGenerator()->linkToRoute('jugend.page.index')); ?>">Zurück zu Nachrichten</a></div>
         <p id="jugend-settings-feedback" role="status" aria-live="polite"></p>
     </form>
     <p class="settings-hint">Zugangsdaten werden nicht erneut angezeigt. Leere Passwortfelder behalten gespeicherte Werte. Verbindungstests setzen gespeicherte Einstellungen voraus.</p>
