@@ -4,12 +4,11 @@ declare(strict_types=1);
 namespace OCA\Jugend\Controller;
 
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
-use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
+use OCP\Util;
 
 class SettingsController extends Controller {
     private const SECRET_KEYS = [
@@ -45,7 +44,6 @@ class SettingsController extends Controller {
         ]);
     }
 
-    #[AdminRequired]
     public function save(
         string $authentik_url = '',
         string $authentik_group_id = '',
