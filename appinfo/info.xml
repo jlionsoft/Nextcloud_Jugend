@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<info>
+  <id>jugend</id>
+  <name>Jugend</name>
+  <summary>Nachrichten an die Jugendgruppe versenden</summary>
+  <description>Native Nextcloud-App als Ersatz für den bisherigen JugendSendClient.</description>
+  <version>0.2.0</version>
+  <licence>agpl</licence>
+  <author>jlionsoft</author>
+  <namespace>Jugend</namespace>
+  <category>organization</category>
+  <website>https://github.com/jlionsoft/Nextcloud_Jugend</website>
+  <bugs>https://github.com/jlionsoft/Nextcloud_Jugend/issues</bugs>
+  <dependencies>
+    <nextcloud min-version="35" />
+  </dependencies>
+  <navigations>
+    <navigation>
+      <name>Jugend</name>
+      <route>jugend.page.index</route>
+      <icon>app.svg</icon>
+      <order>10</order>
+    </navigation>
+  </navigations>
+</info>
