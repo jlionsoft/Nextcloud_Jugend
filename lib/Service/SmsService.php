@@ -27,7 +27,7 @@ class SmsService {
         foreach ($parts as $i => $part) {
             $payload = ['port' => $interface, 'phone-number' => $phone, 'message' => count($parts) > 1 ? '[' . ($i + 1) . '] ' . $part : $part];
             $response = $this->http->newClient()->post($gateway, [
-                'headers' => ['Authorization' => 'Basic ' . base64_encode($username . ':' . $password), 'Accept' => 'application/json'],
+                'headers' => ['Authorization' => 'Basic ' . base64_encode($username . ':' . $password), 'Accept' => 'application/json', 'Content-Type' => 'application/json'],
                 'body' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
                 'timeout' => 10,
             ]);
@@ -48,7 +48,7 @@ class SmsService {
         $basic = <<<'GSM'
 @£$¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà
 GSM;
-        $basic .= "\\n\\r";
+        $basic .= "\n\r";
         $extended = "^{}\\[~]|€";
         $chars = preg_split('//u', $message, -1, PREG_SPLIT_NO_EMPTY);
         if ($chars === false) { throw new RuntimeException('Nachricht enthält ungültiges UTF-8.'); }
