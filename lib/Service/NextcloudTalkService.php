@@ -25,6 +25,7 @@ class NextcloudTalkService {
             'headers' => [
                 'OCS-APIRequest' => 'true',
                 'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
                 'X-Nextcloud-Talk-Bot-Random' => $random,
                 'X-Nextcloud-Talk-Bot-Signature' => $signature,
             ],
