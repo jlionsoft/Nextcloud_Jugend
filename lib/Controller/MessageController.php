@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
-namespace OCA\\Jugend\\Controller;
+namespace OCA\Jugend\Controller;
 
-use OCA\\Jugend\\Service\\MessageService;
-use OCP\\AppFramework\\Controller;
-use OCP\\AppFramework\\Http\\Attribute\\NoAdminRequired;
-use OCP\\AppFramework\\Http\\JSONResponse;
-use OCP\\IRequest;
+use OCA\Jugend\Service\MessageService;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\IRequest;
 
 class MessageController extends Controller {
     public function __construct(string $appName, IRequest $request, private MessageService $messages) {
@@ -24,9 +24,9 @@ class MessageController extends Controller {
         }
         try {
             return new JSONResponse($this->messages->send($message));
-        } catch (\\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_message', 'message' => $e->getMessage()], 400);
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             return new JSONResponse(['error' => 'send_failed', 'message' => 'Der Versand konnte nicht gestartet werden.'], 500);
         }
     }
