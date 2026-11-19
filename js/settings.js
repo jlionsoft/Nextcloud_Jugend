@@ -6,7 +6,7 @@
 
     const feedback = document.getElementById('jugend-settings-feedback');
     const saveButton = document.getElementById('jugend-save-settings');
-    const secretNames = ['authentik_token', 'talk_bot_secret', 'sms_password'];
+    const secretNames = ['authentik_token', 'talk_bot_secret', 'sms_password', 'matrix_bot_token'];
 
     function setFeedback(message, type) {
         feedback.textContent = message || '';

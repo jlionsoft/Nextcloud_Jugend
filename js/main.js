@@ -28,7 +28,7 @@
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (!message.value.trim()) return;
-        if (!window.confirm('Nachricht jetzt an alle konfigurierten Empfänger und den Talk-Raum senden?')) return;
+        if (!window.confirm('Nachricht jetzt an alle Matrix-Mitglieder, den Talk-Raum und SMS-Opt-in-Empfänger senden?')) return;
 
         button.disabled = true;
         resultPanel.hidden = false;
@@ -50,10 +50,13 @@
             const talk = result.talk?.ok
                 ? 'Talk: erfolgreich'
                 : 'Talk: fehlgeschlagen (' + (result.talk?.error || 'unbekannt') + ')';
+            const matrix = 'Matrix: ' + (result.matrix?.sent || 0) + '/' + (result.matrix?.total || 0) + ' erfolgreich';
+            const matrixFailed = (result.matrix?.failed || []).map((item) => item.recipient + ': ' + item.error).join('\n');
+            const matrixError = result.matrix?.error || '';
             const sms = 'SMS: ' + (result.sms?.sent || 0) + '/' + (result.sms?.total || 0) + ' erfolgreich';
             const failed = (result.sms?.failed || []).map((item) => item.recipient + ': ' + item.error).join('\n');
-            const smsError = result.sms?.error ? '\n' + result.sms.error : '';
-            feedback.textContent = [talk, sms, smsError, failed].filter(Boolean).join('\n');
+            const smsError = result.sms?.error || '';
+            feedback.textContent = [talk, matrix, matrixError, matrixFailed, sms, smsError, failed].filter(Boolean).join('\n');
             feedback.classList.toggle('success', !!result.success);
             feedback.classList.toggle('warning', !result.success);
             if (result.success) {

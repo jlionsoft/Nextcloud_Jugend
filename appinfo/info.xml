@@ -4,7 +4,7 @@
   <name>Jugend</name>
   <summary>Nachrichten an die Jugendgruppe versenden</summary>
   <description>Native Nextcloud-App als Ersatz für den bisherigen JugendSendClient.</description>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
   <licence>agpl</licence>
   <author>jlionsoft</author>
   <namespace>Jugend</namespace>

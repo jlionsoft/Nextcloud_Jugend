@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace OCA\Jugend\Controller;
 
 use OCA\Jugend\Service\AuthentikService;
+use OCA\Jugend\Service\MatrixService;
 use OCA\Jugend\Service\NextcloudTalkService;
 use OCA\Jugend\Service\SmsService;
 use OCP\AppFramework\Controller;
@@ -14,13 +15,14 @@ use OCP\IURLGenerator;
 use OCP\Util;
 
 class SettingsController extends Controller {
-    private const SECRET_KEYS = ['authentik_token', 'talk_bot_secret', 'sms_password'];
+    private const SECRET_KEYS = ['authentik_token', 'talk_bot_secret', 'sms_password', 'matrix_bot_token'];
 
     public function __construct(
         string $appName,
         IRequest $request,
         private IAppConfig $appConfig,
         private AuthentikService $authentik,
+        private MatrixService $matrix,
         private NextcloudTalkService $talk,
         private SmsService $sms,
         private IURLGenerator $urlGenerator,
@@ -40,7 +42,12 @@ class SettingsController extends Controller {
             $configured[$key] = $this->appConfig->getValueString($this->appName, $key) !== '';
         }
         $values = [];
-        foreach (['authentik_url', 'authentik_group_id', 'talk_url', 'talk_room_token', 'sms_gateway_url', 'sms_username', 'sms_interface'] as $key) {
+        foreach ([
+            'authentik_url', 'authentik_group_id',
+            'talk_url', 'talk_room_token',
+            'sms_gateway_url', 'sms_username', 'sms_interface',
+            'matrix_homeserver', 'matrix_server_name', 'matrix_bot_user_id',
+        ] as $key) {
             $values[$key] = $this->appConfig->getValueString($this->appName, $key);
         }
         return new TemplateResponse($this->appName, 'settings', [
@@ -59,11 +66,20 @@ class SettingsController extends Controller {
         string $talk_url = '', string $talk_room_token = '', string $talk_bot_secret = '',
         string $sms_gateway_url = '', string $sms_username = '', string $sms_password = '',
         string $sms_interface = 'lte1',
+        string $matrix_homeserver = '', string $matrix_server_name = '', string $matrix_bot_user_id = '',
+        string $matrix_bot_token = '',
         bool $clear_authentik_token = false,
         bool $clear_talk_bot_secret = false,
         bool $clear_sms_password = false,
+        bool $clear_matrix_bot_token = false,
     ): JSONResponse {
-        foreach (['authentik_url' => $authentik_url, 'talk_url' => $talk_url, 'sms_gateway_url' => $sms_gateway_url] as $key => $url) {
+        $urls = [
+            'authentik_url' => $authentik_url,
+            'talk_url' => $talk_url,
+            'sms_gateway_url' => $sms_gateway_url,
+            'matrix_homeserver' => $matrix_homeserver,
+        ];
+        foreach ($urls as $key => $url) {
             $url = trim($url);
             $scheme = strtolower((string)parse_url($url, PHP_URL_SCHEME));
             if ($url !== '' && (filter_var($url, FILTER_VALIDATE_URL) === false || !in_array($scheme, ['http', 'https'], true))) {
@@ -78,6 +94,9 @@ class SettingsController extends Controller {
             'sms_gateway_url' => trim($sms_gateway_url),
             'sms_username' => trim($sms_username),
             'sms_interface' => trim($sms_interface) ?: 'lte1',
+            'matrix_homeserver' => rtrim(trim($matrix_homeserver), '/'),
+            'matrix_server_name' => trim($matrix_server_name),
+            'matrix_bot_user_id' => trim($matrix_bot_user_id),
         ];
         foreach ($plain as $key => $value) {
             $this->appConfig->setValueString($this->appName, $key, $value);
@@ -86,6 +105,7 @@ class SettingsController extends Controller {
             'authentik_token' => [$authentik_token, $clear_authentik_token],
             'talk_bot_secret' => [$talk_bot_secret, $clear_talk_bot_secret],
             'sms_password' => [$sms_password, $clear_sms_password],
+            'matrix_bot_token' => [$matrix_bot_token, $clear_matrix_bot_token],
         ];
         foreach ($secrets as $key => [$value, $clear]) {
             if ($clear) {
@@ -108,6 +128,7 @@ class SettingsController extends Controller {
         try {
             $result = match ($channel) {
                 'authentik' => $this->authentik->testConnection(),
+                'matrix' => $this->matrix->testConnection(),
                 'sms' => $this->sms->testConnection(),
                 'talk' => $this->talk->testConnection(),
                 default => throw new \InvalidArgumentException('Unbekannter Verbindungstyp.'),
