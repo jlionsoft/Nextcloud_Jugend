@@ -29,6 +29,8 @@ class SettingsController extends Controller {
 
     #[AdminRequired]
     public function index(): TemplateResponse {
+        Util::addScript($this->appName, 'settings');
+        Util::addStyle($this->appName, 'main');
         $configured = [];
         foreach (self::SECRET_KEYS as $key) {
             $configured[$key] = $this->appConfig->getValueString($this->appName, $key) !== '';
