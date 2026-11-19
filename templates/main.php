@@ -11,6 +11,8 @@ declare(strict_types=1);
         <p><?php p($l->t('Verfasse eine Nachricht für die Jugendgruppe.')); ?></p>
     </div>
 
+    <p><a href="<?php p(\OC::$server->getURLGenerator()->linkToRoute('jugend.settings.index')); ?>"><?php p($l->t('Einstellungen (nur Nextcloud-Admins)')); ?></a></p>
+
     <form id="jugend-message-form" class="jugend-card">
         <label for="jugend-message"><?php p($l->t('Nachricht')); ?></label>
         <textarea
