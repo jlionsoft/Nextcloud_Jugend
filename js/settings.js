@@ -17,6 +17,7 @@
             const result = await response.json();
             if (!response.ok || !result.saved) throw new Error(result.message || 'Speichern fehlgeschlagen.');
             secrets.forEach(name => { form.elements[name].value = ''; });
+            ['clear_authentik_token', 'clear_talk_bot_secret', 'clear_sms_password'].forEach(name => { form.elements[name].checked = false; });
             feedback.textContent = 'Einstellungen gespeichert.';
         } catch (error) { feedback.textContent = error.message || 'Fehler beim Speichern.'; }
     });
