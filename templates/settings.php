@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /** @var array $_ */
-/** @var \\OCP\\IL10N\\IL10N $l */
+/** @var \OCP\IL10N\IL10N $l */
 $values = $_['values'];
 $configured = $_['configured'];
 $backUrl = $_['backUrl'];
@@ -36,7 +36,7 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
                     <input class="input-field" id="authentik_token" name="authentik_token" type="password" autocomplete="new-password" placeholder="<?php p($configured['authentik_token'] ? $l->t('Neues Token eingeben, um es zu ersetzen') : $l->t('Noch kein Token hinterlegt')); ?>">
                     <div class="jugend-secret-controls">
                         <span class="jugend-secret-status" data-secret-status="authentik_token" data-configured="<?php p($configured['authentik_token'] ? '1' : '0'); ?>"><?php p($configured['authentik_token'] ? $l->t('Token ist gespeichert') : $l->t('Kein Token gespeichert')); ?></span>
-                        <button type="button" class="button jugend-secret-clear" data-secret="authentik_token" <?php if (!$configured['authentik_token']) { print_unescaped('disabled'); } ?>><?php p($l->t('Token entfernen')); ?></button>
+                        <button type="button" class="button jugend-secret-clear" data-secret="authentik_token" <?php if (!$configured['authentik_token']) { ?>disabled<?php } ?>><?php p($l->t('Token entfernen')); ?></button>
                         <input type="hidden" name="clear_authentik_token" value="0">
                     </div>
                     <p class="jugend-field-hint"><?php p($l->t('Das gespeicherte Token wird aus Sicherheitsgründen nicht angezeigt. Leer lassen behält den bisherigen Wert.')); ?></p>
@@ -67,7 +67,7 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
                     <input class="input-field" id="talk_bot_secret" name="talk_bot_secret" type="password" autocomplete="new-password" placeholder="<?php p($configured['talk_bot_secret'] ? $l->t('Neues Secret eingeben, um es zu ersetzen') : $l->t('Noch kein Secret hinterlegt')); ?>">
                     <div class="jugend-secret-controls">
                         <span class="jugend-secret-status" data-secret-status="talk_bot_secret" data-configured="<?php p($configured['talk_bot_secret'] ? '1' : '0'); ?>"><?php p($configured['talk_bot_secret'] ? $l->t('Secret ist gespeichert') : $l->t('Kein Secret gespeichert')); ?></span>
-                        <button type="button" class="button jugend-secret-clear" data-secret="talk_bot_secret" <?php if (!$configured['talk_bot_secret']) { print_unescaped('disabled'); } ?>><?php p($l->t('Secret entfernen')); ?></button>
+                        <button type="button" class="button jugend-secret-clear" data-secret="talk_bot_secret" <?php if (!$configured['talk_bot_secret']) { ?>disabled<?php } ?>><?php p($l->t('Secret entfernen')); ?></button>
                         <input type="hidden" name="clear_talk_bot_secret" value="0">
                     </div>
                     <p class="jugend-field-hint"><?php p($l->t('Leer lassen behält das bisherige Secret.')); ?></p>
@@ -106,7 +106,7 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
                     <input class="input-field" id="sms_password" name="sms_password" type="password" autocomplete="new-password" placeholder="<?php p($configured['sms_password'] ? $l->t('Neues Passwort eingeben, um es zu ersetzen') : $l->t('Noch kein Passwort hinterlegt')); ?>">
                     <div class="jugend-secret-controls">
                         <span class="jugend-secret-status" data-secret-status="sms_password" data-configured="<?php p($configured['sms_password'] ? '1' : '0'); ?>"><?php p($configured['sms_password'] ? $l->t('Passwort ist gespeichert') : $l->t('Kein Passwort gespeichert')); ?></span>
-                        <button type="button" class="button jugend-secret-clear" data-secret="sms_password" <?php if (!$configured['sms_password']) { print_unescaped('disabled'); } ?>><?php p($l->t('Passwort entfernen')); ?></button>
+                        <button type="button" class="button jugend-secret-clear" data-secret="sms_password" <?php if (!$configured['sms_password']) { ?>disabled<?php } ?>><?php p($l->t('Passwort entfernen')); ?></button>
                         <input type="hidden" name="clear_sms_password" value="0">
                     </div>
                 </div>
