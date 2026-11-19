@@ -1,16 +1,16 @@
 <?php
 declare(strict_types=1);
-namespace OCA\\Jugend\\Controller;
+namespace OCA\Jugend\Controller;
 
-use OCA\\Jugend\\Service\\AuthentikService;
-use OCA\\Jugend\\Service\\NextcloudTalkService;
-use OCA\\Jugend\\Service\\SmsService;
-use OCP\\AppFramework\\Controller;
-use OCP\\AppFramework\\Http\\JSONResponse;
-use OCP\\AppFramework\\Http\\TemplateResponse;
-use OCP\\IAppConfig;
-use OCP\\IRequest;
-use OCP\\Util;
+use OCA\Jugend\Service\AuthentikService;
+use OCA\Jugend\Service\NextcloudTalkService;
+use OCA\Jugend\Service\SmsService;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\TemplateResponse;
+use OCP\IAppConfig;
+use OCP\IRequest;
+use OCP\Util;
 
 class SettingsController extends Controller {
     private const SECRET_KEYS = ['authentik_token', 'talk_bot_secret', 'sms_password'];
@@ -78,10 +78,10 @@ class SettingsController extends Controller {
                 'authentik' => $this->authentik->testConnection(),
                 'sms' => $this->sms->testConnection(),
                 'talk' => $this->talk->testConnection(),
-                default => throw new \\InvalidArgumentException('Unbekannter Verbindungstyp.'),
+                default => throw new \InvalidArgumentException('Unbekannter Verbindungstyp.'),
             };
             return new JSONResponse($result);
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             return new JSONResponse(['ok' => false, 'message' => $e->getMessage()], 400);
         }
     }
