@@ -28,6 +28,8 @@ Matrix is not a prerequisite for the new app. Its future removal must not affect
 
 This repository currently contains the initial app shell and message composition UI. The send action remains disabled until the server-side dispatch pipeline and its channel configuration are implemented. This is intentional: the app must never report a send as successful when no channel has actually processed it.
 
+The first settings page is restricted to Nextcloud administrators. All users who can access the app retain the same messaging permissions. API tokens and passwords are stored as sensitive Nextcloud app-config values (excluded from filtered config listings); this flag is **not encryption**. The settings page never returns stored secrets to the browser.
+
 ## Configuration still required
 
 Before enabling sending, implementation and deployment must establish:
