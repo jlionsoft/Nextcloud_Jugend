@@ -15,8 +15,11 @@ class NextcloudTalkService {
     }
 
     public function send(string $message): void {
+        $this->sendToRoom($this->required('talk_room_token'), $message);
+    }
+
+    public function sendToRoom(string $room, string $message): void {
         $base = rtrim($this->required('talk_url'), '/') . '/';
-        $room = $this->required('talk_room_token');
         $secret = $this->required('talk_bot_secret');
         $random = bin2hex(random_bytes(32));
         $signature = hash_hmac('sha256', $random . $message, $secret);
