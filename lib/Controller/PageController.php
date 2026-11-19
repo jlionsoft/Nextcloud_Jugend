@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace OCA\Jugend\Controller;
 
+use OCA\Jugend\Settings\AdminSection;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -51,7 +52,7 @@ class PageController extends Controller {
 
         $userId = $this->userSession->getUser()?->getUID();
         $settingsUrl = $userId !== null && $this->groupManager->isAdmin($userId)
-            ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => 'additional'])
+            ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => AdminSection::SECTION_ID])
             : null;
 
         return new TemplateResponse($this->appName, 'main', [

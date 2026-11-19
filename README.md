@@ -33,7 +33,7 @@ The app uses a responsive, full-width layout with Nextcloud theme variables and 
 
 ## Configuration
 
-Configure the following in Nextcloud's administration settings (Administration settings → Additional settings → Jugend). The "Einstellungen" button on the app's main page links there for administrators:
+Configure the following in Nextcloud's administration settings (Administration settings → Jugend). The "Einstellungen" button on the app's main page links there for administrators:
 
 | Service | Settings |
 |---|---|

@@ -74,7 +74,7 @@ class Admin implements ISettings {
     }
 
     public function getSection(): string {
-        return 'additional';
+        return AdminSection::SECTION_ID;
     }
 
     public function getPriority(): int {
