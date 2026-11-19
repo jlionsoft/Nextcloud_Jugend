@@ -41,7 +41,11 @@ class AuthentikService {
         return $recipients;
     }
 
-    private function body(mixed $body): string { return is_resource($body) ? (string)stream_get_contents($body) : (string)$body; }\n\n    public function testConnection(): array {
+    private function body(mixed $body): string {
+        return is_resource($body) ? (string)stream_get_contents($body) : (string)$body;
+    }
+
+    public function testConnection(): array {
         $recipients = $this->getRecipients();
         return ['ok' => true, 'message' => 'Authentik-Verbindung erfolgreich; ' . count($recipients) . ' SMS-Empfänger mit aktivierter SMS-Option gefunden.'];
     }
