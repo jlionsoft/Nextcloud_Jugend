@@ -6,7 +6,6 @@ namespace OCA\Jugend\Controller;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
-use OCP\AppFramework\Http\Attribute\AdminRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
@@ -27,7 +26,6 @@ class SettingsController extends Controller {
         parent::__construct($appName, $request);
     }
 
-    #[AdminRequired]
     public function index(): TemplateResponse {
         Util::addScript($this->appName, 'settings');
         Util::addStyle($this->appName, 'main');
