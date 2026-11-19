@@ -79,8 +79,7 @@
     font: inherit;
     line-height: 1.55;
 }
-.jugend-composer textarea:focus,
-.jugend-field input:focus {
+.jugend-composer textarea:focus {
     outline: 2px solid var(--color-main-background);
     outline-offset: 1px;
     border-color: var(--color-primary-element);
