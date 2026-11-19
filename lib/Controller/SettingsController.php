@@ -94,7 +94,11 @@ class SettingsController extends Controller {
                 $this->appConfig->setValueString($this->appName, $key, $value, false, true);
             }
         }
-        return new JSONResponse(['saved' => true]);
+        $configured = [];
+        foreach (self::SECRET_KEYS as $key) {
+            $configured[$key] = $this->appConfig->getValueString($this->appName, $key) !== '';
+        }
+        return new JSONResponse(['saved' => true, 'configured' => $configured]);
     }
 
     /**
