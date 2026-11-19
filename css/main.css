@@ -114,83 +114,175 @@
 .jugend-feedback.success { color: var(--color-success); }
 .jugend-feedback.warning { color: var(--color-error); }
 
-.jugend-settings-form { display: grid; gap: 20px; }
-.jugend-settings-section { width: 100%; }
-.jugend-service-mark {
-    flex: 0 0 auto; padding: 6px 10px; border-radius: var(--border-radius);
-    background: var(--color-background-dark); color: var(--color-text-maxcontrast);
-    font-size: 0.75rem; font-weight: 700; letter-spacing: .04em;
+/* Settings follow the native Nextcloud admin-settings layout. */
+#jugend-settings {
+    max-width: 900px;
 }
+
+#jugend-settings > h2 {
+    margin: 0 0 8px;
+}
+
+#jugend-settings > .settings-hint {
+    margin: 0 0 28px;
+}
+
+.jugend-settings-form {
+    display: block;
+}
+
+.jugend-settings-group {
+    min-width: 0;
+    margin: 0 0 28px;
+    padding: 0 0 24px;
+    border: 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.jugend-settings-group h3 {
+    margin: 0 0 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.jugend-settings-group > .settings-hint {
+    margin: 0 0 20px;
+}
+
 .jugend-fields {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px 24px;
+    gap: 18px 24px;
 }
-.jugend-field { min-width: 0; }
-.jugend-field--wide { grid-column: 1 / -1; }
-.jugend-field input.input-field {
-    display: block; width: 100%; max-width: none; min-height: 42px;
-    margin: 0; padding: 8px 12px;
-    border: 1px solid var(--color-border-dark);
-    border-radius: var(--border-radius);
-    background: var(--color-main-background);
-    color: var(--color-main-text);
-}
-.jugend-secret-controls { margin-top: 9px; }
-.jugend-secret-status {
-    display: inline-flex; align-items: center; min-height: 28px;
-    color: var(--color-main-text); font-size: .95rem; font-weight: 600;
-}
-.jugend-secret-status[data-configured="1"] {
-    color: var(--color-main-text);
-    text-decoration: underline;
-    text-decoration-color: var(--color-success);
-    text-decoration-thickness: 2px;
-    text-underline-offset: 3px;
-}
-.jugend-secret-clear { min-height: 30px; }
-.jugend-field-hint { margin: 8px 0 0; }
-.jugend-webhook {
-    margin-top: 24px; padding: 16px;
-    border-radius: var(--border-radius);
-    background: var(--color-background-dark);
-}
-.jugend-copy-row { align-items: stretch; }
-.jugend-copy-row code {
-    flex: 1 1 320px; min-width: 0; padding: 10px;
-    overflow-wrap: anywhere; white-space: normal;
-    color: var(--color-main-text);
-}
-.jugend-section-actions {
-    margin-top: 22px; padding-top: 18px;
-    border-top: 1px solid var(--color-border);
-}
-.jugend-test-result { color: var(--color-text-maxcontrast); font-size: .9rem; }
-.jugend-test-result.success { color: var(--color-success); }
-.jugend-test-result.error { color: var(--color-error); }
-.jugend-settings-footer {
-    position: static;
-    justify-content: space-between; margin: 0;
-    padding: 16px 20px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-large);
-    background: var(--color-main-background);
-    box-shadow: 0 -4px 18px var(--color-box-shadow);
-}
-.jugend-settings-footer .jugend-feedback { flex: 1 1 260px; }
 
-@media (max-width: 900px) {
-    .jugend-main-layout { grid-template-columns: minmax(0, 1fr); }
-    .jugend-help-panel { order: 2; }
+.jugend-field {
+    min-width: 0;
 }
+
+.jugend-field--wide {
+    grid-column: 1 / -1;
+}
+
+.jugend-field label {
+    display: block;
+    margin: 0 0 6px;
+    font-weight: 600;
+}
+
+.jugend-field input.input-field {
+    display: block;
+    width: 100%;
+    max-width: 600px;
+    margin: 0;
+}
+
+.jugend-secret-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin-top: 8px;
+}
+
+.jugend-secret-status {
+    color: var(--color-text-maxcontrast);
+    font-size: .9rem;
+}
+
+.jugend-secret-status[data-configured="1"] {
+    color: var(--color-success);
+}
+
+.jugend-field .settings-hint {
+    margin: 6px 0 0;
+}
+
+.jugend-webhook {
+    margin-top: 20px;
+}
+
+.jugend-webhook-label {
+    margin: 0 0 6px;
+}
+
+.jugend-copy-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.jugend-copy-row code {
+    flex: 1 1 320px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.jugend-section-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.jugend-test-result {
+    color: var(--color-text-maxcontrast);
+    font-size: .9rem;
+}
+
+.jugend-test-result.success {
+    color: var(--color-success);
+}
+
+.jugend-test-result.error {
+    color: var(--color-error);
+}
+
+.jugend-settings-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.jugend-settings-footer .jugend-feedback {
+    flex: 1 1 260px;
+}
+
+.jugend-feedback {
+    margin: 0;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.jugend-feedback.success {
+    color: var(--color-success);
+}
+
+.jugend-feedback.warning {
+    color: var(--color-error);
+}
+
 @media (max-width: 650px) {
-    .jugend-page { padding: 14px; }
-    .jugend-page__header { flex-direction: column; align-items: stretch; margin-bottom: 18px; }
-    .jugend-page__header > a { align-self: flex-start; }
-    .jugend-fields { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-    .jugend-field--wide { grid-column: auto; }
-    .jugend-settings-footer { position: static; align-items: stretch; flex-direction: column-reverse; }
-    .jugend-settings-footer > button { width: 100%; }
-    .jugend-form-actions { justify-content: stretch; }
-    .jugend-form-actions button { width: 100%; }
+    .jugend-fields {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    .jugend-field--wide {
+        grid-column: auto;
+    }
+
+    .jugend-settings-footer {
+        align-items: stretch;
+        flex-direction: column-reverse;
+    }
+
+    .jugend-settings-footer > button {
+        width: 100%;
+    }
 }
