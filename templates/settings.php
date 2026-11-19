@@ -16,15 +16,15 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             <p class="settings-hint"><?php p($l->t('Empfängergruppe und SMS-Freigaben')); ?></p>
             <div class="jugend-fields">
                 <div class="jugend-field">
-                    <label  for="authentik_url"><?php p($l->t('Authentik-URL')); ?></label>
+                    <label for="authentik_url"><?php p($l->t('Authentik-URL')); ?></label>
                     <input class="input-field" id="authentik_url" name="authentik_url" type="url" value="<?php p($values['authentik_url']); ?>" placeholder="https://auth.example.org">
                 </div>
                 <div class="jugend-field">
-                    <label  for="authentik_group_id"><?php p($l->t('Gruppen-ID')); ?></label>
+                    <label for="authentik_group_id"><?php p($l->t('Gruppen-ID')); ?></label>
                     <input class="input-field" id="authentik_group_id" name="authentik_group_id" value="<?php p($values['authentik_group_id']); ?>">
                 </div>
                 <div class="jugend-field jugend-field--wide">
-                    <label  for="authentik_token"><?php p($l->t('API-Token')); ?></label>
+                    <label for="authentik_token"><?php p($l->t('API-Token')); ?></label>
                     <input class="input-field" id="authentik_token" name="authentik_token" type="password" autocomplete="new-password" placeholder="<?php p($configured['authentik_token'] ? $l->t('Neues Token eingeben, um es zu ersetzen') : $l->t('Noch kein Token hinterlegt')); ?>">
                     <div class="jugend-secret-controls">
                         <span class="jugend-secret-status" data-secret-status="authentik_token" data-configured="<?php p($configured['authentik_token'] ? '1' : '0'); ?>"><?php p($configured['authentik_token'] ? $l->t('Token ist gespeichert') : $l->t('Kein Token gespeichert')); ?></span>
@@ -45,15 +45,15 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             <p class="settings-hint"><?php p($l->t('Gruppenraum und Bot-Anbindung')); ?></p>
             <div class="jugend-fields">
                 <div class="jugend-field">
-                    <label  for="talk_url"><?php p($l->t('Nextcloud-URL')); ?></label>
+                    <label for="talk_url"><?php p($l->t('Nextcloud-URL')); ?></label>
                     <input class="input-field" id="talk_url" name="talk_url" type="url" value="<?php p($values['talk_url']); ?>" placeholder="https://cloud.example.org">
                 </div>
                 <div class="jugend-field">
-                    <label  for="talk_room_token"><?php p($l->t('Talk-Raum-Token')); ?></label>
+                    <label for="talk_room_token"><?php p($l->t('Talk-Raum-Token')); ?></label>
                     <input class="input-field" id="talk_room_token" name="talk_room_token" value="<?php p($values['talk_room_token']); ?>">
                 </div>
                 <div class="jugend-field jugend-field--wide">
-                    <label  for="talk_bot_secret"><?php p($l->t('Talk-Bot-Secret')); ?></label>
+                    <label for="talk_bot_secret"><?php p($l->t('Talk-Bot-Secret')); ?></label>
                     <input class="input-field" id="talk_bot_secret" name="talk_bot_secret" type="password" autocomplete="new-password" placeholder="<?php p($configured['talk_bot_secret'] ? $l->t('Neues Secret eingeben, um es zu ersetzen') : $l->t('Noch kein Secret hinterlegt')); ?>">
                     <div class="jugend-secret-controls">
                         <span class="jugend-secret-status" data-secret-status="talk_bot_secret" data-configured="<?php p($configured['talk_bot_secret'] ? '1' : '0'); ?>"><?php p($configured['talk_bot_secret'] ? $l->t('Secret ist gespeichert') : $l->t('Kein Secret gespeichert')); ?></span>
@@ -78,20 +78,20 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             <p class="settings-hint"><?php p($l->t('Persönliche Direktnachrichten an alle Mitglieder der Jugendgruppe')); ?></p>
             <div class="jugend-fields">
                 <div class="jugend-field">
-                    <label  for="matrix_homeserver"><?php p($l->t('Homeserver-URL')); ?></label>
+                    <label for="matrix_homeserver"><?php p($l->t('Homeserver-URL')); ?></label>
                     <input class="input-field" id="matrix_homeserver" name="matrix_homeserver" type="url" value="<?php p($values['matrix_homeserver']); ?>" placeholder="https://matrix.example.org">
                 </div>
                 <div class="jugend-field">
-                    <label  for="matrix_server_name"><?php p($l->t('Matrix-Servername')); ?></label>
+                    <label for="matrix_server_name"><?php p($l->t('Matrix-Servername')); ?></label>
                     <input class="input-field" id="matrix_server_name" name="matrix_server_name" value="<?php p($values['matrix_server_name']); ?>" placeholder="matrix.example.org">
                     <p class="settings-hint"><?php p($l->t('Domainanteil der Matrix-Benutzer-IDs, ohne @ und Doppelpunkt.')); ?></p>
                 </div>
                 <div class="jugend-field jugend-field--wide">
-                    <label  for="matrix_bot_user_id"><?php p($l->t('Bot-Benutzer-ID')); ?></label>
+                    <label for="matrix_bot_user_id"><?php p($l->t('Bot-Benutzer-ID')); ?></label>
                     <input class="input-field" id="matrix_bot_user_id" name="matrix_bot_user_id" value="<?php p($values['matrix_bot_user_id']); ?>" placeholder="@nachrichten:matrix.example.org">
                 </div>
                 <div class="jugend-field jugend-field--wide">
-                    <label  for="matrix_bot_token"><?php p($l->t('Bot-Access-Token')); ?></label>
+                    <label for="matrix_bot_token"><?php p($l->t('Bot-Access-Token')); ?></label>
                     <input class="input-field" id="matrix_bot_token" name="matrix_bot_token" type="password" autocomplete="new-password" placeholder="<?php p($configured['matrix_bot_token'] ? $l->t('Neues Token eingeben, um es zu ersetzen') : $l->t('Noch kein Token hinterlegt')); ?>">
                     <div class="jugend-secret-controls">
                         <span class="jugend-secret-status" data-secret-status="matrix_bot_token" data-configured="<?php p($configured['matrix_bot_token'] ? '1' : '0'); ?>"><?php p($configured['matrix_bot_token'] ? $l->t('Token ist gespeichert') : $l->t('Kein Token gespeichert')); ?></span>
@@ -112,19 +112,19 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             <p class="settings-hint"><?php p($l->t('RouterOS REST API und LTE-Schnittstelle')); ?></p>
             <div class="jugend-fields">
                 <div class="jugend-field">
-                    <label  for="sms_gateway_url"><?php p($l->t('Gateway-URL')); ?></label>
+                    <label for="sms_gateway_url"><?php p($l->t('Gateway-URL')); ?></label>
                     <input class="input-field" id="sms_gateway_url" name="sms_gateway_url" type="url" value="<?php p($values['sms_gateway_url']); ?>" placeholder="http://192.168.178.100">
                 </div>
                 <div class="jugend-field">
-                    <label  for="sms_interface"><?php p($l->t('LTE-Interface')); ?></label>
+                    <label for="sms_interface"><?php p($l->t('LTE-Interface')); ?></label>
                     <input class="input-field" id="sms_interface" name="sms_interface" value="<?php p($values['sms_interface'] ?: 'lte1'); ?>" placeholder="lte1">
                 </div>
                 <div class="jugend-field">
-                    <label  for="sms_username"><?php p($l->t('RouterOS-Benutzername')); ?></label>
+                    <label for="sms_username"><?php p($l->t('RouterOS-Benutzername')); ?></label>
                     <input class="input-field" id="sms_username" name="sms_username" value="<?php p($values['sms_username']); ?>" autocomplete="username">
                 </div>
                 <div class="jugend-field">
-                    <label  for="sms_password"><?php p($l->t('RouterOS-Passwort')); ?></label>
+                    <label for="sms_password"><?php p($l->t('RouterOS-Passwort')); ?></label>
                     <input class="input-field" id="sms_password" name="sms_password" type="password" autocomplete="new-password" placeholder="<?php p($configured['sms_password'] ? $l->t('Neues Passwort eingeben, um es zu ersetzen') : $l->t('Noch kein Passwort hinterlegt')); ?>">
                     <div class="jugend-secret-controls">
                         <span class="jugend-secret-status" data-secret-status="sms_password" data-configured="<?php p($configured['sms_password'] ? '1' : '0'); ?>"><?php p($configured['sms_password'] ? $l->t('Passwort ist gespeichert') : $l->t('Kein Passwort gespeichert')); ?></span>
