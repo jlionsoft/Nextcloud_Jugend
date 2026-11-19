@@ -3,6 +3,7 @@ declare(strict_types=1);
 /** @var array $_ */
 /** @var \OCP\IL10N\IL10N $l */
 ?>
+<div id="app-content">
 <div id="jugend-app" class="jugend-page">
     <header class="jugend-page__header">
         <div>
@@ -53,4 +54,5 @@ declare(strict_types=1);
         <h2><?php p($l->t('Versandergebnis')); ?></h2>
         <p id="jugend-feedback" class="jugend-feedback"></p>
     </section>
+</div>
 </div>
