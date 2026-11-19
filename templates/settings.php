@@ -42,7 +42,7 @@ $configured = $_['configured'];
 
         <div class="jugend-actions">
             <button type="submit" class="primary"><?php p($l->t('Einstellungen speichern')); ?></button>
-            <a class="button" href="<?php p(\OC\Util::linkToRoute('jugend.page.index')); ?>"><?php p($l->t('Zurück zu Nachrichten')); ?></a>
+            <a class="button" href="<?php p(\OC::$server->getURLGenerator()->linkToRoute('jugend.page.index')); ?>"><?php p($l->t('Zurück zu Nachrichten')); ?></a>
         </div>
         <p id="jugend-settings-feedback" role="status" aria-live="polite"></p>
     </form>
