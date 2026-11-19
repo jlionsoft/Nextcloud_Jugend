@@ -131,9 +131,15 @@
 .jugend-secret-controls { margin-top: 9px; }
 .jugend-secret-status {
     display: inline-flex; align-items: center; min-height: 28px;
-    color: var(--color-text-maxcontrast); font-size: .9rem;
+    color: var(--color-main-text); font-size: .95rem; font-weight: 600;
 }
-.jugend-secret-status[data-configured="1"] { color: var(--color-success); }
+.jugend-secret-status[data-configured="1"] {
+    color: var(--color-main-text);
+    text-decoration: underline;
+    text-decoration-color: var(--color-success);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+}
 .jugend-secret-clear { min-height: 30px; }
 .jugend-field-hint { margin: 8px 0 0; }
 .jugend-webhook {
@@ -155,7 +161,7 @@
 .jugend-test-result.success { color: var(--color-success); }
 .jugend-test-result.error { color: var(--color-error); }
 .jugend-settings-footer {
-    position: sticky; bottom: 0; z-index: 10;
+    position: static;
     justify-content: space-between; margin: 0;
     padding: 16px 20px;
     border: 1px solid var(--color-border);
@@ -179,4 +185,25 @@
     .jugend-settings-footer > button { width: 100%; }
     .jugend-form-actions { justify-content: stretch; }
     .jugend-form-actions button { width: 100%; }
+}
+
+
+/* Let the document/body own vertical scrolling, as required by Nextcloud's app layout. */
+#content.app-jugend,
+#content.app-jugend #app-content,
+#content.app-jugend #app-content-wrapper {
+    height: auto !important;
+    min-height: 100%;
+    overflow: visible !important;
+}
+.jugend-page {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+}
+.jugend-secret-status,
+.jugend-test-result,
+.jugend-muted,
+.jugend-field-hint {
+    color: var(--color-main-text);
 }
