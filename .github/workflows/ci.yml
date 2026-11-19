@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/native-app-foundation
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  php-and-metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: PHP syntax
+        run: |
+          find . -type f -name '*.php' -print0 | xargs -0 -r -n1 php -l
+      - name: Validate app metadata XML
+        run: |
+          php -r '$xml = simplexml_load_file("appinfo/info.xml"); if ($xml === false) { fwrite(STDERR, "Invalid appinfo/info.xml\\n"); exit(1); }'
