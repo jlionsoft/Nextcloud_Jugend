@@ -85,6 +85,42 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
 
         <section class="jugend-panel jugend-settings-section">
             <div class="jugend-panel__heading">
+                <div><h2>Matrix</h2><p><?php p($l->t('Persönliche Direktnachrichten an alle Mitglieder der Jugendgruppe')); ?></p></div>
+                <span class="jugend-service-mark">MATRIX</span>
+            </div>
+            <div class="jugend-fields">
+                <div class="jugend-field">
+                    <label class="jugend-label" for="matrix_homeserver"><?php p($l->t('Homeserver-URL')); ?></label>
+                    <input class="input-field" id="matrix_homeserver" name="matrix_homeserver" type="url" value="<?php p($values['matrix_homeserver']); ?>" placeholder="https://matrix.example.org">
+                </div>
+                <div class="jugend-field">
+                    <label class="jugend-label" for="matrix_server_name"><?php p($l->t('Matrix-Servername')); ?></label>
+                    <input class="input-field" id="matrix_server_name" name="matrix_server_name" value="<?php p($values['matrix_server_name']); ?>" placeholder="matrix.example.org">
+                    <p class="jugend-field-hint"><?php p($l->t('Domainanteil der Matrix-Benutzer-IDs, ohne @ und Doppelpunkt.')); ?></p>
+                </div>
+                <div class="jugend-field jugend-field--wide">
+                    <label class="jugend-label" for="matrix_bot_user_id"><?php p($l->t('Bot-Benutzer-ID')); ?></label>
+                    <input class="input-field" id="matrix_bot_user_id" name="matrix_bot_user_id" value="<?php p($values['matrix_bot_user_id']); ?>" placeholder="@nachrichten:matrix.example.org">
+                </div>
+                <div class="jugend-field jugend-field--wide">
+                    <label class="jugend-label" for="matrix_bot_token"><?php p($l->t('Bot-Access-Token')); ?></label>
+                    <input class="input-field" id="matrix_bot_token" name="matrix_bot_token" type="password" autocomplete="new-password" placeholder="<?php p($configured['matrix_bot_token'] ? $l->t('Neues Token eingeben, um es zu ersetzen') : $l->t('Noch kein Token hinterlegt')); ?>">
+                    <div class="jugend-secret-controls">
+                        <span class="jugend-secret-status" data-secret-status="matrix_bot_token" data-configured="<?php p($configured['matrix_bot_token'] ? '1' : '0'); ?>"><?php p($configured['matrix_bot_token'] ? $l->t('Token ist gespeichert') : $l->t('Kein Token gespeichert')); ?></span>
+                        <button type="button" class="button jugend-secret-clear" data-secret="matrix_bot_token" <?php if (!$configured['matrix_bot_token']) { ?>disabled<?php } ?>><?php p($l->t('Token entfernen')); ?></button>
+                        <input type="hidden" name="clear_matrix_bot_token" value="0">
+                    </div>
+                    <p class="jugend-field-hint"><?php p($l->t('Das Token wird nicht angezeigt. Leer lassen behält den bisherigen Wert.')); ?></p>
+                </div>
+            </div>
+            <div class="jugend-section-actions">
+                <button type="button" class="button test-connection" data-channel="matrix"><?php p($l->t('Matrix-Verbindung testen')); ?></button>
+                <span class="jugend-test-result" data-test-result="matrix"></span>
+            </div>
+        </section>
+
+        <section class="jugend-panel jugend-settings-section">
+            <div class="jugend-panel__heading">
                 <div><h2>MikroTik SMS-Gateway</h2><p><?php p($l->t('RouterOS REST API und LTE-Schnittstelle')); ?></p></div>
                 <span class="jugend-service-mark">SMS</span>
             </div>
