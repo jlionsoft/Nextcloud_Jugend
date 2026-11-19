@@ -2,41 +2,44 @@
 
 Native Nextcloud app replacing the existing JugendSendClient.
 
-## Current scope
+## Implemented in this branch
 
-The first release is a focused replacement of the existing message-sending application. Every user who can access the app has the same permissions in this initial phase.
+- Native Nextcloud PHP AppFramework UI and API.
+- Nextcloud session authentication; every user who can open the app can send messages.
+- Technical settings and connection tests are restricted to Nextcloud administrators.
+- Authentik group lookup using a bearer token. Only users with `Sms=true` and a non-empty `PhoneNumber` attribute are SMS recipients.
+- Nextcloud Talk bot message delivery using the Talk bot HMAC-SHA256 request headers.
+- MikroTik RouterOS REST SMS delivery using HTTP Basic authentication and JSON payloads.
+- GSM-7 validation and multipart SMS splitting (150 septets per part to reserve room for the legacy `[n]` prefixes); unsupported characters fail the SMS delivery for that recipient rather than being silently transliterated.
+- Per-channel result reporting, including failed SMS recipients.
+- Explicit connection-test buttons. The Talk test sends a visible test message to the configured room.
+- Settings for all endpoints, IDs, interfaces and credentials. Secrets are never returned to the browser and are marked as sensitive Nextcloud app-config values. This flag excludes them from filtered config listings; it is **not encryption**. Secret fields remain blank on reload, can be left unchanged, or explicitly cleared.
+- GitHub Actions checks PHP syntax, JavaScript syntax and app metadata XML.
 
-The initial feature set is intended to cover:
-- Compose a message for the youth group.
-- Send the message to the configured Nextcloud Talk room.
-- Send SMS through the MikroTik RouterOS REST SMS gateway.
-- Show a clear per-channel result and failed recipients.
+## Runtime behavior and limitations
 
-Matrix is not a prerequisite for the new app. Its future removal must not affect the SMS or Talk integrations.
+- Sending currently runs synchronously in the web request. A large recipient list or multipart SMS campaign can exceed PHP/proxy timeouts. A queued job and persisted delivery history are not included in this first replacement slice.
+- SMS gateway connection test checks reachability of the configured gateway base URL. It does not send a test SMS.
+- Talk connection test sends the literal message `Verbindungstest der Jugend-App.` to the configured Talk room.
+- The app reports that the RouterOS API accepted an SMS request; it cannot confirm delivery to the handset.
+- Authentik attribute names are read as `PhoneNumber` and `Sms` (lowercase variants are also accepted). Confirm these match the actual group payload before production use.
+- No live credentials, network access, Nextcloud instance or MikroTik device were available during implementation. Connection and end-to-end tests must be performed in the target environment.
 
-## Architecture direction
+## Configuration
 
-- Native Nextcloud PHP AppFramework backend and Nextcloud web UI.
-- Nextcloud authentication and app access control; no separate Blazor/Authentik login.
-- Channel adapters kept separate from message orchestration.
-- Recipient lookup isolated behind a provider interface (Authentik can remain the initial provider).
-- Longer-running sends handled as background jobs with persisted status/history.
-- A versioned app API kept suitable for a possible future mobile client.
-- Future modules can be added without coupling them to the message-sending module.
+Configure the following under the app's administrator-only settings page:
 
-## Development status
+| Service | Settings |
+|---|---|
+| Authentik | Base URL, group ID, API token |
+| Nextcloud Talk | Nextcloud base URL, room token, bot secret |
+| MikroTik SMS | Gateway base URL, RouterOS username/password, LTE interface (default `lte1`) |
 
-This repository currently contains the initial app shell and message composition UI. The send action remains disabled until the server-side dispatch pipeline and its channel configuration are implemented. This is intentional: the app must never report a send as successful when no channel has actually processed it.
+The Nextcloud server must be able to reach both Authentik and the MikroTik gateway. Never commit credentials, tokens, phone numbers or production configuration to this repository.
 
-The first settings page is restricted to Nextcloud administrators. All users who can access the app retain the same messaging permissions. API tokens and passwords are stored as sensitive Nextcloud app-config values (excluded from filtered config listings); this flag is **not encryption**. The settings page never returns stored secrets to the browser.
+## Deliberately out of scope
 
-## Configuration still required
-
-Before enabling sending, implementation and deployment must establish:
-- Supported Nextcloud and PHP versions.
-- Talk bot credentials, room token, and webhook secret (if incoming Talk events are retained).
-- MikroTik gateway URL and credentials, plus confirmation that the Nextcloud host can reach it.
-- Initial recipient source and the mapping of phone numbers/SMS opt-in.
-- Background-job execution and retention policy for send history.
-
-Never commit credentials, tokens, phone numbers, or production configuration to this repository.
+- Matrix integration (not required for the replacement).
+- Separate Blazor/Authentik login.
+- App-specific roles and group-to-role mapping.
+- Native mobile client. The API is versioned at `/api/v1` to leave room for one later.
