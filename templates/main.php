@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /** @var array $_ */
-/** @var \\OCP\\IL10N\\IL10N $l */
+/** @var \OCP\IL10N\IL10N $l */
 ?>
 <div id="jugend-app" class="jugend-page">
     <header class="jugend-page__header">
@@ -9,9 +9,9 @@ declare(strict_types=1);
             <h1><?php p($l->t('Jugend-Nachricht versenden')); ?></h1>
             <p><?php p($l->t('Erstelle eine Nachricht und versende sie über Nextcloud Talk und SMS.')); ?></p>
         </div>
-        <a class="button" href="<?php p($_['settingsUrl']); ?>">
-            <span><?php p($l->t('Einstellungen')); ?></span>
-        </a>
+        <?php if (!empty($_['settingsUrl'])) { ?>
+            <a class="button" href="<?php p($_['settingsUrl']); ?>"><?php p($l->t('Einstellungen')); ?></a>
+        <?php } ?>
     </header>
 
     <main class="jugend-main-layout">
