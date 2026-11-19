@@ -1,10 +1,9 @@
 <?php
 declare(strict_types=1);
-namespace OCA\\Jugend\\Service;
+namespace OCA\Jugend\Service;
 
-use OCP\\AppFramework\\Utility\\ITimeFactory;
-use OCP\\Http\\Client\\IClientService;
-use OCP\\IAppConfig;
+use OCP\Http\Client\IClientService;
+use OCP\IAppConfig;
 use RuntimeException;
 
 class AuthentikService {
