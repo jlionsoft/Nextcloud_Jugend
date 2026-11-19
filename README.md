@@ -38,6 +38,18 @@ Configure the following under the app's administrator-only settings page:
 
 The Nextcloud server must be able to reach both Authentik and the MikroTik gateway. Never commit credentials, tokens, phone numbers or production configuration to this repository.
 
+## Installation and test sequence
+
+1. Place the app directory (the directory containing `appinfo/info.xml`) at `apps-extra/jugend` on the Nextcloud server.
+2. Enable it with `sudo -u www-data php occ app:enable jugend` from the Nextcloud installation directory.
+3. As a Nextcloud administrator, open **Jugend → Einstellungen**, enter the Authentik, Talk and RouterOS settings, and save.
+4. Run the Authentik and SMS gateway connection tests. The Talk test sends a message to the configured room.
+5. Copy the displayed Talk webhook URL into the Talk bot configuration and use the same bot secret.
+6. Test the webhook by sending `!ping` in the Talk room; the bot should answer `🏓 pong`.
+7. Start with a harmless short message and a small test recipient group. Verify the Talk result, SMS opt-in filtering, phone numbers, multipart splitting and failed-recipient display before using the full group.
+
+The app must be installed and tested on a staging instance first. The CI workflow checks syntax and metadata only; it does not replace a live Nextcloud app installation test.
+
 ## Deliberately out of scope
 
 - Matrix integration (not required for the replacement).
