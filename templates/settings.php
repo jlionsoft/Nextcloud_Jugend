@@ -2,7 +2,7 @@
 declare(strict_types=1);
 /** @var array $_ */
 /** @var \OCP\IL10N\IL10N $l */
-$values = $_['values']; $configured = $_['configured']; $backUrl = $_['backUrl'];
+$values = $_['values']; $configured = $_['configured']; $backUrl = $_['backUrl']; $talkWebhookUrl = $_['talkWebhookUrl'];
 ?>
 <div id="jugend-settings" class="section">
     <h1><?php p($l->t('Jugend – Einstellungen')); ?></h1>
@@ -19,6 +19,7 @@ $values = $_['values']; $configured = $_['configured']; $backUrl = $_['backUrl']
         <label for="talk_room_token">Talk-Raum-Token</label><input id="talk_room_token" name="talk_room_token" value="<?php p($values['talk_room_token']); ?>">
         <label for="talk_bot_secret">Talk-Bot-Secret</label><input id="talk_bot_secret" name="talk_bot_secret" type="password" autocomplete="new-password" placeholder="<?php p($configured['talk_bot_secret'] ? 'Secret gespeichert – leer lassen zum Beibehalten' : 'Noch kein Secret gespeichert'); ?>"><label><input type="checkbox" name="clear_talk_bot_secret" value="1"> Gespeichertes Secret löschen</label>
         <button type="button" class="button test-connection" data-channel="talk">Talk-Testnachricht senden</button>
+        <p>Webhook-URL für die Talk-Bot-Konfiguration:</p><code><?php p($talkWebhookUrl); ?></code>
         <hr>
         <h2>MikroTik SMS-Gateway</h2>
         <label for="sms_gateway_url">Gateway-URL</label><input id="sms_gateway_url" name="sms_gateway_url" type="url" value="<?php p($values['sms_gateway_url']); ?>" placeholder="http://192.168.178.100">
