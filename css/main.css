@@ -194,12 +194,10 @@
 #content.app-jugend #app-content-wrapper {
     height: auto !important;
     min-height: 100%;
-    overflow: visible !important;
 }
 .jugend-page {
     height: auto;
     min-height: 100%;
-    overflow: visible;
 }
 .jugend-secret-status,
 .jugend-test-result,
