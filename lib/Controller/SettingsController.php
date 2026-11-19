@@ -46,6 +46,7 @@ class SettingsController extends Controller {
             'values' => $values,
             'configured' => $configured,
             'backUrl' => $this->urlGenerator->linkToRoute('jugend.page.index'),
+            'talkWebhookUrl' => $this->urlGenerator->linkToRouteAbsolute('jugend.talkwebhook.webhook'),
         ]);
     }
 
