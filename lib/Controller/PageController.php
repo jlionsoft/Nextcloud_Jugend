@@ -9,7 +9,7 @@ use OCP\IURLGenerator;
 use OCP\Util;
 
 class PageController extends Controller {
-    public function __construct(string $appName, IRequest $request, private IURLGenerator $urlGenerator) {
+    public function __construct(string $appName, IRequest $request, private IURLGenerator $urlGenerator, private IGroupManager $groupManager, private IUserSession $userSession) {
         parent::__construct($appName, $request);
     }
 
