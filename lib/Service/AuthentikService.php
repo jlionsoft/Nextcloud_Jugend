@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace OCA\Jugend\Service;
 
+use OCA\Jugend\AppInfo\Application;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use RuntimeException;
@@ -50,7 +51,7 @@ class AuthentikService {
     }
 
     private function required(string $key): string {
-        $value = trim($this->config->getValueString('jugend', $key));
+        $value = trim($this->config->getValueString(Application::APP_ID, $key));
         if ($value === '') { throw new RuntimeException('Authentik-Einstellung fehlt: ' . $key . '.'); }
         return $value;
     }

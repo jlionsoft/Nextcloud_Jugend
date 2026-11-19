@@ -2,15 +2,16 @@
 declare(strict_types=1);
 namespace OCA\Jugend\Controller;
 
+use OCA\Jugend\AppInfo\Application;
 use OCA\Jugend\Service\MessageService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\ILogger;
+use Psr\Log\LoggerInterface;
 
 class MessageController extends Controller {
-    public function __construct(string $appName, IRequest $request, private MessageService $messages, private ILogger $logger) {
+    public function __construct(string $appName, IRequest $request, private MessageService $messages, private LoggerInterface $logger) {
         parent::__construct($appName, $request);
     }
 
@@ -29,7 +30,7 @@ class MessageController extends Controller {
             return new JSONResponse(['error' => 'invalid_message', 'message' => $e->getMessage()], 400);
         } catch (\Throwable $e) {
             $errorId = bin2hex(random_bytes(6));
-            $this->logger->logException($e, ['app' => 'jugend', 'errorId' => $errorId, 'message' => 'Message delivery failed']);
+            $this->logger->error('Message delivery failed', ['app' => Application::APP_ID, 'exception' => $e, 'errorId' => $errorId]);
             return new JSONResponse(['error' => 'send_failed', 'errorId' => $errorId, 'message' => 'Der Versand ist serverseitig fehlgeschlagen. Fehler-ID: ' . $errorId . '. Details stehen im Nextcloud-Log.'], 500);
         }
     }

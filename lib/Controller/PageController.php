@@ -3,6 +3,8 @@ declare(strict_types=1);
 namespace OCA\Jugend\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -21,10 +23,8 @@ class PageController extends Controller {
         parent::__construct($appName, $request);
     }
 
-    /**
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function index(): TemplateResponse {
         Util::addScript($this->appName, 'main');
         Util::addStyle($this->appName, 'main');

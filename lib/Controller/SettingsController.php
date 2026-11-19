@@ -7,6 +7,7 @@ use OCA\Jugend\Service\MatrixService;
 use OCA\Jugend\Service\NextcloudTalkService;
 use OCA\Jugend\Service\SmsService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IAppConfig;
@@ -30,10 +31,8 @@ class SettingsController extends Controller {
         parent::__construct($appName, $request);
     }
 
-    /**
-     * @AdminRequired
-     * @NoCSRFRequired
-     */
+    // Controller methods are admin-only unless marked #[NoAdminRequired].
+    #[NoCSRFRequired]
     public function index(): TemplateResponse {
         Util::addScript($this->appName, 'settings');
         Util::addStyle($this->appName, 'main');
@@ -58,9 +57,6 @@ class SettingsController extends Controller {
         ]);
     }
 
-    /**
-     * @AdminRequired
-     */
     public function save(
         string $authentik_url = '', string $authentik_group_id = '', string $authentik_token = '',
         string $talk_url = '', string $talk_room_token = '', string $talk_bot_secret = '',
@@ -121,9 +117,6 @@ class SettingsController extends Controller {
         return new JSONResponse(['saved' => true, 'configured' => $configured]);
     }
 
-    /**
-     * @AdminRequired
-     */
     public function test(string $channel = ''): JSONResponse {
         try {
             $result = match ($channel) {
