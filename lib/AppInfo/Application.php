@@ -4,6 +4,7 @@ namespace OCA\Jugend\AppInfo;
 
 use OCA\Jugend\Service\AuthentikService;
 use OCA\Jugend\Service\MessageService;
+use OCA\Jugend\Service\MatrixService;
 use OCA\Jugend\Service\NextcloudTalkService;
 use OCA\Jugend\Service\SmsService;
 use OCP\AppFramework\App;
@@ -30,9 +31,13 @@ class Application extends App implements IBootstrap {
         $context->registerService(NextcloudTalkService::class, static function (ContainerInterface $c): NextcloudTalkService {
             return new NextcloudTalkService($c->get(IClientService::class), $c->get(IAppConfig::class));
         });
+        $context->registerService(MatrixService::class, static function (ContainerInterface $c): MatrixService {
+            return new MatrixService($c->get(IClientService::class), $c->get(IAppConfig::class));
+        });
         $context->registerService(MessageService::class, static function (ContainerInterface $c): MessageService {
             return new MessageService(
                 $c->get(AuthentikService::class),
+                $c->get(MatrixService::class),
                 $c->get(SmsService::class),
                 $c->get(NextcloudTalkService::class),
             );
