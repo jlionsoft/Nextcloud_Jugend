@@ -26,7 +26,7 @@ class MessageService {
         } catch (\Throwable $e) {
             $result['sms']['error'] = $e->getMessage();
         }
-        $result['success'] = $result['talk']['ok'] || ($result['sms']['total'] > 0 && $result['sms']['sent'] === $result['sms']['total']);
+        $result['success'] = $result['talk']['ok'] && !isset($result['sms']['error']) && $result['sms']['sent'] === $result['sms']['total'];
         return $result;
     }
 }
