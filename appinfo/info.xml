@@ -14,7 +14,7 @@
   <bugs>https://github.com/jlionsoft/Nextcloud_Jugend/issues</bugs>
   <repository type="git">https://github.com/jlionsoft/Nextcloud_Jugend.git</repository>
   <dependencies>
-    <nextcloud min-version="35" />
+    <nextcloud min-version="35" max-version="35" />
   </dependencies>
   <navigations>
     <navigation>
