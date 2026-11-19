@@ -6,6 +6,7 @@ namespace OCA\Jugend\Controller;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
+use OCP\Util;
 
 class PageController extends Controller {
     public function __construct(
@@ -19,6 +20,9 @@ class PageController extends Controller {
      * @NoAdminRequired
      */
     public function index(): TemplateResponse {
+        Util::addScript($this->appName, 'main');
+        Util::addStyle($this->appName, 'main');
+
         return new TemplateResponse($this->appName, 'main');
     }
 }
