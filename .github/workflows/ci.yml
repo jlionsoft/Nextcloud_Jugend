@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  php-and-metadata:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,8 +21,10 @@ jobs:
           php-version: '8.3'
           coverage: none
       - name: PHP syntax
+        run: find . -type f -name '*.php' -print0 | xargs -0 -r -n1 php -l
+      - name: JavaScript syntax
         run: |
-          find . -type f -name '*.php' -print0 | xargs -0 -r -n1 php -l
+          node --check js/main.js
+          node --check js/settings.js
       - name: Validate app metadata XML
-        run: |
-          php -r '$xml = simplexml_load_file("appinfo/info.xml"); if ($xml === false) { fwrite(STDERR, "Invalid appinfo/info.xml\\n"); exit(1); }'
+        run: php -r '$xml = simplexml_load_file("appinfo/info.xml"); if ($xml === false) { fwrite(STDERR, "Invalid appinfo/info.xml\\n"); exit(1); }'
