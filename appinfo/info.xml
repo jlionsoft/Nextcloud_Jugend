@@ -16,6 +16,9 @@
   <dependencies>
     <nextcloud min-version="35" max-version="35" />
   </dependencies>
+  <settings>
+    <admin>OCA\Jugend\Settings\Admin</admin>
+  </settings>
   <navigations>
     <navigation>
       <name>Jugend</name>

@@ -7,16 +7,17 @@ use OCA\Jugend\Service\MatrixService;
 use OCA\Jugend\Service\NextcloudTalkService;
 use OCA\Jugend\Service\SmsService;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IAppConfig;
+use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IURLGenerator;
-use OCP\Util;
 
+/**
+ * Backend for the admin settings form (see OCA\Jugend\Settings\Admin).
+ * Controller methods are admin-only unless marked #[NoAdminRequired].
+ */
 class SettingsController extends Controller {
-    private const SECRET_KEYS = ['authentik_token', 'talk_bot_secret', 'sms_password', 'matrix_bot_token'];
+    public const SECRET_KEYS = ['authentik_token', 'talk_bot_secret', 'sms_password', 'matrix_bot_token'];
 
     public function __construct(
         string $appName,
@@ -26,35 +27,9 @@ class SettingsController extends Controller {
         private MatrixService $matrix,
         private NextcloudTalkService $talk,
         private SmsService $sms,
-        private IURLGenerator $urlGenerator,
+        private IL10N $l,
     ) {
         parent::__construct($appName, $request);
-    }
-
-    // Controller methods are admin-only unless marked #[NoAdminRequired].
-    #[NoCSRFRequired]
-    public function index(): TemplateResponse {
-        Util::addScript($this->appName, 'settings');
-        Util::addStyle($this->appName, 'main');
-        $configured = [];
-        foreach (self::SECRET_KEYS as $key) {
-            $configured[$key] = $this->appConfig->getValueString($this->appName, $key) !== '';
-        }
-        $values = [];
-        foreach ([
-            'authentik_url', 'authentik_group_id',
-            'talk_url', 'talk_room_token',
-            'sms_gateway_url', 'sms_username', 'sms_interface',
-            'matrix_homeserver', 'matrix_server_name', 'matrix_bot_user_id',
-        ] as $key) {
-            $values[$key] = $this->appConfig->getValueString($this->appName, $key);
-        }
-        return new TemplateResponse($this->appName, 'settings', [
-            'values' => $values,
-            'configured' => $configured,
-            'backUrl' => $this->urlGenerator->linkToRoute('jugend.page.index'),
-            'talkWebhookUrl' => $this->urlGenerator->linkToRouteAbsolute('jugend.talkwebhook.webhook'),
-        ]);
     }
 
     public function save(
@@ -79,7 +54,7 @@ class SettingsController extends Controller {
             $url = trim($url);
             $scheme = strtolower((string)parse_url($url, PHP_URL_SCHEME));
             if ($url !== '' && (filter_var($url, FILTER_VALIDATE_URL) === false || !in_array($scheme, ['http', 'https'], true))) {
-                return new JSONResponse(['saved' => false, 'message' => 'Ungültige URL in ' . $key . '.'], 400);
+                return new JSONResponse(['saved' => false, 'message' => $this->l->t('Ungültige URL in %s.', [$key])], 400);
             }
         }
         $plain = [
@@ -124,7 +99,7 @@ class SettingsController extends Controller {
                 'matrix' => $this->matrix->testConnection(),
                 'sms' => $this->sms->testConnection(),
                 'talk' => $this->talk->testConnection(),
-                default => throw new \InvalidArgumentException('Unbekannter Verbindungstyp.'),
+                default => throw new \InvalidArgumentException($this->l->t('Unbekannter Verbindungstyp.')),
             };
             return new JSONResponse($result);
         } catch (\Throwable $e) {
