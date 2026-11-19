@@ -1,88 +1,177 @@
-#jugend-app {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 24px;
+/* Native Nextcloud app layout: use the complete app-content area and theme variables. */
+.jugend-page {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    padding: clamp(16px, 2.4vw, 36px);
+    color: var(--color-main-text);
 }
 
-.jugend-header {
-    margin-bottom: 24px;
-}
+.jugend-page *,
+.jugend-page *::before,
+.jugend-page *::after { box-sizing: border-box; }
 
-.jugend-header p {
+.jugend-page__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 0 0 28px;
+}
+.jugend-page__header h1 { margin: 0 0 6px; }
+.jugend-page__header p,
+.jugend-panel__heading p {
+    margin: 0;
     color: var(--color-text-maxcontrast);
 }
 
-.jugend-card {
-    padding: 24px;
+.jugend-main-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(260px, 0.8fr);
+    align-items: start;
+    gap: 20px;
+}
+.jugend-panel {
+    min-width: 0;
+    padding: clamp(18px, 2vw, 28px);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius-large);
     background: var(--color-main-background);
+    box-shadow: 0 1px 2px var(--color-box-shadow);
 }
-
-.jugend-card label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-}
-
-.jugend-card textarea {
-    box-sizing: border-box;
-    width: 100%;
-    min-height: 180px;
-    resize: vertical;
-}
-
-.jugend-message-meta,
-.jugend-actions {
+.jugend-panel h2 { margin: 0 0 8px; font-size: 1.25rem; }
+.jugend-panel__heading {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
-    margin-top: 12px;
+    margin-bottom: 24px;
 }
-
-.jugend-message-meta {
-    color: var(--color-text-maxcontrast);
-    font-size: 0.9rem;
+.jugend-label {
+    display: block;
+    margin: 0 0 8px;
+    color: var(--color-main-text);
+    font-weight: 600;
 }
-
-.jugend-feedback {
-    margin: 12px 0 0;
-}
-
-.jugend-feedback.warning {
-    color: var(--color-warning);
-}
-
-#jugend-settings {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 24px;
-}
-
-#jugend-settings h2 {
-    margin: 24px 0 12px;
-}
-
-#jugend-settings input {
-    box-sizing: border-box;
+.jugend-composer textarea {
     display: block;
     width: 100%;
-    max-width: 680px;
-    margin: 6px 0 16px;
+    min-height: clamp(220px, 34vh, 420px);
+    padding: 14px 16px;
+    resize: vertical;
+    border: 2px solid var(--color-border-dark);
+    border-radius: var(--border-radius);
+    background: var(--color-main-background);
+    color: var(--color-main-text);
+    font: inherit;
+    line-height: 1.55;
 }
+.jugend-composer textarea:focus,
+.jugend-field input:focus {
+    outline: 2px solid var(--color-main-background);
+    outline-offset: 1px;
+    border-color: var(--color-primary-element);
+}
+.jugend-editor-footer,
+.jugend-form-actions,
+.jugend-section-actions,
+.jugend-settings-footer,
+.jugend-secret-controls,
+.jugend-copy-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.jugend-editor-footer { justify-content: space-between; margin-top: 10px; }
+.jugend-muted,
+.jugend-field-hint { color: var(--color-text-maxcontrast); font-size: 0.9rem; }
+.jugend-form-actions { justify-content: flex-end; margin-top: 22px; }
+.jugend-form-actions button,
+.jugend-settings-footer > button { min-height: 44px; padding-inline: 22px; }
+.jugend-channel-list { list-style: none; padding: 0; margin: 22px 0; }
+.jugend-channel-list li { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 18px; }
+.jugend-channel-list small { display: block; margin-top: 4px; color: var(--color-text-maxcontrast); }
+.jugend-channel-dot {
+    flex: 0 0 10px; width: 10px; height: 10px; margin-top: 5px;
+    border-radius: 50%; background: var(--color-primary-element);
+}
+.jugend-result { margin-top: 20px; }
+.jugend-feedback { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+.jugend-feedback.success { color: var(--color-success); }
+.jugend-feedback.warning { color: var(--color-error); }
 
-#jugend-settings hr {
-    margin: 24px 0;
-    border: 0;
+.jugend-settings-form { display: grid; gap: 20px; }
+.jugend-settings-section { width: 100%; }
+.jugend-service-mark {
+    flex: 0 0 auto; padding: 6px 10px; border-radius: var(--border-radius);
+    background: var(--color-background-dark); color: var(--color-text-maxcontrast);
+    font-size: 0.75rem; font-weight: 700; letter-spacing: .04em;
+}
+.jugend-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 24px;
+}
+.jugend-field { min-width: 0; }
+.jugend-field--wide { grid-column: 1 / -1; }
+.jugend-field input.input-field {
+    display: block; width: 100%; max-width: none; min-height: 42px;
+    margin: 0; padding: 8px 12px;
+    border: 1px solid var(--color-border-dark);
+    border-radius: var(--border-radius);
+    background: var(--color-main-background);
+    color: var(--color-main-text);
+}
+.jugend-secret-controls { margin-top: 9px; }
+.jugend-secret-status {
+    display: inline-flex; align-items: center; min-height: 28px;
+    color: var(--color-text-maxcontrast); font-size: .9rem;
+}
+.jugend-secret-status[data-configured="1"] { color: var(--color-success); }
+.jugend-secret-clear { min-height: 30px; }
+.jugend-field-hint { margin: 8px 0 0; }
+.jugend-webhook {
+    margin-top: 24px; padding: 16px;
+    border-radius: var(--border-radius);
+    background: var(--color-background-dark);
+}
+.jugend-copy-row { align-items: stretch; }
+.jugend-copy-row code {
+    flex: 1 1 320px; min-width: 0; padding: 10px;
+    overflow-wrap: anywhere; white-space: normal;
+    color: var(--color-main-text);
+}
+.jugend-section-actions {
+    margin-top: 22px; padding-top: 18px;
     border-top: 1px solid var(--color-border);
 }
-
-.settings-hint {
-    color: var(--color-text-maxcontrast);
-    font-size: 0.9rem;
+.jugend-test-result { color: var(--color-text-maxcontrast); font-size: .9rem; }
+.jugend-test-result.success { color: var(--color-success); }
+.jugend-test-result.error { color: var(--color-error); }
+.jugend-settings-footer {
+    position: sticky; bottom: 0; z-index: 10;
+    justify-content: space-between; margin: 0;
+    padding: 16px 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-large);
+    background: var(--color-main-background);
+    box-shadow: 0 -4px 18px var(--color-box-shadow);
 }
+.jugend-settings-footer .jugend-feedback { flex: 1 1 260px; }
 
-#jugend-feedback, #jugend-settings-feedback { white-space: pre-line; }
-#jugend-feedback.success { color: var(--color-success); }
-#jugend-feedback.warning { color: var(--color-warning); }
+@media (max-width: 900px) {
+    .jugend-main-layout { grid-template-columns: minmax(0, 1fr); }
+    .jugend-help-panel { order: 2; }
+}
+@media (max-width: 650px) {
+    .jugend-page { padding: 14px; }
+    .jugend-page__header { flex-direction: column; align-items: stretch; margin-bottom: 18px; }
+    .jugend-page__header > a { align-self: flex-start; }
+    .jugend-fields { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .jugend-field--wide { grid-column: auto; }
+    .jugend-settings-footer { position: static; align-items: stretch; flex-direction: column-reverse; }
+    .jugend-settings-footer > button { width: 100%; }
+    .jugend-form-actions { justify-content: stretch; }
+    .jugend-form-actions button { width: 100%; }
+}
