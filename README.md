@@ -17,6 +17,10 @@ Native Nextcloud app replacing the existing JugendSendClient.
 - Settings for all endpoints, IDs, interfaces and credentials. Secrets are never returned to the browser and are marked as sensitive Nextcloud app-config values. This flag excludes them from filtered config listings; it is **not encryption**. Secret fields remain blank on reload, can be left unchanged, or explicitly cleared.
 - GitHub Actions checks PHP syntax, JavaScript syntax and app metadata XML.
 
+## User interface
+
+The app uses a responsive, full-width layout with Nextcloud theme variables and panel-based content areas. Administrator settings are grouped by integration. Secret values are never displayed; entering a new value replaces the stored secret, leaving the field empty keeps it, and the explicit remove action deletes it. Connection tests save the current form values before testing the selected integration.
+
 ## Runtime behavior and limitations
 
 - Sending currently runs synchronously in the web request. A large recipient list or multipart SMS campaign can exceed PHP/proxy timeouts. A queued job and persisted delivery history are not included in this first replacement slice.
