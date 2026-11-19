@@ -63,7 +63,8 @@ class SettingsController extends Controller {
     ): JSONResponse {
         foreach (['authentik_url' => $authentik_url, 'talk_url' => $talk_url, 'sms_gateway_url' => $sms_gateway_url] as $key => $url) {
             $url = trim($url);
-            if ($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false) {
+            $scheme = strtolower((string)parse_url($url, PHP_URL_SCHEME));
+            if ($url !== '' && (filter_var($url, FILTER_VALIDATE_URL) === false || !in_array($scheme, ['http', 'https'], true))) {
                 return new JSONResponse(['saved' => false, 'message' => 'Ungültige URL in ' . $key . '.'], 400);
             }
         }
