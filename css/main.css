@@ -82,3 +82,7 @@
     color: var(--color-text-maxcontrast);
     font-size: 0.9rem;
 }
+
+#jugend-feedback, #jugend-settings-feedback { white-space: pre-line; }
+#jugend-feedback.success { color: var(--color-success); }
+#jugend-feedback.warning { color: var(--color-warning); }
