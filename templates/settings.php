@@ -7,6 +7,7 @@ $configured = $_['configured'];
 $backUrl = $_['backUrl'];
 $talkWebhookUrl = $_['talkWebhookUrl'];
 ?>
+<div id="app-content">
 <div id="jugend-settings" class="jugend-page">
     <header class="jugend-page__header">
         <div>
@@ -158,4 +159,5 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             <button type="submit" class="primary" id="jugend-save-settings"><?php p($l->t('Alle Einstellungen speichern')); ?></button>
         </div>
     </form>
+</div>
 </div>

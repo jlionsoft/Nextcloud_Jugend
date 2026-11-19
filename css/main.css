@@ -1,4 +1,10 @@
 /* Native Nextcloud app layout: use the complete app-content area and theme variables. */
+/* Nextcloud's #content is a fixed-height, non-scrolling container; #app-content is the scroll area. */
+#app-content {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
 .jugend-page {
     box-sizing: border-box;
     width: 100%;
