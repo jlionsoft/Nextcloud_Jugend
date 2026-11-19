@@ -56,23 +56,39 @@ GSM;
         $extended = "^{}\\[~]|€";
         $chars = preg_split('//u', $message, -1, PREG_SPLIT_NO_EMPTY);
         if ($chars === false) { throw new RuntimeException('Nachricht enthält ungültiges UTF-8.'); }
-        $parts = [];
-        $current = '';
-        $slots = 0;
         foreach ($chars as $char) {
             if (!str_contains($basic, $char) && !str_contains($extended, $char)) {
                 throw new RuntimeException('Nicht unterstütztes GSM-7-Zeichen: ' . $char . '. Bitte Nachricht anpassen.');
             }
-            $cost = str_contains($extended, $char) ? 2 : 1;
-            if ($slots + $cost > 150) {
-                $parts[] = trim($current);
-                $current = '';
-                $slots = 0;
-            }
-            $current .= $char;
-            $slots += $cost;
         }
-        if ($current !== '' || $parts === []) { $parts[] = trim($current); }
-        return array_values(array_filter($parts, static fn($part) => $part !== ''));
+
+        $parts = [];
+        $start = 0;
+        $length = count($chars);
+        while ($start < $length) {
+            $end = $start;
+            $slots = 0;
+            $lastWhitespace = -1;
+            while ($end < $length) {
+                $cost = str_contains($extended, $chars[$end]) ? 2 : 1;
+                if ($slots + $cost > 150) { break; }
+                $slots += $cost;
+                if (preg_match('/^\s$/u', $chars[$end]) === 1) { $lastWhitespace = $end; }
+                $end++;
+            }
+            if ($end === $length) {
+                $parts[] = trim(implode('', array_slice($chars, $start, $end - $start)));
+                break;
+            }
+            if ($end === $start) {
+                throw new RuntimeException('Ein Zeichen überschreitet die zulässige SMS-Teilnachrichtenlänge.');
+            }
+            $split = $lastWhitespace > $start ? $lastWhitespace : $end;
+            $part = trim(implode('', array_slice($chars, $start, $split - $start)));
+            if ($part !== '') { $parts[] = $part; }
+            $start = $split;
+            while ($start < $length && preg_match('/^\s$/u', $chars[$start]) === 1) { $start++; }
+        }
+        return $parts;
     }
 }
