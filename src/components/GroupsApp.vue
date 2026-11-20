@@ -39,8 +39,12 @@
 							<p class="jugend-muted">{{ tr('Wähle die Mitglieder und markiere genau zwei Personen als Gruppenleitung.') }}</p>
 							<div class="jugend-membership-list">
 								<div v-for="user in users" :key="user.uid" class="jugend-member-row">
-									<label class="jugend-member-label"><input v-model="selectedMembers" type="checkbox" :value="user.uid"> {{ user.displayName }} ({{ user.uid }})</label>
-									<label class="jugend-leader-label"><input v-model="selectedLeaders" type="checkbox" :value="user.uid" :disabled="!selectedMembers.includes(user.uid)"> Gruppenleitung</label>
+									<NcCheckboxRadioSwitch v-model="selectedMembers" type="checkbox" :value="user.uid">
+										{{ user.displayName }} ({{ user.uid }})
+									</NcCheckboxRadioSwitch>
+									<NcCheckboxRadioSwitch v-model="selectedLeaders" type="checkbox" :value="user.uid" :disabled="!selectedMembers.includes(user.uid)">
+										Gruppenleitung
+									</NcCheckboxRadioSwitch>
 								</div>
 							</div>
 							<NcButton type="submit" variant="primary" :disabled="saving">{{ tr('Mitgliedschaften speichern') }}</NcButton>
@@ -63,6 +67,7 @@ import NcAppNavigationItem from '@nextcloud/vue/components/NcAppNavigationItem'
 import NcAppContent from '@nextcloud/vue/components/NcAppContent'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
+import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
 
 const props = defineProps({ navigation: { type: Array, required: true } })
 const tr = (text) => t('jugend', text)

@@ -49,14 +49,6 @@
     box-sizing: border-box;
 }
 
-/*
- * Nextcloud's core CSS sets "display: block" on section/aside/dialog elements, which overrides the
- * browser default for the hidden attribute (e.g. the empty result panel before the first send).
- */
-.jugend-page [hidden] {
-    display: none !important;
-}
-
 /* ---------------------------------------------------------------------------
  * Page header
  * ------------------------------------------------------------------------- */
@@ -129,25 +121,6 @@
     margin: 0 0 var(--jugend-space-2);
     color: var(--color-main-text);
     font-weight: 600;
-}
-
-.jugend-composer textarea {
-    display: block;
-    width: 100%;
-    min-height: clamp(calc(var(--jugend-grid) * 50), 34vh, calc(var(--jugend-grid) * 105));
-    margin: 0;
-    padding: var(--jugend-space-3) var(--jugend-space-4);
-    resize: vertical;
-    border: var(--border-width-input, 1px) solid var(--color-border-maxcontrast);
-    border-radius: var(--border-radius-element, 8px);
-    background: var(--color-main-background);
-    color: var(--color-main-text);
-    font: inherit;
-    line-height: var(--default-line-height, 1.5);
-}
-
-.jugend-composer textarea::placeholder {
-    color: var(--color-text-maxcontrast);
 }
 
 .jugend-editor-footer,
@@ -241,67 +214,6 @@
 }
 
 /* ---------------------------------------------------------------------------
- * Confirmation dialog (native <dialog>)
- * ------------------------------------------------------------------------- */
-/*
- * Nextcloud's core CSS resets all <dialog> elements to "display: block; margin: 0". That makes a
- * closed dialog visible in the page flow and stops an open modal from being centered, so both
- * browser defaults are restored explicitly here.
- */
-.jugend-dialog:not([open]) {
-    display: none;
-}
-
-.jugend-dialog[open] {
-    position: fixed;
-    inset: 0;
-    margin: auto;
-    height: fit-content;
-    max-height: calc(100% - var(--jugend-space-8));
-    overflow: auto;
-}
-
-/* The dialog sits inside .jugend-page, so it inherits the --jugend-* tokens. */
-.jugend-dialog {
-    width: min(calc(var(--jugend-grid) * 120), calc(100vw - var(--jugend-space-8)));
-    max-width: none;
-    padding: 0;
-    border: 0;
-    border-radius: var(--border-radius-container-large, 16px);
-    background: var(--color-main-background);
-    color: var(--color-main-text);
-    box-shadow: 0 0 calc(var(--jugend-grid) * 5) var(--color-box-shadow);
-}
-
-.jugend-dialog::backdrop {
-    background: rgba(0, 0, 0, 0.5);
-}
-
-.jugend-dialog__form {
-    padding: var(--jugend-space-6);
-}
-
-.jugend-dialog__form h2 {
-    margin: 0 0 var(--jugend-space-3);
-    font-size: var(--jugend-font-heading);
-    font-weight: 600;
-    line-height: 1.3;
-}
-
-.jugend-dialog__text {
-    margin: 0;
-    overflow-wrap: anywhere;
-}
-
-.jugend-dialog__actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: var(--jugend-space-2);
-    margin-top: var(--jugend-space-6);
-}
-
-/* ---------------------------------------------------------------------------
  * Admin settings (native Nextcloud settings section: div.section > h2 > h3)
  * ------------------------------------------------------------------------- */
 #jugend-settings {
@@ -356,13 +268,6 @@
     display: block;
     margin: 0 0 var(--jugend-space-1);
     font-weight: 600;
-}
-
-.jugend-field input:not([type='hidden']) {
-    display: block;
-    width: 100%;
-    max-width: calc(var(--jugend-grid) * 150);
-    margin: 0;
 }
 
 .jugend-field .settings-hint {
@@ -469,9 +374,6 @@
         flex-direction: column-reverse;
     }
 
-    .jugend-dialog__actions button {
-        flex: 1 1 auto;
-    }
 }
 
 /* Organisation planning */
@@ -521,16 +423,3 @@
 
 
 /* Native Nextcloud-style navigation and grouped settings */
-.jugend-settings-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--jugend-space-2);
-    margin: 0 0 var(--jugend-space-6);
-    padding: var(--jugend-space-3) 0;
-    border-top: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
-}
-
-.jugend-settings-nav a {
-    text-decoration: none;
-}

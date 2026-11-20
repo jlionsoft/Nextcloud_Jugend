@@ -30,8 +30,18 @@
 							<div class="jugend-form-actions">
 								<NcButton variant="secondary" @click="loadPreview">{{ tr('Vorschau aktualisieren') }}</NcButton>
 								<NcButton variant="secondary" :disabled="!previewValid" @click="prepareResources">{{ tr('Ressourcen vorbereiten / erneut versuchen') }}</NcButton>
-								<NcButton variant="primary" :disabled="!activationReady" @click="activatePeriod">{{ tr('Periode aktivieren') }}</NcButton>
+								<NcButton variant="primary" :disabled="!activationReady" @click="confirmActivation = true">{{ tr('Periode aktivieren') }}</NcButton>
 							</div>
+							<NcModal v-if="confirmActivation" :name="tr('Periode aktivieren')" @close="confirmActivation = false">
+								<div class="jugend-dialog__form">
+									<h2>{{ tr('Periode aktivieren') }}</h2>
+									<p>Organisationsperiode „{{ selectedPeriod.title }}“ jetzt aktivieren?</p>
+									<div class="jugend-dialog__actions">
+										<NcButton @click="confirmActivation = false">{{ tr('Abbrechen') }}</NcButton>
+										<NcButton variant="primary" @click="activatePeriod">{{ tr('Periode aktivieren') }}</NcButton>
+									</div>
+								</div>
+							</NcModal>
 						</section>
 						<section v-if="selectedPeriod?.status === 'active'" class="jugend-organization-form">
 							<h3>{{ tr('Ressourcen der aktiven Periode') }}</h3>
@@ -45,11 +55,11 @@
 						<form class="jugend-organization-form" @submit.prevent="createPeriod">
 							<h3>{{ tr('Neue Periode planen') }}</h3>
 							<div class="jugend-fields">
-								<div class="jugend-field"><label>{{ tr('Schlüssel') }}</label><input v-model="periodForm.key" class="input-field" required maxlength="32"></div>
-								<div class="jugend-field"><label>{{ tr('Bezeichnung') }}</label><input v-model="periodForm.title" class="input-field" required maxlength="128"></div>
-								<div class="jugend-field"><label>{{ tr('Beginn') }}</label><input v-model="periodForm.startsOn" class="input-field" type="date"></div>
-								<div class="jugend-field"><label>{{ tr('Ende') }}</label><input v-model="periodForm.endsOn" class="input-field" type="date"></div>
-								<div class="jugend-field jugend-field--wide"><label>{{ tr('Vorlage') }}</label><select v-model="periodForm.sourcePeriodId" class="input-field"><option value="">{{ tr('Leere Periode erstellen') }}</option><option v-for="period in periods" :key="period.id" :value="period.id">{{ period.title }}</option></select></div>
+								<div class="jugend-field"><NcTextField v-model="periodForm.key" :label="tr('Schlüssel')" label-outside required maxlength="32" /></div>
+								<div class="jugend-field"><NcTextField v-model="periodForm.title" :label="tr('Bezeichnung')" label-outside required maxlength="128" /></div>
+								<div class="jugend-field"><NcTextField v-model="periodForm.startsOn" :label="tr('Beginn')" label-outside type="date" /></div>
+								<div class="jugend-field"><NcTextField v-model="periodForm.endsOn" :label="tr('Ende')" label-outside type="date" /></div>
+								<div class="jugend-field jugend-field--wide"><NcSelect v-model="periodTemplate" :options="periodTemplateOptions" label="title" :input-label="tr('Vorlage')" label-outside /></div>
 							</div>
 							<NcButton type="submit" variant="primary" :disabled="periodSaving">{{ tr('Entwurf erstellen') }}</NcButton>
 						</form>
@@ -65,9 +75,9 @@
 						<form v-if="selectedPeriod?.status === 'draft'" class="jugend-organization-form" @submit.prevent="createGroup">
 							<h3>{{ tr('Arbeitsgruppe hinzufügen') }}</h3>
 							<div class="jugend-fields">
-								<div class="jugend-field"><label>{{ tr('Technischer Schlüssel') }}</label><input v-model="groupForm.slug" class="input-field" required maxlength="64"></div>
-								<div class="jugend-field"><label>{{ tr('Gruppenname') }}</label><input v-model="groupForm.name" class="input-field" required maxlength="128"></div>
-								<div class="jugend-field jugend-field--wide"><label>{{ tr('Beschreibung') }}</label><input v-model="groupForm.description" class="input-field" maxlength="500"></div>
+								<div class="jugend-field"><NcTextField v-model="groupForm.slug" :label="tr('Technischer Schlüssel')" label-outside required maxlength="64" /></div>
+								<div class="jugend-field"><NcTextField v-model="groupForm.name" :label="tr('Gruppenname')" label-outside required maxlength="128" /></div>
+								<div class="jugend-field jugend-field--wide"><NcTextField v-model="groupForm.description" :label="tr('Beschreibung')" label-outside maxlength="500" /></div>
 							</div>
 							<NcButton type="submit" variant="primary">{{ tr('Gruppe anlegen') }}</NcButton>
 						</form>
@@ -75,8 +85,8 @@
 							<h3>{{ tr('Mitglieder und Gruppenleitung') }}: {{ selectedGroup.name }}</h3>
 							<div class="jugend-membership-list">
 								<div v-for="user in users" :key="user.uid" class="jugend-member-row">
-									<label class="jugend-member-label"><input v-model="membershipIds" type="checkbox" :value="user.uid"> {{ user.displayName }} ({{ user.uid }})</label>
-									<label class="jugend-leader-label"><input v-model="leaderIds" type="checkbox" :value="user.uid" :disabled="!membershipIds.includes(user.uid)"> Gruppenleitung</label>
+									<NcCheckboxRadioSwitch v-model="membershipIds" type="checkbox" :value="user.uid">{{ user.displayName }} ({{ user.uid }})</NcCheckboxRadioSwitch>
+									<NcCheckboxRadioSwitch v-model="leaderIds" type="checkbox" :value="user.uid" :disabled="!membershipIds.includes(user.uid)">Gruppenleitung</NcCheckboxRadioSwitch>
 								</div>
 							</div>
 							<NcButton type="submit" variant="primary">{{ tr('Mitgliedschaften speichern') }}</NcButton>
@@ -87,7 +97,7 @@
 					<h2>{{ tr('App-Administratoren') }}</h2>
 					<div v-for="admin in admins" :key="admin.user_id" class="jugend-member-row"><span>{{ admin.user_id }}</span><NcButton variant="secondary" @click="revokeAdmin(admin.user_id)">Entziehen</NcButton></div>
 					<div class="jugend-organization-form">
-						<select v-model="adminUserId" class="input-field"><option value="">Benutzer auswählen …</option><option v-for="user in users" :key="user.uid" :value="user.uid">{{ user.displayName }} ({{ user.uid }})</option></select>
+						<NcSelect v-model="adminSelection" :options="adminUserOptions" label="label" :input-label="tr('Benutzer auswählen')" label-outside />
 						<NcButton variant="primary" :disabled="!adminUserId" @click="grantAdmin">Berechtigung vergeben</NcButton>
 					</div>
 				</section>
@@ -103,19 +113,19 @@
 					</div>
 					<form class="jugend-organization-form" @submit.prevent="saveRole">
 						<div class="jugend-fields">
-							<div class="jugend-field"><label>Technischer Schlüssel</label><input v-model="roleForm.roleKey" class="input-field" required></div>
-							<div class="jugend-field"><label>Rollenname</label><input v-model="roleForm.name" class="input-field" required></div>
-							<div class="jugend-field jugend-field--wide"><label>Beschreibung</label><input v-model="roleForm.description" class="input-field"></div>
+							<div class="jugend-field"><NcTextField v-model="roleForm.roleKey" label="Technischer Schlüssel" label-outside required /></div>
+							<div class="jugend-field"><NcTextField v-model="roleForm.name" label="Rollenname" label-outside required /></div>
+							<div class="jugend-field jugend-field--wide"><NcTextField v-model="roleForm.description" label="Beschreibung" label-outside /></div>
 						</div>
-						<fieldset class="jugend-role-permissions"><legend>Berechtigungen</legend><label v-for="permission in permissions" :key="permission.permission_key" class="jugend-role-permission"><input v-model="roleForm.permissionKeys" type="checkbox" :value="permission.permission_key"> {{ permission.name }}</label></fieldset>
+						<fieldset class="jugend-role-permissions"><legend>Berechtigungen</legend><NcCheckboxRadioSwitch v-for="permission in permissions" :key="permission.permission_key" v-model="roleForm.permissionKeys" type="checkbox" :value="permission.permission_key">{{ permission.name }}</NcCheckboxRadioSwitch></fieldset>
 						<NcButton type="submit" variant="primary">Rolle speichern</NcButton>
 					</form>
 					<form class="jugend-organization-form" @submit.prevent="assignRole">
 						<h3>Rolle zuweisen</h3>
-						<select v-model="assignmentForm.userId" class="input-field"><option value="">Person auswählen …</option><option v-for="user in users" :key="user.uid" :value="user.uid">{{ user.displayName }} ({{ user.uid }})</option></select>
-						<select v-model="assignmentForm.roleId" class="input-field"><option value="">Rolle auswählen …</option><option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option></select>
-						<select v-model="assignmentForm.scopeType" class="input-field"><option value="global">Global</option><option value="period">Organisationsperiode</option><option value="group">Arbeitsgruppe</option></select>
-						<select v-if="assignmentForm.scopeType !== 'global'" v-model="assignmentForm.scopeId" class="input-field"><option value="">Geltungsbereich auswählen …</option><option v-for="scope in assignmentScopes" :key="scope.id" :value="scope.id">{{ scope.label }}</option></select>
+						<NcSelect v-model="assignmentUserSelection" :options="assignmentUserOptions" label="label" :input-label="tr('Person')" label-outside />
+						<NcSelect v-model="assignmentRoleSelection" :options="assignmentRoleOptions" label="label" :input-label="tr('Rolle')" label-outside />
+						<NcSelect v-model="assignmentScopeSelection" :options="assignmentScopeTypeOptions" label="label" :input-label="tr('Geltungsbereich')" label-outside />
+						<NcSelect v-if="assignmentForm.scopeType !== 'global'" v-model="assignmentScopeIdSelection" :options="assignmentScopes" label="label" :input-label="tr('Geltungsbereich')" label-outside />
 						<NcButton type="submit" variant="primary" :disabled="!assignmentForm.userId || !assignmentForm.roleId">Rolle zuweisen</NcButton>
 					</form>
 				</section>
@@ -125,7 +135,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, watch } from 'vue'
+import { reactive, ref, onMounted, watch, computed } from 'vue'
 import { loadState } from '@nextcloud/initial-state'
 import axios from '@nextcloud/axios'
 import { t } from '@nextcloud/l10n'
@@ -135,6 +145,10 @@ import NcAppNavigationItem from '@nextcloud/vue/components/NcAppNavigationItem'
 import NcAppContent from '@nextcloud/vue/components/NcAppContent'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
+import NcTextField from '@nextcloud/vue/components/NcTextField'
+import NcSelect from '@nextcloud/vue/components/NcSelect'
+import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
+import NcModal from '@nextcloud/vue/components/NcModal'
 
 const props = defineProps({ navigation: { type: Array, required: true } })
 const tr = (text) => t('jugend', text)
@@ -167,6 +181,26 @@ const roleForm = reactive({ roleId: 0, roleKey: '', name: '', description: '', p
 const assignments = ref([])
 const assignmentForm = reactive({ userId: '', roleId: '', scopeType: 'global', scopeId: '' })
 const assignmentScopes = ref([])
+const confirmActivation = ref(false)
+const periodTemplate = ref(null)
+const adminSelection = ref(null)
+const assignmentUserSelection = ref(null)
+const assignmentRoleSelection = ref(null)
+const assignmentScopeSelection = ref({ id: 'global', label: 'Global' })
+const assignmentScopeIdSelection = ref(null)
+
+const periodTemplateOptions = computed(() => [
+	{ id: '', title: tr('Leere Periode erstellen') },
+	...periods.value.map((period) => ({ id: period.id, title: period.title })),
+])
+const adminUserOptions = computed(() => users.value.map((user) => ({ id: user.uid, label: user.displayName + ' (' + user.uid + ')' })))
+const assignmentUserOptions = computed(() => users.value.map((user) => ({ id: user.uid, label: user.displayName + ' (' + user.uid + ')' })))
+const assignmentRoleOptions = computed(() => roles.value.map((role) => ({ id: role.id, label: role.name })))
+const assignmentScopeTypeOptions = [
+	{ id: 'global', label: 'Global' },
+	{ id: 'period', label: 'Organisationsperiode' },
+	{ id: 'group', label: 'Arbeitsgruppe' },
+]
 
 function navigate(url) { window.location.assign(url) }
 function show(message, type = 'info') { feedback.value = message; feedbackType.value = type }
@@ -211,6 +245,7 @@ async function selectGroup(group) {
 async function createPeriod() {
 	periodSaving.value = true
 	try {
+		periodForm.sourcePeriodId = periodTemplate.value?.id || ''
 		const endpoint = periodForm.sourcePeriodId ? urls.clonePeriod : urls.createPeriod
 		const data = { ...periodForm }
 		const payload = await request(endpoint, 'post', data)
@@ -260,7 +295,8 @@ async function prepareResources() {
 	} catch (error) { show(error.response?.data?.message || error.message, 'error') }
 }
 async function activatePeriod() {
-	if (!activationReady.value || !window.confirm('Organisationsperiode „' + selectedPeriod.value.title + '“ jetzt aktivieren?')) return
+	confirmActivation.value = false
+	if (!activationReady.value) return
 	try {
 		const payload = await request(urls.activatePeriod, 'post', { periodId: selectedPeriod.value.id })
 		show('„' + payload.period.title + '“ ist jetzt die aktive Organisationsperiode.', 'success')
@@ -285,6 +321,7 @@ async function loadAppAdmins() {
 	admins.value = (await request(urls.appAdmins)).admins || []
 }
 async function grantAdmin() {
+	adminUserId.value = adminSelection.value?.id || ''
 	await request(urls.grantAppAdmin, 'post', { userId: adminUserId.value })
 	adminUserId.value = ''
 	await loadAppAdmins()
@@ -314,7 +351,8 @@ async function deleteRole(role) {
 	await loadRoles()
 }
 
-watch(() => assignmentForm.scopeType, async (scopeType) => {
+watch(() => assignmentScopeSelection.value?.id || 'global', async (scopeType) => {
+	assignmentForm.scopeType = scopeType
 	assignmentScopes.value = []
 	assignmentForm.scopeId = ''
 	if (scopeType === 'global') return
@@ -332,6 +370,10 @@ watch(() => assignmentForm.scopeType, async (scopeType) => {
 })
 
 async function assignRole() {
+	assignmentForm.userId = assignmentUserSelection.value?.id || ''
+	assignmentForm.roleId = assignmentRoleSelection.value?.id || ''
+	assignmentForm.scopeType = assignmentScopeSelection.value?.id || 'global'
+	assignmentForm.scopeId = assignmentScopeIdSelection.value?.id || ''
 	const data = { userId: assignmentForm.userId, roleId: assignmentForm.roleId, scopeType: assignmentForm.scopeType }
 	if (assignmentForm.scopeType !== 'global') data.scopeId = assignmentForm.scopeId
 	await request(urls.assignRole, 'post', data)

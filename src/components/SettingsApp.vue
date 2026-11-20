@@ -8,8 +8,15 @@
 				<p class="settings-hint">{{ section.hint }}</p>
 				<div class="jugend-fields">
 					<div v-for="field in section.fields" :key="field.name" class="jugend-field" :class="{ 'jugend-field--wide': field.wide }">
-						<label :for="field.name">{{ field.label }}</label>
-						<input :id="field.name" v-model="form[field.name]" class="input-field" :name="field.name" :type="field.type || 'text'" :autocomplete="field.autocomplete" :placeholder="field.placeholder">
+						<NcTextField
+							:id="field.name"
+							v-model="form[field.name]"
+							:name="field.name"
+							:type="field.type || 'text'"
+							:label="field.label"
+							label-outside
+							:autocomplete="field.autocomplete"
+							:placeholder="field.placeholder" />
 						<p v-if="field.hint" class="settings-hint">{{ field.hint }}</p>
 						<div v-if="field.secret" class="jugend-secret-controls">
 							<span class="jugend-secret-status" :data-configured="configured[field.name] ? '1' : '0'">
@@ -50,6 +57,7 @@ import axios from '@nextcloud/axios'
 import { t } from '@nextcloud/l10n'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
+import NcTextField from '@nextcloud/vue/components/NcTextField'
 
 const props = defineProps({
 	values: { type: Object, required: true },

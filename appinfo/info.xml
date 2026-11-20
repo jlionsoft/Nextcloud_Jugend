@@ -5,7 +5,7 @@
   <name>Jugend</name>
   <summary>Organisationsverwaltung und Kommunikation für die Jugendabteilung</summary>
   <description>Verwaltet Organisationsperioden, Arbeitsgruppen und Kommunikation der Jugendabteilung.</description>
-  <version>0.12.7</version>
+  <version>0.12.8</version>
   <licence>AGPL-3.0-or-later</licence>
   <author>jlionsoft</author>
   <namespace>Jugend</namespace>
