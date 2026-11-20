@@ -35,6 +35,11 @@ class PageController extends Controller {
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function index(): TemplateResponse {
+        $userId = $this->userSession->getUser()?->getUID();
+        if ($userId === null || !$this->authorization->isAppUser($userId)) {
+            return new TemplateResponse($this->appName, 'forbidden', [], 'error');
+        }
+
         Util::addScript($this->appName, 'main');
         Util::addStyle($this->appName, 'main');
 
@@ -54,7 +59,6 @@ class PageController extends Controller {
             'smsSummary' => $this->l->t('SMS: {sent}/{total} erfolgreich'),
         ]);
 
-        $userId = $this->userSession->getUser()?->getUID();
         $isAdmin = $userId !== null && $this->groupManager->isAdmin($userId);
         $settingsUrl = $isAdmin ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => AdminSection::SECTION_ID]) : null;
         $isAppAdmin = $userId !== null && $this->authorization->isAppAdmin($userId);

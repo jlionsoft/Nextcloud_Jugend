@@ -5,7 +5,7 @@ Native Nextcloud app replacing the existing JugendSendClient.
 ## Implemented in this branch
 
 - Native Nextcloud PHP AppFramework UI and API.
-- Nextcloud session authentication; every user who can open the app can send messages.
+- Nextcloud session authentication. The configured Authentik group is the server-side allow-list for app pages, RBAC-protected APIs and message sending; membership lookup fails closed. Every active member of this group can use the app and send messages.
 - Technical settings and connection tests are restricted to Nextcloud administrators.
 - Authentik group lookup using a bearer token. All active group members are Matrix recipients; only users with `sms=true` and a non-empty `phone_number` attribute are SMS recipients.
 - Matrix Client-Server API integration: verify bot identity, detect existing accounts, reuse joined direct rooms from `m.direct`, create and invite to trusted private rooms when needed, update `m.direct`, and send `m.room.message` events. Rate-limit responses are retried with backoff.
@@ -37,18 +37,19 @@ Configure the following in Nextcloud's administration settings (Administration s
 
 | Service | Settings |
 |---|---|
-| Authentik | Base URL, group ID, API token |
+| Authentik | Base URL, group ID, API token; this group controls app access and message recipients |
+| Nextcloud resource provisioning | Nextcloud base URL, service account and app password, service-only group, existing root Groupfolder, department access group |
 | Nextcloud Talk | Nextcloud base URL, room token, bot secret |
 | Matrix | Homeserver URL, server name, bot user ID, bot access token |
 | MikroTik SMS | Gateway base URL, RouterOS username/password, LTE interface (default `lte1`) |
 
-The Nextcloud server must be able to reach both Authentik and the MikroTik gateway. Never commit credentials, tokens, phone numbers or production configuration to this repository.
+The Nextcloud server must be able to reach Authentik, the resource-provisioning Nextcloud endpoint and the MikroTik gateway. The provisioning account should be dedicated and minimally privileged; its service-only group must be the only group with access to the root Groupfolder. The configured department group must be synchronized from Authentik to Nextcloud. Never commit credentials, tokens, phone numbers or production configuration to this repository.
 
 ## Installation and test sequence
 
 1. Place the app directory (the directory containing `appinfo/info.xml`) at `apps-extra/jugend` on the Nextcloud server.
 2. Enable it with `sudo -u www-data php occ app:enable jugend` from the Nextcloud installation directory.
-3. As a Nextcloud administrator, open **Jugend → Einstellungen**, enter the Authentik, Matrix, Talk and RouterOS settings, and save.
+3. As a Nextcloud administrator, open **Jugend → Einstellungen**, configure the Authentik access/recipient group, Matrix, Talk, RouterOS and the dedicated Nextcloud resource-provisioning account, then save.
 4. Run the Authentik, Matrix and SMS gateway connection tests. The Talk test sends a message to the configured room.
 5. Copy the displayed Talk webhook URL into the Talk bot configuration and use the same bot secret.
 6. Test the webhook by sending `!ping` in the Talk room; the bot should answer `🏓 pong`.
@@ -70,7 +71,9 @@ Die Organisationsverwaltung ist unter `/apps/jugend/organization` verfügbar und
 - Audit-Log für zentrale Organisations-, Rollen- und Provisionierungsaktionen.
 - Authentik-Arbeitsgruppengruppen, Nextcloud-Gruppenfreigaben, Talk-Räume, Groupfolder-Unterordner und CalDAV-Kalender.
 - Wiederholbare Provisionierungsjobs mit persistiertem Status, Fehlertext, Versuchsanzahl und Lease-Fencing.
-- Archivierte Dateiordner und Kalender werden lesend für die aktuelle Abteilungsgruppe freigegeben; historische Talk-Räume werden mit aktuellen Abteilungsmitgliedern abgeglichen.
+- Aktive Talk-Räume, Groupfolders und Kalender erhalten die jeweils aktuelle Gruppenmitgliedschaft. Jede Organisationsperiode bekommt eigene Talk-Räume.
+- Archivierte Dateiordner und Kalender werden ausschließlich lesend für die aktuelle Abteilungsgruppe freigegeben; historische Talk-Räume werden mit allen aktuellen Abteilungsmitgliedern abgeglichen. Ausgeschiedene Personen verlieren dadurch den Archivzugriff, während die historischen Inhalte erhalten bleiben.
+- Der automatische Ressourcenabgleich läuft als Nextcloud-Hintergrundjob im 15-Minuten-Intervall; fehlgeschlagene Synchronisationen werden mit Status und Fehlerdetails für App-Administratoren protokolliert.
 - Gruppenleitungen sehen ihre aktiven Arbeitsgruppen und gleichnamige Gruppen in Entwurfsperioden. Über den stabilen Gruppenslug können sie Mitglieder und die zwei Leitungsrollen für den nächsten Organisationswechsel planen.
 
 ### Vorbereiteter Organisationswechsel

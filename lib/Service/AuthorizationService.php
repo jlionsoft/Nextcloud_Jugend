@@ -5,16 +5,50 @@ namespace OCA\Jugend\Service;
 
 use OCP\IDBConnection;
 use OCP\IGroupManager;
+use Psr\Log\LoggerInterface;
 
 class AuthorizationService {
     private const ROLE_KEY = 'app_admin';
+    private ?array $appAccessUsers = null;
     private const PERMISSIONS = [
         'organization.manage' => ['Organisationsverwaltung', 'Perioden und Arbeitsgruppen verwalten'],
         'roles.manage' => ['Rollen verwalten', 'App-Administratoren zuweisen und entziehen'],
         'group.members.manage' => ['Gruppenmitgliedschaften verwalten', 'Mitglieder und Leitung der eigenen Arbeitsgruppe verwalten'],
     ];
 
-    public function __construct(private IDBConnection $db, private IGroupManager $groups) {}
+    public function __construct(
+        private IDBConnection $db,
+        private IGroupManager $groups,
+        private AuthentikService $authentik,
+        private LoggerInterface $logger,
+    ) {}
+
+    /**
+     * Checks the configured Authentik department group as the authoritative
+     * app-access allow-list. A failed lookup is deliberately fail-closed.
+     */
+    public function isAppUser(string $uid): bool {
+        if ($uid === '') {
+            return false;
+        }
+        if ($this->appAccessUsers === null) {
+            $this->appAccessUsers = [];
+            try {
+                foreach ($this->authentik->getRecipients() as $recipient) {
+                    $allowedUid = trim((string)($recipient['username'] ?? ''));
+                    if ($allowedUid !== '') {
+                        $this->appAccessUsers[$allowedUid] = true;
+                    }
+                }
+            } catch (\Throwable $e) {
+                $this->logger->error('Jugend-App-Zugriffsgruppe konnte nicht geprüft werden; Zugriff wird verweigert.', [
+                    'app' => 'jugend',
+                    'exception' => $e,
+                ]);
+            }
+        }
+        return isset($this->appAccessUsers[$uid]);
+    }
 
     private function ensureDefinitions(): int {
         $qb = $this->db->getQueryBuilder();
@@ -62,10 +96,10 @@ class AuthorizationService {
     }
 
     public function can(string $uid, string $permission, ?string $scopeType = null, ?int $scopeId = null): bool {
-        if ($uid === '' || !isset(self::PERMISSIONS[$permission])) {
+        if ($uid === '' || !isset(self::PERMISSIONS[$permission]) || !$this->isAppUser($uid)) {
             return false;
         }
-        // Global Nextcloud administrators are the trusted bootstrap principals.
+        // Global Nextcloud administrators are trusted bootstrap principals inside the app access group.
         if ($this->groups->isAdmin($uid)) {
             return true;
         }

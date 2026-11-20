@@ -5,6 +5,6 @@ declare(strict_types=1);
 <div id="app-content">
     <div class="section">
         <h2><?php p($l->t('Keine Berechtigung')); ?></h2>
-        <p><?php p($l->t('Die Organisationsverwaltung ist derzeit nur für Nextcloud-Administratoren freigeschaltet.')); ?></p>
+        <p><?php p($l->t('Du hast keine Berechtigung, diese Seite aufzurufen.')); ?></p>
     </div>
 </div>
