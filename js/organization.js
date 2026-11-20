@@ -294,10 +294,29 @@
     document.getElementById('jugend-role-cancel').addEventListener('click', resetRoleForm);
     const assignmentScope = document.getElementById('jugend-assignment-scope');
     const assignmentScopeIdWrap = document.getElementById('jugend-assignment-scope-id-wrap');
-    assignmentScope.addEventListener('change', () => {
-        assignmentScopeIdWrap.hidden = assignmentScope.value === 'global';
-        document.getElementById('jugend-assignment-scope-id').required = assignmentScope.value !== 'global';
-    });
+    async function updateAssignmentScopeOptions() {
+        const scopeSelect = document.getElementById('jugend-assignment-scope-id');
+        const scopeType = assignmentScope.value;
+        assignmentScopeIdWrap.hidden = scopeType === 'global';
+        scopeSelect.required = scopeType !== 'global';
+        scopeSelect.disabled = scopeType === 'global';
+        scopeSelect.replaceChildren(new Option(scopeType === 'group' ? 'Arbeitsgruppe auswählen …' : 'Periode auswählen …', ''));
+        if (scopeType === 'global') return;
+        try {
+            const periodPayload = await request(urls.periods);
+            if (scopeType === 'period') {
+                periodPayload.periods.forEach((period) => scopeSelect.add(new Option(period.title + ' (' + period.status + ')', period.id)));
+            } else {
+                for (const period of periodPayload.periods) {
+                    const groupPayload = await request(urls.groups + '?periodId=' + encodeURIComponent(period.id));
+                    groupPayload.groups.forEach((group) => scopeSelect.add(new Option(period.title + ' — ' + group.name, group.id)));
+                }
+            }
+        } catch (error) {
+            showFeedback(error.message, true);
+        }
+    }
+    assignmentScope.addEventListener('change', updateAssignmentScopeOptions);
     document.getElementById('jugend-role-assignment-form').addEventListener('submit', async (event) => {
         event.preventDefault();
         const data = {
@@ -311,7 +330,7 @@
             await request(urls.assignRole, 'POST', data);
             showFeedback('Rollenzuweisung wurde gespeichert.');
             event.currentTarget.reset();
-            assignmentScope.dispatchEvent(new Event('change'));
+            await updateAssignmentScopeOptions();
             await loadRoles();
         } catch (error) { showFeedback(error.message, true); }
     });
