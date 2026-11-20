@@ -509,6 +509,69 @@ class ResourceProvisioningService {
         return 'jugend-p' . $periodId . '-g' . $groupId;
     }
 
+    /** Returns current and archived status for every provisioned resource type. */
+    public function getResourceProvisioningStatus(int $periodId): array {
+        $period = $this->organization->getPeriod($periodId);
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('group_id', 'resource_type', 'status', 'attempts', 'last_error', 'updated_at')
+            ->from('jugend_provisioning')
+            ->where($qb->expr()->eq('period_id', $qb->createNamedParameter($periodId)));
+        $byGroup = [];
+        foreach ($qb->executeQuery()->fetchAll() as $row) {
+            $byGroup[(int)$row['group_id']][(string)$row['resource_type']] = [
+                'status' => $row['status'],
+                'attempts' => (int)$row['attempts'],
+                'lastError' => $row['last_error'],
+                'updatedAt' => (int)$row['updated_at'],
+            ];
+        }
+        $groups = [];
+        foreach ($this->organization->listGroups($periodId) as $group) {
+            $groups[] = [
+                'groupId' => (int)$group['id'],
+                'groupName' => $group['name'],
+                'resources' => $byGroup[(int)$group['id']] ?? [],
+            ];
+        }
+
+        $archivedQuery = $this->db->getQueryBuilder();
+        $archivedQuery->select(
+            'jp.period_id',
+            'jp.group_id',
+            'jp.resource_type',
+            'jp.status',
+            'jp.attempts',
+            'jp.last_error',
+            'jp.updated_at',
+            'g.name AS group_name',
+            'p.title AS period_title'
+        )
+            ->from('jugend_provisioning', 'jp')
+            ->innerJoin('jp', 'jugend_groups', 'g', $archivedQuery->expr()->eq('jp.group_id', 'g.id'))
+            ->innerJoin('g', 'jugend_periods', 'p', $archivedQuery->expr()->eq('g.period_id', 'p.id'))
+            ->where($archivedQuery->expr()->eq('p.status', $archivedQuery->createNamedParameter('archived')))
+            ->orderBy('p.starts_on', 'DESC')
+            ->addOrderBy('g.sort_order', 'ASC');
+        $archivedByGroup = [];
+        foreach ($archivedQuery->executeQuery()->fetchAll() as $row) {
+            $key = (int)$row['period_id'] . ':' . (int)$row['group_id'];
+            if (!isset($archivedByGroup[$key])) {
+                $archivedByGroup[$key] = [
+                    'periodTitle' => $row['period_title'],
+                    'groupName' => $row['group_name'],
+                    'resources' => [],
+                ];
+            }
+            $archivedByGroup[$key]['resources'][(string)$row['resource_type']] = [
+                'status' => $row['status'],
+                'attempts' => (int)$row['attempts'],
+                'lastError' => $row['last_error'],
+                'updatedAt' => (int)$row['updated_at'],
+            ];
+        }
+        return ['period' => $period, 'groups' => $groups, 'archivedGroups' => array_values($archivedByGroup)];
+    }
+
     /** Returns persisted provisioning state for the selected period. */
     public function getTalkProvisioningStatus(int $periodId): array {
         $period = $this->organization->getPeriod($periodId);
