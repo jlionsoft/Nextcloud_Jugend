@@ -71,6 +71,7 @@ Die Organisationsverwaltung ist unter `/apps/jugend/organization` verfügbar und
 - Authentik-Arbeitsgruppengruppen, Nextcloud-Gruppenfreigaben, Talk-Räume, Groupfolder-Unterordner und CalDAV-Kalender.
 - Wiederholbare Provisionierungsjobs mit persistiertem Status, Fehlertext, Versuchsanzahl und Lease-Fencing.
 - Archivierte Dateiordner und Kalender werden lesend für die aktuelle Abteilungsgruppe freigegeben; historische Talk-Räume werden mit aktuellen Abteilungsmitgliedern abgeglichen.
+- Gruppenleitungen sehen ihre aktiven Arbeitsgruppen und gleichnamige Gruppen in Entwurfsperioden. Über den stabilen Gruppenslug können sie Mitglieder und die zwei Leitungsrollen für den nächsten Organisationswechsel planen.
 
 ### Vorbereiteter Organisationswechsel
 
@@ -85,7 +86,7 @@ Die Aktivierung wird serverseitig blockiert, solange nicht für jede Arbeitsgrup
 
 ### Noch offene Arbeiten und Grenzen
 
-- Gruppenleitungen sehen ihre aktiven Arbeitsgruppen und gleichnamige Gruppen in Entwurfsperioden. Über den stabilen Gruppenslug können sie Mitglieder und die zwei Leitungsrollen für den nächsten Organisationswechsel planen.
+
 - Vollständige Laufzeit- und Integrationstests gegen die konkrete Nextcloud-35-/Talk-/Groupfolders-/Calendar-/Authentik-Installation stehen aus.
 - Eine automatische Kompensation verwaister Remote-Ressourcen nach teilweise fehlgeschlagenen API-/Datenbankoperationen fehlt.
 - Eine sichtbare Gesamtüberwachung des Hintergrundjobs einschließlich des letzten erfolgreichen Laufs fehlt.
