@@ -188,6 +188,16 @@
                 if (group.lastError) row.append(element('small', 'error', group.lastError));
                 target.append(row);
             });
+            if ((payload.archivedGroups || []).length) {
+                target.append(element('h4', '', 'Archivierte Talk-Räume'));
+                payload.archivedGroups.forEach((group) => {
+                    const row = element('div', 'jugend-member-row');
+                    row.append(element('span', '', group.periodTitle + ' · ' + group.groupName + ' · ' +
+                        (labels[group.status] || group.status) + ' · Versuche: ' + group.attempts));
+                    if (group.lastError) row.append(element('small', 'error', group.lastError));
+                    target.append(row);
+                });
+            }
         } catch (error) {
             target.replaceChildren(element('p', 'error', error.message));
         }
