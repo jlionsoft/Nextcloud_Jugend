@@ -656,6 +656,11 @@ class ResourceProvisioningService {
         return 'jugend-p' . $periodId . '-g' . $groupId;
     }
 
+    /** Whether the external provisioning service is configured. */
+    public function isConfigured(): bool {
+        return $this->client->isConfigured();
+    }
+
     /** Returns links for the resources belonging to one work group. */
     public function getGroupResourceLinks(int $groupId): array {
         $qb = $this->db->getQueryBuilder();

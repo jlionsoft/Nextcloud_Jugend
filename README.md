@@ -89,7 +89,7 @@ Die Aktivierung wird serverseitig blockiert, solange nicht für jede Arbeitsgrup
 
 - Vollständige Laufzeit- und Integrationstests gegen die konkrete Nextcloud-35-/Talk-/Groupfolders-/Calendar-/Authentik-Installation stehen aus.
 - Eine automatische Kompensation verwaister Remote-Ressourcen nach teilweise fehlgeschlagenen API-/Datenbankoperationen fehlt.
-- Eine sichtbare Gesamtüberwachung des Hintergrundjobs einschließlich des letzten erfolgreichen Laufs fehlt.
+
 - Die Vorbereitung kann Talk-Räume nicht atomar mit der lokalen Datenbankregistrierung erstellen. Bei einem Fehler genau zwischen Remote-Erstellung und lokaler Speicherung kann ein verwaister Raum entstehen.
 
 Die CI prüft Syntax und Metadaten, ersetzt aber keine Integrationstests auf der Zielinstanz. Bis diese Tests erfolgreich durchgeführt wurden, ist die Ressourcenorchestrierung nicht als produktiv verifiziert zu betrachten.
