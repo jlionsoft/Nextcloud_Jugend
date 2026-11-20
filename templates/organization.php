@@ -17,13 +17,13 @@ declare(strict_types=1);
         <main class="jugend-organization-layout">
             <section class="jugend-panel">
                 <h2><?php p($l->t('Organisationsperioden')); ?></h2>
-                <p class="jugend-muted"><?php p($l->t('Aktive und geplante Organisationsjahre. Änderungen sind zunächst Entwürfe und beeinflussen die aktive Organisation nicht.')); ?></p>
+                <p class="jugend-muted"><?php p($l->t('Aktive und geplante Organisationsperioden. Beginn und Ende sind frei wählbar; ein Wechsel ist an keinen festen Kalendertag gebunden. Entwürfe beeinflussen die aktive Organisation nicht.')); ?></p>
                 <div id="jugend-period-list" class="jugend-period-list">
                     <p class="jugend-muted"><?php p($l->t('Perioden werden geladen …')); ?></p>
                 </div>
 
                 <section id="jugend-rollover-preview" class="jugend-rollover-preview" hidden>
-                    <h3>Jahreswechsel prüfen</h3>
+                    <h3>Organisationswechsel prüfen</h3>
                     <p id="jugend-rollover-status" class="jugend-muted">Die Vorschau prüft Gruppen, Mitgliedschaften und Gruppenleitungen.</p>
                     <div id="jugend-rollover-errors" role="alert"></div>
                     <div id="jugend-rollover-summary" class="jugend-period-list"></div>
@@ -31,7 +31,7 @@ declare(strict_types=1);
                         <button type="button" id="jugend-rollover-refresh" class="secondary">Vorschau aktualisieren</button>
                         <button type="button" id="jugend-rollover-activate" class="primary" disabled>Periode aktivieren</button>
                     </div>
-                    <p class="jugend-muted">Die Aktivierung archiviert die bisher aktive Periode. Talk, Dateiordner und Kalender werden anschließend separat bereitgestellt.</p>
+                    <p class="jugend-muted">Die Aktivierung erfolgt bewusst manuell am gewünschten Wechseltermin – unabhängig vom Kalenderjahr. Dabei wird die bisher aktive Periode archiviert. Talk, Dateiordner und Kalender werden anschließend separat bereitgestellt.</p>
                 </section>
 
                 <section id="jugend-resource-provisioning" class="jugend-organization-form" hidden>
@@ -55,18 +55,18 @@ declare(strict_types=1);
                     <div class="jugend-fields">
                         <div class="jugend-field">
                             <label for="jugend-period-key"><?php p($l->t('Schlüssel')); ?></label>
-                            <input id="jugend-period-key" name="key" required maxlength="32" placeholder="2027">
+                            <input id="jugend-period-key" name="key" required maxlength="32" placeholder="z. B. saison-2027-28">
                         </div>
                         <div class="jugend-field">
                             <label for="jugend-period-title"><?php p($l->t('Bezeichnung')); ?></label>
-                            <input id="jugend-period-title" name="title" required maxlength="128" placeholder="Organisationsjahr 2027">
+                            <input id="jugend-period-title" name="title" required maxlength="128" placeholder="z. B. Saison 2027/2028">
                         </div>
                         <div class="jugend-field">
-                            <label for="jugend-period-start"><?php p($l->t('Beginn')); ?></label>
+                            <label for="jugend-period-start"><?php p($l->t('Beginn (frei wählbarer Stichtag)')); ?></label>
                             <input id="jugend-period-start" name="startsOn" type="date">
                         </div>
                         <div class="jugend-field">
-                            <label for="jugend-period-end"><?php p($l->t('Ende')); ?></label>
+                            <label for="jugend-period-end"><?php p($l->t('Ende der Organisationsperiode')); ?></label>
                             <input id="jugend-period-end" name="endsOn" type="date">
                         </div>
                         <div class="jugend-field jugend-field--wide">

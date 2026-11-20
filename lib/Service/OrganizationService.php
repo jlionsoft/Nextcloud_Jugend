@@ -31,7 +31,7 @@ class OrganizationService {
         if ($title === '' || mb_strlen($title) > 128) {
             throw new \InvalidArgumentException('Bitte gib einen gültigen Namen für die Organisationsperiode an.');
         }
-        $startsOn = $startsOn !== null && trim($startsOn) !== '' ? $startsOn : null;
+        $startsOn = $startsOn !== null && trim($startsOn) !== '' ? trim($startsOn) : null;
         $endsOn = $endsOn !== null && trim($endsOn) !== '' ? $endsOn : null;
         $this->validateDateRange($startsOn, $endsOn);
         $now = time();
@@ -431,8 +431,15 @@ class OrganizationService {
 
     private function validateDateRange(?string $startsOn, ?string $endsOn): void {
         foreach (['Beginn' => $startsOn, 'Ende' => $endsOn] as $label => $date) {
-            if ($date !== null && $date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-                throw new \InvalidArgumentException('Ungültiges Datum für ' . $label . '.');
+            if ($date === null || $date === '') {
+                continue;
+            }
+            $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+            $dateErrors = \DateTimeImmutable::getLastErrors();
+            if ($parsed === false
+                || ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0))
+                || $parsed->format('Y-m-d') !== $date) {
+                throw new \InvalidArgumentException('Ungültiges Datum für ' . $label . '. Bitte ein gültiges Kalenderdatum angeben.');
             }
         }
         if ($startsOn && $endsOn && $endsOn < $startsOn) {

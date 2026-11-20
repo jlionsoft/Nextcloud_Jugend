@@ -1,4 +1,4 @@
-# Organisationsmodell und Jahreswechsel
+# Organisationsmodell und Organisationsperioden
 
 ## Verbindliche Produktentscheidungen
 
@@ -20,14 +20,23 @@ Die Organisationsmitgliedschaft ist periodengebunden. Ein Benutzer kann mehreren
 
 Rollen bestehen aus Berechtigungen (Capability Keys). Zuweisungen besitzen einen Geltungsbereich: global, period oder group. Die Autorisierung prüft sowohl die Berechtigung als auch den Scope des angefragten Objekts. Rollenbezeichnungen allein dürfen niemals eine Autorisierungsentscheidung auslösen.
 
-## Jahreswechsel als Workflow
+## Zeitliche Semantik der Organisationsperioden
 
-1. Eine Leitung oder ein App-Admin erstellt eine neue Periode als Entwurf, optional durch Kopieren einer früheren Periode.
+- Eine Organisationsperiode ist **kein Kalenderjahr**. Sie kann an jedem beliebigen Datum beginnen und enden, beispielsweise am 1. September, 15. März oder an einem frei gewählten Stichtag.
+- `starts_on` und `ends_on` sind optionale, inklusive Datumsgrenzen im Format `YYYY-MM-DD`. Wenn beide gesetzt sind, darf das Ende nicht vor dem Beginn liegen. Es wird kein bestimmtes Jahr, kein 1. Januar und keine feste Periodenlänge vorausgesetzt.
+- `period_key` und der Titel sind frei gewählte Bezeichner. Sie dürfen eine Saison oder einen Zeitraum beschreiben, müssen aber weder eine Jahreszahl enthalten noch aus einem Kalenderjahr abgeleitet werden.
+- Das Datum allein aktiviert oder archiviert keine Periode. Der Wechsel wird von einer berechtigten Person ausdrücklich ausgelöst und wirkt sofort zum Zeitpunkt der Bestätigung. Die eingetragenen Datumsgrenzen beschreiben den organisatorisch vorgesehenen Zeitraum; sie sind kein Scheduler.
+- Die Vorschau zeigt den vorgesehenen Zeitraum. Die Bestätigungsabfrage weist darauf hin, dass die Aktivierung unmittelbar erfolgt und die bisherige Periode archiviert.
+- Ein zukünftiger automatischer Wechsel zu einem festgelegten Stichtag wäre eine eigene Funktion mit Zeitzonen-, Cron- und Fehlerbehandlung und ist nicht Teil des manuellen Aktivierungsworkflows.
+
+## Organisationswechsel als Workflow
+
+1. Eine Leitung oder ein App-Admin erstellt eine neue Organisationsperiode als Entwurf, trägt bei Bedarf den frei wählbaren Beginn und das Ende ein und kann optional eine frühere Periode kopieren.
 2. Gruppen, Mitglieder und jeweils zwei Gruppenleiter werden bearbeitet.
 3. Eine Vorschau zeigt neue, entfernte und wechselnde Mitglieder sowie Validierungsfehler.
-4. Ressourcen werden vorbereitet. Externe Nextcloud-Aufrufe werden als wiederholbare Schritte mit Status protokolliert; ein Fehler darf nicht zu einem halb aktivierten Zustand führen.
-5. Die Aktivierung wird explizit bestätigt. Die bisher aktive Periode wird archiviert und die neue Periode aktiv.
-6. Die App synchronisiert die aktive Gruppenmitgliedschaft zu Nextcloud. Die Zugriffsgruppe der Abteilung bleibt davon getrennt.
+4. Die Vorschau und die Organisationsdaten werden geprüft. Die Ressourcenbereitstellung ist ein separater, wiederholbarer Vorgang; sie läuft nach der Aktivierung für die aktive Periode und wird über Status und Fehlerprotokoll überwacht.
+5. Am gewünschten Wechseltermin wird die Aktivierung explizit bestätigt. Die bisher aktive Periode wird archiviert und die neue Periode sofort aktiv – unabhängig davon, ob der Termin auf einen Jahresanfang fällt.
+6. Die App provisioniert bzw. synchronisiert die Ressourcen der aktiven Periode. Archivierte Ressourcen werden auf den Zugriff der aktuellen Abteilungsmitglieder umgestellt. Die Zugriffsgruppe der Abteilung bleibt davon getrennt.
 
 Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Ressourcenorchestrierung wird danach als eigener Service/Background-Job implementiert. Talk, Files und Calendar sind optionale Integrationen und müssen über öffentliche Nextcloud-APIs angesprochen werden.
 
@@ -35,7 +44,7 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 
 - Alle aktuell zugriffsberechtigten Abteilungsmitglieder dürfen historische Dateien und Kalender lesen, auch wenn sie damals nicht Mitglied waren.
 - Archivierte Gruppenordner und Kalender werden nicht gelöscht. Ihre Freigabe wird auf Lesen für die aktuelle App-Zugriffsgruppe gesetzt.
-- Historische Talk-Räume bleiben getrennt pro Jahr erhalten. Neue Mitglieder werden nicht automatisch in alte Chats eingeladen; die App stellt den historischen Raum als Archivverweis dar. Ein späterer expliziter Beitritt muss separat entschieden und getestet werden.
+- Historische Talk-Räume bleiben getrennt pro Organisationsperiode erhalten. Neue Mitglieder werden nicht automatisch in alte Chats eingeladen; die App stellt den historischen Raum als Archivverweis dar. Ein späterer expliziter Beitritt muss separat entschieden und getestet werden.
 - Beim Austritt wird der Benutzer aus der Authentik-/Nextcloud-Zugriffsgruppe entfernt. Die App löscht keine historischen Datensätze oder Ressourcen. Der Zugang zu App und Abteilungsarchiven endet durch den Entzug der übergeordneten Zugriffsgruppe.
 - Die App darf die Authentik-Gruppe nicht selbst verändern, solange dafür keine ausdrücklich konfigurierte und autorisierte Provisioning-Integration existiert.
 
@@ -69,13 +78,13 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 - App-Administratoren und frei definierbare Rollen werden unterstützt. Die Systemrolle `app_admin` bleibt geschützt.
 - Rollenänderungen und Organisationsaktionen werden im Audit-Log erfasst.
 
-### Jahreswechsel
+### Organisationswechsel
 
 - Neue Perioden und Arbeitsgruppen können als Entwürfe unabhängig von der aktiven Periode vorbereitet werden. Beim Anlegen lässt sich optional eine bestehende Periode als Vorlage kopieren; Gruppen, aktuelle Mitglieder und Gruppenleitungen werden in einem Datenbankvorgang in den neuen Entwurf übernommen.
 - Die Aktivierungsvorschau vergleicht Gruppen anhand ihres technischen Slugs und zeigt neue/entfallende Gruppen sowie Mitgliedschafts- und Leitungsänderungen.
 - Vor der Aktivierung werden alle Gruppen auf genau zwei aktive Leitungen und alle Mitglieder auf vorhandene Nextcloud-Konten innerhalb der aktuellen Authentik-Empfängermenge geprüft.
 - Die Aktivierung archiviert die bisher aktive Periode und aktiviert die ausgewählte Entwurfsperiode in einer Datenbanktransaktion. Schlägt der Statuswechsel fehl, wird die Transaktion zurückgerollt.
-- **Wichtige Grenze:** Die aktuelle Aktivierung schaltet nur den Organisationsstatus in der App um. Sie provisioniert noch keine Nextcloud-Gruppen, Talk-Räume, Gruppenordner oder Kalender. Bis die Ressourcenorchestrierung umgesetzt und getestet ist, darf die Aktivierung nicht als vollständiger produktiver Jahreswechsel verstanden werden.
+- **Wichtige Grenze:** Die Aktivierung schaltet zunächst den Organisationsstatus in der App um. Die Ressourcenorchestrierung läuft anschließend und muss vor dem Produktiveinsatz gegen die konkrete Nextcloud-/Authentik-Installation als Laufzeittest geprüft werden. Ein vollständiges Rollback bereits ausgeführter externer Provisionierungsschritte ist nicht garantiert.
 
 ### Noch ausstehende Schritte
 
