@@ -93,7 +93,9 @@
         document.getElementById('jugend-rollover-activate').disabled = true;
         await loadGroups();
         if (period.status === 'draft') await loadRolloverPreview();
-        if (period.status === 'active') await loadTalkStatus();
+        if (period.status === 'active') {
+            await Promise.all([loadTalkStatus(), loadResourceSyncStatus()]);
+        }
     }
 
     async function loadGroups() {
@@ -205,6 +207,35 @@
     }
 
 
+    async function loadResourceSyncStatus() {
+        if (!urls.resourceSyncStatus) return;
+        const target = document.getElementById('jugend-resource-sync-status');
+        target.replaceChildren(element('p', 'jugend-muted', 'Hintergrundstatus wird geladen …'));
+        try {
+            const status = await request(urls.resourceSyncStatus);
+            target.replaceChildren();
+            const labels = {
+                never: 'Noch kein Lauf erfasst',
+                not_configured: 'Dienstkonto nicht konfiguriert',
+                running: 'Synchronisierung läuft',
+                success: 'Letzter Lauf erfolgreich',
+                failed: 'Letzter Lauf fehlgeschlagen'
+            };
+            const formatTime = (value) => value
+                ? new Date(value * 1000).toLocaleString('de-DE')
+                : 'Noch nicht vorhanden';
+            target.append(element('p', 'jugend-muted', 'Status: ' + (labels[status.status] || status.status)));
+            target.append(element('p', 'jugend-muted', 'Gestartet: ' + formatTime(status.startedAt)));
+            target.append(element('p', 'jugend-muted', 'Letzter Abschluss: ' + formatTime(status.finishedAt)));
+            target.append(element('p', 'jugend-muted', 'Letzter erfolgreicher Lauf: ' + formatTime(status.lastSuccessAt)));
+            if (status.lastError) {
+                target.append(element('p', 'error', status.lastError));
+            }
+        } catch (error) {
+            target.replaceChildren(element('p', 'error', error.message));
+        }
+    }
+
     async function loadTalkStatus() {
         if (!selectedPeriod || selectedPeriod.status !== 'active' || !urls.resourceProvisioningStatus) return;
         const target = document.getElementById('jugend-talk-status');
@@ -300,6 +331,7 @@
     });
 
     document.getElementById('jugend-talk-status-refresh').addEventListener('click', loadTalkStatus);
+    document.getElementById('jugend-resource-sync-refresh').addEventListener('click', loadResourceSyncStatus);
 
     async function runResourceProvisioning(buttonId, outputId, endpoint, resourceLabel) {
         if (!selectedPeriod || selectedPeriod.status !== 'active') return;
