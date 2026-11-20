@@ -68,7 +68,7 @@ class ProvisioningService {
     public function findTalkRoomByName(string $name): ?array {
         $name = trim($name);
         if ($name === '') {
-            throw new \\InvalidArgumentException('Der Talk-Raumname ist ungültig.');
+            throw new \InvalidArgumentException('Der Talk-Raumname ist ungültig.');
         }
         $data = $this->ocsData($this->request('GET', '/ocs/v2.php/apps/spreed/api/v4/room'));
         $matches = array_values(array_filter(
