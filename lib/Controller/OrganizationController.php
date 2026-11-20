@@ -64,9 +64,9 @@ class OrganizationController extends Controller {
         if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
         try {
             return new JSONResponse($this->organization->previewPeriod($periodId));
-        } catch (\\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             return new JSONResponse(['error' => 'preview_failed', 'message' => 'Die Aktivierungsvorschau konnte nicht erstellt werden.'], 500);
         }
     }
@@ -78,11 +78,11 @@ class OrganizationController extends Controller {
         if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
         try {
             return new JSONResponse(['period' => $this->organization->activatePeriod($periodId, $actor)]);
-        } catch (\\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
-        } catch (\\RuntimeException $e) {
+        } catch (\RuntimeException $e) {
             return new JSONResponse(['error' => 'activation_conflict', 'message' => $e->getMessage()], 409);
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             return new JSONResponse(['error' => 'activation_failed', 'message' => 'Die Periode konnte nicht aktiviert werden. Es wurden keine Änderungen übernommen.'], 500);
         }
     }
