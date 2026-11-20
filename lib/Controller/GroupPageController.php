@@ -29,7 +29,7 @@ class GroupPageController extends Controller {
     }
 
     private function hasManagedGroups(string $uid): bool {
-        foreach ($this->organization->listActiveGroups() as $group) {
+        foreach ($this->organization->listManageableGroups() as $group) {
             if ($this->authorization->can($uid, 'group.members.manage', 'group', (int)$group['id'])) {
                 return true;
             }
