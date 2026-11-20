@@ -57,3 +57,13 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 5. Nextcloud-Gruppen-Synchronisierung.
 6. Ressourcenadapter für Talk, Files und Calendar.
 7. Archivierung, Audit und Fehler-/Wiederholungsbehandlung.
+
+
+## RBAC-Implementierungsstand
+
+Die erste RBAC-Stufe verwendet Capability Keys statt Rollenname-Vergleiche:
+- `organization.manage`: globale Verwaltung von Perioden, Gruppen und Kandidatenlisten.
+- `roles.manage`: reserviert für die spätere vollständige Rollenverwaltung.
+- `group.members.manage`: Gruppenmitgliedschaften der eigenen Arbeitsgruppe ändern; aktuell dynamisch aus einer aktiven Gruppenleiter-Mitgliedschaft abgeleitet.
+
+Die Systemrolle `app_admin` wird idempotent angelegt und global zugewiesen. Globale Nextcloud-Administratoren bleiben als Bootstrap-Principals immer berechtigt. App-Admin-Zuweisungen dürfen in dieser Stufe nur globale Nextcloud-Administratoren vornehmen. Die Organisationsseite ist App-Administratoren vorbehalten; ein Gruppenleiter erhält keinen globalen Zugriff auf Perioden- und Gruppenverwaltung.
