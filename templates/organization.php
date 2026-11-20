@@ -51,6 +51,12 @@ declare(strict_types=1);
                         <button type="button" id="jugend-provision-calendars" class="secondary">Kalender bereitstellen / abgleichen</button>
                         <button type="button" id="jugend-talk-status-refresh" class="secondary">Talk-Status aktualisieren</button>
                     </div>
+                    <h4>Automatischer Ressourcenabgleich</h4>
+                    <p class="jugend-muted">Der Hintergrundjob läuft alle 15 Minuten, sofern Nextcloud-Cron aktiv ist. Hier siehst du den letzten Lauf und den letzten erfolgreichen Abgleich.</p>
+                    <div class="jugend-form-actions">
+                        <button type="button" id="jugend-resource-sync-refresh" class="secondary">Hintergrundstatus aktualisieren</button>
+                    </div>
+                    <div id="jugend-resource-sync-status" class="jugend-period-list" role="status" aria-live="polite"></div>
                     <h4>Provisionierungsstatus dieser Periode</h4>
                     <div id="jugend-talk-status" class="jugend-period-list" role="status" aria-live="polite"></div>
                     <div id="jugend-provision-talk-result" class="jugend-period-list" role="status" aria-live="polite"></div>
