@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+
 namespace OCA\Jugend\Controller;
 
 use OCA\Jugend\Service\NextcloudTalkService;
@@ -13,6 +14,7 @@ use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
 class TalkWebhookController extends Controller {
+    /** @var \OCP\ICache */
     private $replayCache;
 
     public function __construct(
@@ -27,6 +29,11 @@ class TalkWebhookController extends Controller {
         $this->replayCache = $cacheFactory->createDistributed('jugend_talk_webhook');
     }
 
+    /**
+     * Receives and validates Nextcloud Talk bot webhook events.
+     *
+     * @return JSONResponse Webhook processing result
+     */
     #[PublicPage]
     #[NoCSRFRequired]
     public function webhook(): JSONResponse {
@@ -60,7 +67,7 @@ class TalkWebhookController extends Controller {
             return new JSONResponse(['error' => 'invalid_event'], 400);
         }
 
-        $type = (string)$event['type'];
+        $type = (string) $event['type'];
         if (in_array($type, ['Join', 'Leave', 'Like', 'Undo'], true)) {
             $this->logger->info('Jugend Talk webhook event: ' . $type);
         } elseif ($type === 'Create' && ($event['object']['name'] ?? '') === 'message') {
