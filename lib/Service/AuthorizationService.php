@@ -188,7 +188,7 @@ class AuthorizationService {
             $qb->executeStatement();
             $this->audit($actor, 'role.granted', $uid, ['role' => self::ROLE_KEY]);
             $this->db->commit();
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             $this->db->rollBack();
             throw $e;
         }
@@ -207,7 +207,7 @@ class AuthorizationService {
             $qb->executeStatement();
             $this->audit($actor, 'role.revoked', $uid, ['role' => self::ROLE_KEY]);
             $this->db->commit();
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             $this->db->rollBack();
             throw $e;
         }
@@ -414,7 +414,7 @@ class AuthorizationService {
             $qb->executeStatement();
             $this->audit($actor, 'role.assigned', $uid, ['roleId' => $roleId, 'roleKey' => $role['role_key'], 'scopeType' => $scopeType, 'scopeId' => $scopeId]);
             $this->db->commit();
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             $this->db->rollBack();
             throw $e;
         }
@@ -440,7 +440,7 @@ class AuthorizationService {
             $qb->executeStatement();
             $this->audit($actor, 'role.unassigned', (string)$assignment['user_id'], ['roleId' => (int)$assignment['role_id'], 'roleKey' => $assignment['role_key'], 'scopeType' => $assignment['scope_type'], 'scopeId' => $assignment['scope_id']]);
             $this->db->commit();
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             $this->db->rollBack();
             throw $e;
         }
