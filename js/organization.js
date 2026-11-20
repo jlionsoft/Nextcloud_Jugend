@@ -123,6 +123,57 @@
         } catch (error) { showFeedback(error.message, true); }
     });
 
+
+    async function loadAppAdmins() {
+        if (!urls.manageAppAdmins) return;
+        const panel = document.getElementById('jugend-app-admin-panel');
+        panel.hidden = false;
+        const [adminPayload, userPayload] = await Promise.all([
+            request(urls.appAdmins),
+            request(urls.users)
+        ]);
+        const list = document.getElementById('jugend-app-admin-list');
+        list.replaceChildren();
+        const select = document.getElementById('jugend-app-admin-user');
+        select.replaceChildren(new Option('Benutzer auswählen …', ''));
+        const assigned = new Set(adminPayload.admins.map((admin) => admin.user_id));
+        userPayload.users.forEach((user) => {
+            if (!assigned.has(user.uid)) {
+                select.add(new Option(user.displayName + ' (' + user.uid + ')', user.uid));
+            }
+        });
+        if (!adminPayload.admins.length) {
+            list.append(element('p', 'jugend-muted', 'Noch keine App-Administratoren zugewiesen.'));
+        }
+        adminPayload.admins.forEach((admin) => {
+            const row = element('div', 'jugend-member-row');
+            const info = element('span', '', admin.user_id + (admin.granted_by ? ' · vergeben durch ' + admin.granted_by : ''));
+            const revoke = element('button', 'secondary', 'Entziehen');
+            revoke.type = 'button';
+            revoke.addEventListener('click', async () => {
+                if (!window.confirm('App-Administratorrechte für „' + admin.user_id + '“ wirklich entziehen?')) return;
+                try {
+                    await request(urls.revokeAppAdmin, 'DELETE', {userId: admin.user_id});
+                    showFeedback('App-Administratorrechte für „' + admin.user_id + '“ wurden entzogen.');
+                    await loadAppAdmins();
+                } catch (error) { showFeedback(error.message, true); }
+            });
+            row.append(info, revoke);
+            list.append(row);
+        });
+    }
+
+    document.getElementById('jugend-app-admin-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const userId = document.getElementById('jugend-app-admin-user').value;
+        if (!userId) return;
+        try {
+            await request(urls.grantAppAdmin, 'POST', {userId});
+            showFeedback('„' + userId + '“ ist jetzt App-Administrator.');
+            await loadAppAdmins();
+        } catch (error) { showFeedback(error.message, true); }
+    });
+
     document.getElementById('jugend-organization-back').href = urls.home;
 
     document.getElementById('jugend-period-form').addEventListener('submit', async (event) => {
@@ -150,5 +201,5 @@
         } catch (error) { showFeedback(error.message, true); }
     });
 
-    Promise.all([request(urls.users).then((payload) => { availableUsers = payload.users; }), loadPeriods()]).catch((error) => showFeedback(error.message, true));
+    Promise.all([request(urls.users).then((payload) => { availableUsers = payload.users; }), loadPeriods(), loadAppAdmins()]).catch((error) => showFeedback(error.message, true));
 }());
