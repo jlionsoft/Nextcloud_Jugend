@@ -17,6 +17,8 @@
     const selectedLabel = document.getElementById('jugend-selected-period');
     const groupForm = document.getElementById('jugend-group-form');
     let selectedPeriod = null;
+    let selectedGroup = null;
+    let availableUsers = [];
 
     async function request(url, method = 'GET', data = null) {
         const options = {method, headers: {Accept: 'application/json'}};
@@ -75,13 +77,51 @@
             return;
         }
         payload.groups.forEach((group) => {
-            const card = element('article', 'jugend-group-card');
-            const heading = element('h3', '', group.name);
-            const members = element('p', 'jugend-muted', group.members.length + ' Mitglieder · ' + group.members.filter((m) => m.is_leader === true || m.is_leader === 1 || m.is_leader === '1').length + ' Gruppenleiter');
-            card.append(heading, members);
+            const card = element('button', 'jugend-period-item', group.name + ' · ' + group.members.length + ' Mitglieder');
+            card.type = 'button';
+            card.addEventListener('click', () => selectGroup(group));
             groupList.append(card);
         });
     }
+
+    async function selectGroup(group) {
+        selectedGroup = group;
+        const editor = document.getElementById('jugend-membership-editor');
+        editor.hidden = false;
+        document.getElementById('jugend-selected-group').textContent = group.name;
+        const memberIds = new Set(group.members.map((member) => member.user_id));
+        const leaderIds = new Set(group.members.filter((member) => member.is_leader === true || member.is_leader === 1 || member.is_leader === '1').map((member) => member.user_id));
+        const list = document.getElementById('jugend-membership-list');
+        list.replaceChildren();
+        availableUsers.forEach((user) => {
+            const row = element('div', 'jugend-member-row');
+            const memberLabel = element('label', 'jugend-member-label');
+            const member = element('input'); member.type = 'checkbox'; member.value = user.uid; member.checked = memberIds.has(user.uid); member.className = 'jugend-member-check';
+            memberLabel.append(member, document.createTextNode(' ' + user.displayName + ' (' + user.uid + ')'));
+            const leaderLabel = element('label', 'jugend-leader-label');
+            const leader = element('input'); leader.type = 'checkbox'; leader.value = user.uid; leader.checked = leaderIds.has(user.uid); leader.disabled = !member.checked; leader.className = 'jugend-leader-check';
+            leaderLabel.append(leader, document.createTextNode(' Gruppenleitung'));
+            member.addEventListener('change', () => { leader.disabled = !member.checked; if (!member.checked) leader.checked = false; });
+            row.append(memberLabel, leaderLabel); list.append(row);
+        });
+    }
+
+    document.getElementById('jugend-membership-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!selectedGroup) return;
+        const params = new URLSearchParams();
+        params.set('groupId', selectedGroup.id);
+        document.querySelectorAll('.jugend-member-check:checked').forEach((input) => params.append('members[]', input.value));
+        document.querySelectorAll('.jugend-leader-check:checked').forEach((input) => params.append('leaders[]', input.value));
+        try {
+            const response = await fetch(urls.setMembers, {method:'PUT', headers:{'Content-Type':'application/x-www-form-urlencoded', requesttoken:token(), Accept:'application/json'}, body:params});
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(payload.message || 'Mitgliedschaften konnten nicht gespeichert werden.');
+            showFeedback('Mitgliedschaften für „' + selectedGroup.name + '“ gespeichert.');
+            await loadGroups();
+            await selectGroup(payload.group);
+        } catch (error) { showFeedback(error.message, true); }
+    });
 
     document.getElementById('jugend-organization-back').href = urls.home;
 
@@ -110,5 +150,5 @@
         } catch (error) { showFeedback(error.message, true); }
     });
 
-    loadPeriods().catch((error) => showFeedback(error.message, true));
+    Promise.all([request(urls.users).then((payload) => { availableUsers = payload.users; }), loadPeriods()]).catch((error) => showFeedback(error.message, true));
 }());
