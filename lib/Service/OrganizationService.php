@@ -31,6 +31,8 @@ class OrganizationService {
         if ($title === '' || mb_strlen($title) > 128) {
             throw new \InvalidArgumentException('Bitte gib einen gültigen Namen für die Organisationsperiode an.');
         }
+        $startsOn = $startsOn !== null && trim($startsOn) !== '' ? $startsOn : null;
+        $endsOn = $endsOn !== null && trim($endsOn) !== '' ? $endsOn : null;
         $this->validateDateRange($startsOn, $endsOn);
         $now = time();
         $qb = $this->db->getQueryBuilder();
