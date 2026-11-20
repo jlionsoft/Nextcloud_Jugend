@@ -143,6 +143,181 @@ class ResourceProvisioningService {
         return $result;
     }
 
+    /**
+     * Creates a private Groupfolder per active work group. The provisioning
+     * account remains the only native group member on the folder; actual
+     * access is granted through managed user shares. Archived folders are
+     * shared to the Authentik-synchronised department group.
+     */
+    public function provisionGroupFolders(int $periodId, string $actor): array {
+        $period = $this->organization->getPeriod($periodId);
+        if ($period['status'] !== 'active') {
+            throw new \InvalidArgumentException('Groupfolders können nur für die aktive Organisationsperiode bereitgestellt werden.');
+        }
+        $serviceGroup = $this->client->getProvisioningGroupId();
+        $departmentGroup = $this->client->getDepartmentGroupId();
+        if ($serviceGroup === '' || $departmentGroup === '') {
+            throw new \RuntimeException('Bitte Dienstgruppe und Abteilungs-Zugriffsgruppe in den Jugendeinstellungen konfigurieren.');
+        }
+
+        $currentMembers = $this->currentDepartmentMembers();
+        $result = ['created' => [], 'existing' => [], 'archivedSynced' => [], 'failed' => [], 'inProgress' => []];
+
+        foreach ($this->organization->listGroups($periodId) as $group) {
+            $groupId = (int)$group['id'];
+            if (!$this->claimJob($periodId, $groupId, 'groupfolder')) {
+                $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $group['name']];
+                continue;
+            }
+            $created = false;
+            try {
+                $mountpoint = $this->groupFolderMountpoint($periodId, (string)$group['slug'], $groupId);
+                $folder = $this->client->findGroupFolder($mountpoint);
+                if ($folder === null) {
+                    $folderId = $this->client->createGroupFolder($mountpoint);
+                    $folder = ['id' => $folderId, 'mount_point' => $mountpoint, 'groups' => []];
+                    $created = true;
+                }
+                $this->client->ensureGroupFolderServiceGroup($folder, $serviceGroup);
+                $this->storeResource($groupId, 'groupfolder', (string)$folder['id'], $this->groupFolderUrl($mountpoint));
+                if ($created) {
+                    $this->audit($actor, 'resource.groupfolder.created', (string)$groupId, ['periodId' => $periodId, 'folderId' => (int)$folder['id']]);
+                }
+
+                $expected = [];
+                foreach ($group['members'] as $member) {
+                    $uid = trim((string)$member['user_id']);
+                    if ($uid !== '' && isset($currentMembers[$uid])) {
+                        $expected['0:' . $uid] = ['type' => 0, 'with' => $uid];
+                    }
+                }
+                $changes = $this->reconcileGroupFolderShares('/' . $mountpoint, $expected);
+                $entry = [
+                    'groupId' => $groupId,
+                    'groupName' => $group['name'],
+                    'folderId' => (int)$folder['id'],
+                    'mountpoint' => $mountpoint,
+                    'url' => $this->groupFolderUrl($mountpoint),
+                    'sharesAdded' => $changes['added'],
+                    'sharesRemoved' => $changes['removed'],
+                ];
+                if ($changes['errors'] !== []) {
+                    $this->finishJob($periodId, $groupId, 'groupfolder', 'failed', 'Mindestens eine Groupfolder-Freigabe konnte nicht abgeglichen werden.');
+                    $result['failed'][] = ['groupId' => $groupId, 'groupName' => $group['name'], 'message' => 'Mindestens eine Groupfolder-Freigabe konnte nicht abgeglichen werden.', 'shares' => $changes['errors']];
+                } else {
+                    $this->finishJob($periodId, $groupId, 'groupfolder', 'succeeded', null);
+                    $result[$created ? 'created' : 'existing'][] = $entry;
+                }
+            } catch (\Throwable $e) {
+                $this->finishJob($periodId, $groupId, 'groupfolder', 'failed', $e->getMessage());
+                $result['failed'][] = ['groupId' => $groupId, 'groupName' => $group['name'], 'message' => $e->getMessage()];
+            }
+        }
+
+        foreach ($this->listArchivedGroupFolderResources() as $resource) {
+            $archivedPeriodId = (int)$resource['period_id'];
+            $groupId = (int)$resource['group_id'];
+            if (!$this->claimJob($archivedPeriodId, $groupId, 'groupfolder')) {
+                $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true];
+                continue;
+            }
+            try {
+                $mountpoint = $this->groupFolderMountpoint($archivedPeriodId, (string)$resource['group_slug'], $groupId);
+                $expected = ['1:' . $departmentGroup => ['type' => 1, 'with' => $departmentGroup]];
+                $changes = $this->reconcileGroupFolderShares('/' . $mountpoint, $expected);
+                if ($changes['errors'] !== []) {
+                    $this->finishJob($archivedPeriodId, $groupId, 'groupfolder', 'failed', 'Archivzugriff konnte nicht vollständig abgeglichen werden.');
+                    $result['failed'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true, 'message' => 'Archivzugriff konnte nicht vollständig abgeglichen werden.', 'shares' => $changes['errors']];
+                } else {
+                    $this->finishJob($archivedPeriodId, $groupId, 'groupfolder', 'succeeded', null);
+                    $result['archivedSynced'][] = [
+                        'groupId' => $groupId,
+                        'groupName' => $resource['group_name'],
+                        'periodTitle' => $resource['period_title'],
+                        'sharesAdded' => $changes['added'],
+                        'sharesRemoved' => $changes['removed'],
+                        'url' => $this->groupFolderUrl($mountpoint),
+                    ];
+                }
+            } catch (\Throwable $e) {
+                $this->finishJob($archivedPeriodId, $groupId, 'groupfolder', 'failed', $e->getMessage());
+                $result['failed'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true, 'message' => $e->getMessage()];
+            }
+        }
+        return $result;
+    }
+
+    private function reconcileGroupFolderShares(string $path, array $expected): array {
+        $existing = $this->client->getManagedFileShares($path);
+        $existingByKey = [];
+        foreach ($existing as $share) {
+            $key = (int)($share['share_type'] ?? -1) . ':' . (string)($share['share_with'] ?? '');
+            $existingByKey[$key] = (int)($share['id'] ?? 0);
+        }
+        $added = [];
+        $removed = [];
+        $errors = [];
+        foreach ($expected as $key => $share) {
+            if (isset($existingByKey[$key])) {
+                unset($existingByKey[$key]);
+                continue;
+            }
+            try {
+                $this->client->createFileShare($path, $share['type'], $share['with'], 31);
+                $added[] = $key;
+            } catch (\Throwable $e) {
+                $errors[] = ['share' => $key, 'action' => 'add', 'message' => $e->getMessage()];
+            }
+        }
+        foreach ($existingByKey as $key => $shareId) {
+            if ($shareId <= 0) {
+                continue;
+            }
+            try {
+                $this->client->deleteFileShare($shareId);
+                $removed[] = $key;
+            } catch (\Throwable $e) {
+                $errors[] = ['share' => $key, 'action' => 'remove', 'message' => $e->getMessage()];
+            }
+        }
+        return ['added' => $added, 'removed' => $removed, 'errors' => $errors];
+    }
+
+    private function listArchivedGroupFolderResources(): array {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('r.group_id', 'g.slug AS group_slug', 'g.name AS group_name', 'p.id AS period_id', 'p.title AS period_title')
+            ->from('jugend_resources', 'r')
+            ->innerJoin('r', 'jugend_groups', 'g', $qb->expr()->eq('r.group_id', 'g.id'))
+            ->innerJoin('g', 'jugend_periods', 'p', $qb->expr()->eq('g.period_id', 'p.id'))
+            ->where($qb->expr()->eq('r.resource_type', $qb->createNamedParameter('groupfolder')))
+            ->andWhere($qb->expr()->eq('p.status', $qb->createNamedParameter('archived')));
+        return $qb->executeQuery()->fetchAll();
+    }
+
+    private function groupFolderMountpoint(int $periodId, string $slug, int $groupId): string {
+        $slug = preg_replace('/[^a-z0-9_-]/i', '-', $slug) ?: 'group';
+        return 'jugend-' . $periodId . '-' . substr($slug, 0, 40) . '-' . $groupId;
+    }
+
+    private function groupFolderUrl(string $mountpoint): string {
+        return $this->client->getBaseUrl() . '/apps/files/?dir=%2F' . rawurlencode($mountpoint);
+    }
+
+    private function storeResource(int $groupId, string $type, string $resourceId, string $url): void {
+        $existing = $this->findResource($groupId, $type);
+        if ($existing !== null) {
+            return;
+        }
+        $qb = $this->db->getQueryBuilder();
+        $qb->insert('jugend_resources')
+            ->setValue('group_id', $qb->createNamedParameter($groupId))
+            ->setValue('resource_type', $qb->createNamedParameter($type))
+            ->setValue('resource_id', $qb->createNamedParameter($resourceId))
+            ->setValue('resource_url', $qb->createNamedParameter($url))
+            ->setValue('created_at', $qb->createNamedParameter(time()));
+        $qb->executeStatement();
+    }
+
     /** Returns persisted provisioning state for the selected period. */
     public function getTalkProvisioningStatus(int $periodId): array {
         $period = $this->organization->getPeriod($periodId);
