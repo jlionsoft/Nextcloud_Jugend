@@ -173,7 +173,30 @@
             if (!summary.addedGroups.length && !summary.removedGroups.length && !summary.renamedGroups.length && !summary.membershipChanges.length) {
                 rolloverSummary.append(element('p', 'jugend-muted', 'Keine Gruppen- oder Mitgliedschaftsänderungen gegenüber der aktiven Periode.'));
             }
-            activateButton.disabled = !preview.valid;
+            const preparation = preview.resourcePreparation || {ready: false, groups: [], missing: []};
+            const preparationTarget = document.getElementById('jugend-period-preparation-status');
+            preparationTarget.replaceChildren();
+            const preparationLabels = {talk: 'Talk-Raum', groupfolder: 'Gruppenordner', calendar: 'Kalender'};
+            const stateLabels = {not_started: 'Noch nicht vorbereitet', pending: 'Wartet', running: 'Wird vorbereitet', succeeded: 'Vorbereitet', failed: 'Fehler – erneuter Versuch möglich'};
+            preparation.groups.forEach((group) => {
+                const parts = Object.entries(preparationLabels).map(([key, label]) => {
+                    const state = group.resources?.[key];
+                    return label + ': ' + (stateLabels[state?.status || 'not_started'] || state?.status || 'Noch nicht vorbereitet');
+                });
+                preparationTarget.append(element('p', 'jugend-muted', group.groupName + ' · ' + parts.join(' · ')));
+                Object.values(group.resources || {}).forEach((state) => {
+                    if (state.lastError) preparationTarget.append(element('p', 'error', state.lastError));
+                });
+            });
+            if (!preparation.groups.length) {
+                preparationTarget.append(element('p', 'jugend-muted', 'Noch keine Arbeitsgruppen vorhanden.'));
+            }
+            if (preparation.ready) {
+                preparationTarget.prepend(element('p', 'success', 'Alle drei Ressourcen je Arbeitsgruppe sind vorbereitet. Die Mitglieder erhalten noch keinen Zugriff.'));
+            } else {
+                preparationTarget.prepend(element('p', 'jugend-muted', 'Noch nicht vollständig vorbereitet: ' + (preparation.missing || []).join(', ')));
+            }
+            activateButton.disabled = !preview.activationReady;
         } catch (error) {
             rolloverStatus.textContent = 'Die Vorschau konnte nicht geladen werden.';
             rolloverErrors.append(element('p', 'error', error.message));
@@ -328,6 +351,39 @@
         runResourceProvisioning('jugend-provision-calendars', 'jugend-provision-calendars-result', urls.provisionCalendars, 'Kalender'));
 
 
+    document.getElementById('jugend-period-prepare-resources').addEventListener('click', async () => {
+        if (!selectedPeriod || selectedPeriod.status !== 'draft') return;
+        const button = document.getElementById('jugend-period-prepare-resources');
+        const output = document.getElementById('jugend-period-preparation-status');
+        button.disabled = true;
+        output.replaceChildren(element('p', 'jugend-muted', 'Ressourcen werden angelegt. Gruppenmitglieder erhalten dabei noch keinen Zugriff …'));
+        try {
+            const payload = await request(urls.preparePeriodResources, 'POST', {periodId: selectedPeriod.id});
+            const result = payload.result || {};
+            output.replaceChildren();
+            (result.prepared || []).forEach((entry) => {
+                output.append(element('p', 'success', entry.groupName + ': ' + entry.resource + ' vorbereitet.'));
+            });
+            (result.existing || []).forEach((entry) => {
+                output.append(element('p', 'jugend-muted', entry.groupName + ': ' + entry.resource + ' war bereits vorhanden.'));
+            });
+            (result.failed || []).forEach((entry) => {
+                output.append(element('p', 'error', entry.groupName + ' / ' + entry.resource + ': ' + entry.message));
+            });
+            (result.inProgress || []).forEach((entry) => {
+                output.append(element('p', 'jugend-muted', entry.groupName + ' / ' + entry.resource + ': Vorbereitung läuft bereits.'));
+            });
+            showFeedback('Ressourcenvorbereitung abgeschlossen. Bitte prüfe den Status vor der Aktivierung.');
+            await loadRolloverPreview();
+        } catch (error) {
+            output.replaceChildren(element('p', 'error', error.message));
+            showFeedback(error.message, true);
+            await loadRolloverPreview();
+        } finally {
+            button.disabled = false;
+        }
+    });
+
     document.getElementById('jugend-rollover-refresh').addEventListener('click', loadRolloverPreview);
     activateButton.addEventListener('click', async () => {
         if (!selectedPeriod || activateButton.disabled) return;
@@ -361,6 +417,7 @@
             showFeedback('Mitgliedschaften für „' + selectedGroup.name + '“ gespeichert.');
             await loadGroups();
             await selectGroup(payload.group);
+            await loadRolloverPreview();
         } catch (error) { showFeedback(error.message, true); }
     });
 
