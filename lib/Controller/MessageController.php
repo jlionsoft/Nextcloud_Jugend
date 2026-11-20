@@ -5,11 +5,13 @@ namespace OCA\Jugend\Controller;
 
 use OCA\Jugend\AppInfo\Application;
 use OCA\Jugend\Service\MessageService;
+use OCA\Jugend\Service\AuthorizationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 class MessageController extends Controller {
@@ -17,6 +19,8 @@ class MessageController extends Controller {
         string $appName,
         IRequest $request,
         private MessageService $messages,
+        private AuthorizationService $authorization,
+        private IUserSession $session,
         private LoggerInterface $logger,
         private IL10N $l,
     ) {
@@ -31,6 +35,14 @@ class MessageController extends Controller {
      */
     #[NoAdminRequired]
     public function send(string $message = ''): JSONResponse {
+        $uid = $this->session->getUser()?->getUID();
+        if ($uid === null) {
+            return new JSONResponse(['error' => 'unauthenticated'], 401);
+        }
+        if (!$this->authorization->isAppUser($uid)) {
+            return new JSONResponse(['error' => 'forbidden', 'message' => 'Du bist nicht Mitglied der App-Zugriffsgruppe.'], 403);
+        }
+
         $message = trim($message);
         if ($message === '') {
             return new JSONResponse(['error' => 'empty_message', 'message' => $this->l->t('Bitte gib eine Nachricht ein.')], 400);
