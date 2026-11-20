@@ -77,6 +77,7 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 - Die App verwendet serverseitige Capability-Prüfungen mit globalen, Perioden- und Gruppen-Scopes. Perioden-/Gruppenrechte sind nur wirksam, solange die zugehörige Periode aktiv ist; beim Archivieren enden damit insbesondere dynamische Gruppenleitungsrechte.
 - App-Administratoren und frei definierbare Rollen werden unterstützt. Die Systemrolle `app_admin` bleibt geschützt.
 - Rollenänderungen und Organisationsaktionen werden im Audit-Log erfasst.
+- Aktuelle Gruppenleitungen erhalten einen eigenen Arbeitsbereich. Er zeigt ausschließlich ihre aktiven Arbeitsgruppen und erlaubt die Verwaltung der Mitgliedschaften sowie der beiden Leitungsrollen. Änderungen werden historisiert und über den regulären Ressourcenabgleich an Authentik, Talk, Dateiordner und Kalender weitergegeben.
 
 ### Organisationswechsel
 
@@ -92,7 +93,6 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 2. Ressourcenadapter für Talk-Räume, Gruppenordner und Kalender.
 3. Vorbereitung und Prüfung aller Ressourcen vor dem finalen Periodenwechsel.
 4. Archivfreigaben für alle aktuellen Mitglieder der App-Zugriffsgruppe.
-5. Eigener Gruppenleitungs-Arbeitsbereich mit ausschließlich gruppenbezogenen Verwaltungsaktionen.
 6. Laufzeit- und Integrationstests auf der Zielinstanz mit Nextcloud Hub 26 / Server 35.
 
 Die App verändert weder die Authentik-Zugriffsgruppe noch historische Mitgliedschafts- oder Ressourceninhalte automatisch beim Austritt einer Person.
