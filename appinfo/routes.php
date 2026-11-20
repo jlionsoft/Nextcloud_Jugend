@@ -9,6 +9,7 @@ return [
         ['name' => 'organization#clonePeriod', 'url' => '/api/v1/organization/periods/clone', 'verb' => 'POST'],
         ['name' => 'organization#previewPeriod', 'url' => '/api/v1/organization/periods/preview', 'verb' => 'GET'],
         ['name' => 'organization#activatePeriod', 'url' => '/api/v1/organization/periods/activate', 'verb' => 'POST'],
+        ['name' => 'organization#provisionTalkRooms', 'url' => '/api/v1/organization/periods/provision-talk', 'verb' => 'POST'],
         ['name' => 'organization#groups', 'url' => '/api/v1/organization/groups', 'verb' => 'GET'],
         ['name' => 'organization#createGroup', 'url' => '/api/v1/organization/groups', 'verb' => 'POST'],
         ['name' => 'organization#users', 'url' => '/api/v1/organization/users', 'verb' => 'GET'],

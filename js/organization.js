@@ -72,6 +72,7 @@
         selectedLabel.textContent = period.title + ' (' + period.status + ')';
         groupForm.hidden = period.status !== 'draft';
         document.getElementById('jugend-rollover-preview').hidden = period.status !== 'draft';
+        document.getElementById('jugend-resource-provisioning').hidden = period.status !== 'active';
         document.getElementById('jugend-rollover-activate').disabled = true;
         await loadGroups();
         if (period.status === 'draft') await loadRolloverPreview();
@@ -159,6 +160,50 @@
             rolloverErrors.append(element('p', 'error', error.message));
         }
     }
+
+    document.getElementById('jugend-provision-talk').addEventListener('click', async () => {
+        if (!selectedPeriod || selectedPeriod.status !== 'active') return;
+        const button = document.getElementById('jugend-provision-talk');
+        const output = document.getElementById('jugend-provision-talk-result');
+        button.disabled = true;
+        output.replaceChildren(element('p', 'jugend-muted', 'Talk-Räume werden bereitgestellt und Gruppenmitglieder abgeglichen …'));
+        try {
+            const result = await request(urls.provisionTalkRooms, 'POST', {periodId: selectedPeriod.id});
+            output.replaceChildren();
+            const renderEntries = (title, entries) => {
+                if (!entries.length) return;
+                output.append(element('h4', '', title));
+                entries.forEach((entry) => {
+                    const row = element('p', 'jugend-muted', entry.groupName + ': ' + (entry.participantsAdded?.length || 0) + ' Mitglieder hinzugefügt');
+                    if (entry.url) {
+                        const link = element('a', '', 'Talk-Raum öffnen');
+                        link.href = entry.url;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        row.append(document.createTextNode(' · '), link);
+                    }
+                    output.append(row);
+                    (entry.participantErrors || []).forEach((failure) => {
+                        output.append(element('p', 'error', failure.userId + ': ' + failure.message));
+                    });
+                });
+            };
+            renderEntries('Neu erstellt', result.created || []);
+            renderEntries('Bereits vorhanden / abgeglichen', result.existing || []);
+            (result.failed || []).forEach((failure) => {
+                output.append(element('p', 'error', failure.groupName + ': ' + failure.message));
+            });
+            if (!(result.created || []).length && !(result.existing || []).length && !(result.failed || []).length) {
+                output.append(element('p', 'jugend-muted', 'Keine Arbeitsgruppen für diese Periode vorhanden.'));
+            }
+            showFeedback('Talk-Ressourcen wurden verarbeitet. Bitte prüfe die Ergebnisse je Arbeitsgruppe.');
+        } catch (error) {
+            output.replaceChildren(element('p', 'error', error.message));
+            showFeedback(error.message, true);
+        } finally {
+            button.disabled = false;
+        }
+    });
 
     document.getElementById('jugend-rollover-refresh').addEventListener('click', loadRolloverPreview);
     activateButton.addEventListener('click', async () => {

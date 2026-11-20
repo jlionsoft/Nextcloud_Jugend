@@ -34,6 +34,15 @@ declare(strict_types=1);
                     <p class="jugend-muted">Die Aktivierung archiviert die bisher aktive Periode. Externe Talk-, Datei- und Kalenderressourcen werden in dieser Entwicklungsstufe noch nicht provisioniert.</p>
                 </section>
 
+                <section id="jugend-resource-provisioning" class="jugend-organization-form" hidden>
+                    <h3>Ressourcen der aktiven Periode</h3>
+                    <p class="jugend-muted">Erstellt je Arbeitsgruppe einen eigenen Talk-Raum und lädt die aktuell eingetragenen Gruppenmitglieder ein. Bereits vorhandene Räume werden weiterverwendet.</p>
+                    <div class="jugend-form-actions">
+                        <button type="button" id="jugend-provision-talk" class="primary">Talk-Räume bereitstellen / abgleichen</button>
+                    </div>
+                    <div id="jugend-provision-talk-result" class="jugend-period-list" role="status" aria-live="polite"></div>
+                </section>
+
                 <form id="jugend-period-form" class="jugend-organization-form">
                     <h3><?php p($l->t('Neue Periode planen')); ?></h3>
                     <div class="jugend-fields">

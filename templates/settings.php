@@ -74,6 +74,35 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
         </section>
 
         <section class="jugend-settings-group">
+            <h3>Nextcloud-Dienstkonto für Ressourcen</h3>
+            <p class="settings-hint"><?php p($l->t('Separates Dienstkonto zur automatischen Anlage von Talk-Räumen und weiteren Organisationsressourcen. Verwende ein dediziertes Konto mit App-Passwort und nur den benötigten Berechtigungen.')); ?></p>
+            <div class="jugend-fields">
+                <div class="jugend-field">
+                    <label for="provisioning_url"><?php p($l->t('Nextcloud-Basis-URL')); ?></label>
+                    <input class="input-field" id="provisioning_url" name="provisioning_url" type="url" value="<?php p($values['provisioning_url']); ?>" placeholder="https://cloud.example.org">
+                </div>
+                <div class="jugend-field">
+                    <label for="provisioning_user"><?php p($l->t('Dienstkonto-Benutzername')); ?></label>
+                    <input class="input-field" id="provisioning_user" name="provisioning_user" value="<?php p($values['provisioning_user']); ?>" autocomplete="username">
+                </div>
+                <div class="jugend-field jugend-field--wide">
+                    <label for="provisioning_app_password"><?php p($l->t('App-Passwort')); ?></label>
+                    <input class="input-field" id="provisioning_app_password" name="provisioning_app_password" type="password" autocomplete="new-password" placeholder="<?php p($configured['provisioning_app_password'] ? $l->t('Neues App-Passwort eingeben, um es zu ersetzen') : $l->t('Noch kein App-Passwort hinterlegt')); ?>">
+                    <div class="jugend-secret-controls">
+                        <span class="jugend-secret-status" data-secret-status="provisioning_app_password" data-configured="<?php p($configured['provisioning_app_password'] ? '1' : '0'); ?>"><?php p($configured['provisioning_app_password'] ? $l->t('App-Passwort ist gespeichert') : $l->t('Kein App-Passwort gespeichert')); ?></span>
+                        <button type="button" class="button jugend-secret-clear" data-secret="provisioning_app_password" <?php if (!$configured['provisioning_app_password']) { ?>disabled<?php } ?>><?php p($l->t('App-Passwort entfernen')); ?></button>
+                        <input type="hidden" name="clear_provisioning_app_password" value="0">
+                    </div>
+                    <p class="settings-hint"><?php p($l->t('Das App-Passwort wird verschlüsselt gespeichert und niemals wieder im Klartext ausgegeben. Für die Verbindung ist HTTPS erforderlich.')); ?></p>
+                </div>
+            </div>
+            <div class="jugend-section-actions">
+                <button type="button" class="button test-connection" data-channel="provisioning"><?php p($l->t('Dienstkonto-Verbindung testen')); ?></button>
+                <span class="jugend-test-result" role="status" aria-live="polite" data-test-result="provisioning"></span>
+            </div>
+        </section>
+
+        <section class="jugend-settings-group">
             <h3>Matrix</h3>
             <p class="settings-hint"><?php p($l->t('Persönliche Direktnachrichten an alle Mitglieder der Jugendgruppe')); ?></p>
             <div class="jugend-fields">

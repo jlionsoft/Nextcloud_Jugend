@@ -21,6 +21,7 @@ class Admin implements ISettings {
         'talk_url', 'talk_room_token',
         'sms_gateway_url', 'sms_username', 'sms_interface',
         'matrix_homeserver', 'matrix_server_name', 'matrix_bot_user_id',
+        'provisioning_url', 'provisioning_user',
     ];
 
     public function __construct(
