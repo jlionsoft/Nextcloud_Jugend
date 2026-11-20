@@ -335,6 +335,7 @@ class ProvisioningService {
             'headers' => $headers + ['Accept' => 'application/xml'],
             'body' => $body,
             'timeout' => 20,
+            'http_errors' => false,
         ]);
         if (!in_array($response->getStatusCode(), $acceptedStatusCodes, true)) {
             throw new RuntimeException('Nextcloud antwortet auf ' . $method . ' mit HTTP ' . $response->getStatusCode() . '.');
