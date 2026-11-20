@@ -76,3 +76,16 @@ The initial database schema and architecture decisions for period-based work gro
 The organisation page is available at `/apps/jugend/organization` to Nextcloud administrators in this first iteration. It currently supports creating draft periods, adding work groups, selecting users from the configured Authentik access group, and assigning exactly two group leaders per group. Membership intervals are retained in the database history.
 
 This is intentionally not yet the final authorization model: the current management page/API is restricted to Nextcloud global administrators. App-admin and scoped group-leader permissions will replace this bootstrap restriction in a later step. Period activation, Nextcloud group provisioning, Talk room creation, Files group folders, Calendar provisioning and archival resource permissions are not implemented yet. Do not use this iteration to roll out a live annual organization change.
+
+
+## App-Rollen und Berechtigungen (erste RBAC-Stufe)
+
+- Organisationsverwaltung wird serverseitig über die Berechtigung `organization.manage` geschützt. Diese erhalten globale Nextcloud-Administratoren als Bootstrap-Principals sowie explizit zugewiesene App-Administratoren.
+- App-Administratoren werden in `jugend_user_roles` mit globalem Scope gespeichert. Die Zuweisung und Entziehung ist in dieser Stufe ausschließlich globalen Nextcloud-Administratoren über die API `/api/v1/organization/app-admins` gestattet (POST mit `userId`, DELETE mit `userId`).
+- Aktive Gruppenleiter erhalten dynamisch `group.members.manage` für ihre eigene Arbeitsgruppe. Das wird bei jedem Request anhand einer aktiven Mitgliedschaft mit `is_leader=1` geprüft; eine Rollenbezeichnung oder ein clientseitiger Zustand genügt nicht.
+- Die Systemrolle `app_admin` und ihre Capability-Zuordnungen werden idempotent durch den AuthorizationService angelegt.
+- Die Organisationsseite bleibt App-Administratoren vorbehalten. Gruppenleiter können über die API nur die Mitgliedschaften ihrer eigenen Gruppe ändern, sofern die Periode noch ein Entwurf ist.
+- Dies ist noch keine vollständige Rollenverwaltung: frei definierbare Rollen, Perioden-Scopes, UI für App-Admin-Zuweisungen, Audit-Einträge für Rollenänderungen und weitere gruppenbezogene Fähigkeiten folgen separat. Globale Nextcloud-Administratoren bleiben die Bootstrap- und Notfalladministratoren.
+
+- Zuweisung und Entzug von App-Administratorrechten werden zusätzlich im bestehenden Audit-Log protokolliert.
+- Die Organisationsseite enthält eine Delegationsoberfläche für globale Nextcloud-Administratoren; App-Administratoren ohne globale Rechte sehen diese Sektion nicht.
