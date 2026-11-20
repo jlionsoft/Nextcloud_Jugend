@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace OCA\Jugend\Controller;
 
 use OCA\Jugend\Service\OrganizationService;
+use OCA\Jugend\Service\AuthorizationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -16,15 +17,16 @@ class OrganizationController extends Controller {
         string $appName,
         IRequest $request,
         private OrganizationService $organization,
+        private AuthorizationService $authorization,
         private IGroupManager $groups,
         private IUserSession $session,
     ) {
         parent::__construct($appName, $request);
     }
 
-    private function requireAdmin(): ?JSONResponse {
+    private function requirePermission(string $permission, ?string $scopeType = null, ?int $scopeId = null): ?JSONResponse {
         $uid = $this->session->getUser()?->getUID();
-        if ($uid === null || !$this->groups->isAdmin($uid)) {
+        if ($uid === null || !$this->authorization->can($uid, $permission, $scopeType, $scopeId)) {
             return new JSONResponse(['error' => 'forbidden', 'message' => 'Keine Berechtigung für die Organisationsverwaltung.'], 403);
         }
         return null;
@@ -32,7 +34,7 @@ class OrganizationController extends Controller {
 
     #[NoAdminRequired]
     public function periods(): JSONResponse {
-        if ($denied = $this->requireAdmin()) { return $denied; }
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
         return new JSONResponse(['periods' => $this->organization->listPeriods()]);
     }
 
