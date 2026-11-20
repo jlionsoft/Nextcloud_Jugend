@@ -56,8 +56,9 @@
             return;
         }
         groups.forEach((group) => {
+            const periodState = group.period_status === 'draft' ? 'Geplant' : 'Aktiv';
             const button = element('button', 'jugend-period-item',
-                (group.period_title ? group.period_title + ' · ' : '') + group.name + ' · ' + group.members.length + ' Mitglieder');
+                periodState + ' · ' + (group.period_title ? group.period_title + ' · ' : '') + group.name + ' · ' + group.members.length + ' Mitglieder');
             button.type = 'button';
             button.setAttribute('aria-pressed', String(selectedGroup?.id === group.id));
             button.addEventListener('click', () => selectGroup(group));
