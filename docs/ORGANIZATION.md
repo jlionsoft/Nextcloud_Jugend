@@ -77,7 +77,7 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 - Die App verwendet serverseitige Capability-Prüfungen mit globalen, Perioden- und Gruppen-Scopes. Perioden-/Gruppenrechte sind nur wirksam, solange die zugehörige Periode aktiv ist; beim Archivieren enden damit insbesondere dynamische Gruppenleitungsrechte.
 - App-Administratoren und frei definierbare Rollen werden unterstützt. Die Systemrolle `app_admin` bleibt geschützt.
 - Rollenänderungen und Organisationsaktionen werden im Audit-Log erfasst.
-- Aktuelle Gruppenleitungen erhalten einen eigenen Arbeitsbereich. Er zeigt ausschließlich ihre aktiven Arbeitsgruppen und erlaubt die Verwaltung der Mitgliedschaften sowie der beiden Leitungsrollen. Änderungen werden historisiert und über den regulären Ressourcenabgleich an Authentik, Talk, Dateiordner und Kalender weitergegeben.
+- Gruppenleitungen erhalten einen eigenen Arbeitsbereich. Er zeigt ihre aktiven Arbeitsgruppen sowie gleichnamige Gruppen in Entwurfsperioden. Die Leitungsberechtigung wird über den stabilen Gruppenslug auf den passenden Entwurf übertragen; Gruppenleitungen können dort Mitglieder und die beiden Leitungsrollen für die nächste Periode planen. Änderungen werden historisiert. Bei aktiven Gruppen übernimmt der reguläre Ressourcenabgleich die Änderungen; Entwurfsgruppen werden erst beim späteren Wechsel provisioniert.
 
 ### Organisationswechsel
 
