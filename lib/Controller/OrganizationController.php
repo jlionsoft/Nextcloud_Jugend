@@ -60,6 +60,20 @@ class OrganizationController extends Controller {
     }
 
     #[NoAdminRequired]
+    public function clonePeriod(int $sourcePeriodId = 0, string $key = '', string $title = '', ?string $startsOn = null, ?string $endsOn = null): JSONResponse {
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
+        $actor = $this->session->getUser()?->getUID();
+        if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
+        try {
+            return new JSONResponse(['period' => $this->organization->clonePeriod($sourcePeriodId, $key, $title, $startsOn, $endsOn, $actor)], 201);
+        } catch (\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => 'invalid_template', 'message' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return new JSONResponse(['error' => 'clone_failed', 'message' => 'Die Organisationsperiode konnte nicht aus der Vorlage erstellt werden. Der Schlüssel ist möglicherweise bereits vergeben.'], 500);
+        }
+    }
+
+    #[NoAdminRequired]
     public function previewPeriod(int $periodId = 0): JSONResponse {
         if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
         try {
