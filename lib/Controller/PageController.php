@@ -51,12 +51,13 @@ class PageController extends Controller {
         ]);
 
         $userId = $this->userSession->getUser()?->getUID();
-        $settingsUrl = $userId !== null && $this->groupManager->isAdmin($userId)
-            ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => AdminSection::SECTION_ID])
-            : null;
+        $isAdmin = $userId !== null && $this->groupManager->isAdmin($userId);
+        $settingsUrl = $isAdmin ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => AdminSection::SECTION_ID]) : null;
+        $organizationUrl = $isAdmin ? $this->urlGenerator->linkToRoute('jugend.organizationpage.index') : null;
 
         return new TemplateResponse($this->appName, 'main', [
             'settingsUrl' => $settingsUrl,
+            'organizationUrl' => $organizationUrl,
         ]);
     }
 }
