@@ -105,4 +105,42 @@ class OrganizationController extends Controller {
             return new JSONResponse(['error' => 'update_failed', 'message' => 'Die Gruppenmitgliedschaften konnten nicht gespeichert werden.'], 500);
         }
     }
+
+    #[NoAdminRequired]
+    public function appAdmins(): JSONResponse {
+        $uid = $this->session->getUser()?->getUID();
+        if ($uid === null || !$this->groups->isAdmin($uid)) {
+            return new JSONResponse(['error' => 'forbidden'], 403);
+        }
+        return new JSONResponse(['admins' => $this->authorization->listAppAdmins()]);
+    }
+
+    #[NoAdminRequired]
+    public function grantAppAdmin(string $userId = ''): JSONResponse {
+        $actor = $this->session->getUser()?->getUID();
+        if ($actor === null || !$this->groups->isAdmin($actor)) {
+            return new JSONResponse(['error' => 'forbidden'], 403);
+        }
+        $userId = trim($userId);
+        if ($userId === '' || $this->users->get($userId) === null) {
+            return new JSONResponse(['error' => 'invalid_user', 'message' => 'Der Nextcloud-Benutzer wurde nicht gefunden.'], 400);
+        }
+        $this->authorization->grantAppAdmin($userId, $actor);
+        return new JSONResponse(['ok' => true, 'admins' => $this->authorization->listAppAdmins()]);
+    }
+
+    #[NoAdminRequired]
+    public function revokeAppAdmin(string $userId = ''): JSONResponse {
+        $actor = $this->session->getUser()?->getUID();
+        if ($actor === null || !$this->groups->isAdmin($actor)) {
+            return new JSONResponse(['error' => 'forbidden'], 403);
+        }
+        $userId = trim($userId);
+        if ($userId === '') {
+            return new JSONResponse(['error' => 'invalid_user'], 400);
+        }
+        $this->authorization->revokeAppAdmin($userId);
+        return new JSONResponse(['ok' => true, 'admins' => $this->authorization->listAppAdmins()]);
+    }
+
 }
