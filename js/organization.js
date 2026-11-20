@@ -76,6 +76,7 @@
         document.getElementById('jugend-rollover-activate').disabled = true;
         await loadGroups();
         if (period.status === 'draft') await loadRolloverPreview();
+        if (period.status === 'active') await loadTalkStatus();
     }
 
     async function loadGroups() {
@@ -161,6 +162,37 @@
         }
     }
 
+
+    async function loadTalkStatus() {
+        if (!selectedPeriod || selectedPeriod.status !== 'active' || !urls.talkProvisioningStatus) return;
+        const target = document.getElementById('jugend-talk-status');
+        target.replaceChildren(element('p', 'jugend-muted', 'Provisionierungsstatus wird geladen …'));
+        try {
+            const payload = await request(urls.talkProvisioningStatus + '?periodId=' + encodeURIComponent(selectedPeriod.id));
+            target.replaceChildren();
+            if (!payload.groups.length) {
+                target.append(element('p', 'jugend-muted', 'Keine Arbeitsgruppen in dieser Periode.'));
+                return;
+            }
+            const labels = {
+                not_started: 'Noch nicht bereitgestellt',
+                pending: 'Wartet',
+                running: 'Wird verarbeitet',
+                succeeded: 'Erfolgreich',
+                failed: 'Fehler – erneuter Versuch möglich'
+            };
+            payload.groups.forEach((group) => {
+                const row = element('div', 'jugend-member-row');
+                const detail = element('span', '', group.groupName + ' · ' + (labels[group.status] || group.status) + ' · Versuche: ' + group.attempts);
+                row.append(detail);
+                if (group.lastError) row.append(element('small', 'error', group.lastError));
+                target.append(row);
+            });
+        } catch (error) {
+            target.replaceChildren(element('p', 'error', error.message));
+        }
+    }
+
     document.getElementById('jugend-provision-talk').addEventListener('click', async () => {
         if (!selectedPeriod || selectedPeriod.status !== 'active') return;
         const button = document.getElementById('jugend-provision-talk');
@@ -190,6 +222,13 @@
             };
             renderEntries('Neu erstellt', result.created || []);
             renderEntries('Bereits vorhanden / abgeglichen', result.existing || []);
+            if ((result.archivedSynced || []).length) {
+                output.append(element('h4', '', 'Archivzugriff abgeglichen'));
+                result.archivedSynced.forEach((entry) => {
+                    output.append(element('p', 'jugend-muted', entry.periodTitle + ' · ' + entry.groupName + ': ' +
+                        (entry.participantsAdded?.length || 0) + ' hinzugefügt, ' + (entry.participantsRemoved?.length || 0) + ' entfernt'));
+                });
+            }
             (result.failed || []).forEach((failure) => {
                 output.append(element('p', 'error', failure.groupName + ': ' + failure.message));
             });
@@ -202,8 +241,11 @@
             showFeedback(error.message, true);
         } finally {
             button.disabled = false;
+            await loadTalkStatus();
         }
     });
+
+    document.getElementById('jugend-talk-status-refresh').addEventListener('click', loadTalkStatus);
 
     document.getElementById('jugend-rollover-refresh').addEventListener('click', loadRolloverPreview);
     activateButton.addEventListener('click', async () => {
