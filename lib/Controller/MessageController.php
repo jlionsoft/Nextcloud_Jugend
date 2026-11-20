@@ -40,9 +40,9 @@ class MessageController extends Controller {
         }
         try {
             return new JSONResponse($this->messages->send($message));
-        } catch (\\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_message', 'message' => $e->getMessage()], 400);
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             $errorId = bin2hex(random_bytes(6));
             $this->logger->error('Message delivery failed', ['app' => Application::APP_ID, 'exception' => $e, 'errorId' => $errorId]);
             return new JSONResponse(['error' => 'send_failed', 'errorId' => $errorId, 'message' => $this->l->t('Der Versand ist serverseitig fehlgeschlagen. Fehler-ID: %s. Details stehen im Nextcloud-Log.', [$errorId])], 500);
