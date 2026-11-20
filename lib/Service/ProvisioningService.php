@@ -55,10 +55,27 @@ class ProvisioningService {
         $payload = json_decode((string)$response->getBody(), true);
         $data = $payload['ocs']['data'] ?? [];
         $token = (string)($data['token'] ?? '');
-        if ((int)($payload['ocs']['meta']['statuscode'] ?? 0) !== 100 || $token === '') {
+        if (!in_array((int)($payload['ocs']['meta']['statuscode'] ?? 0), [100, 200, 201], true) || $token === '') {
             throw new RuntimeException('Nextcloud Talk hat keinen gültigen Raum zurückgegeben.');
         }
         return ['token' => $token, 'roomId' => isset($data['id']) ? (int)$data['id'] : null];
+    }
+
+    public function addTalkParticipant(string $token, string $userId): void {
+        $token = trim($token);
+        $userId = trim($userId);
+        if ($token === '' || $userId === '') {
+            throw new \InvalidArgumentException('Talk-Raumtoken und Benutzer-ID müssen gesetzt sein.');
+        }
+        $response = $this->request(
+            'POST',
+            '/ocs/v2.php/apps/spreed/api/v4/room/' . rawurlencode($token) . '/participants',
+            ['newParticipant' => $userId, 'source' => 'users'],
+        );
+        $payload = json_decode((string)$response->getBody(), true);
+        if (!in_array((int)($payload['ocs']['meta']['statuscode'] ?? 0), [100, 200, 201], true)) {
+            throw new RuntimeException('Talk konnte den Benutzer ' . $userId . ' nicht zum Raum hinzufügen.');
+        }
     }
 
     private function request(string $method, string $path, array $form = []): \Psr\Http\Message\ResponseInterface {
