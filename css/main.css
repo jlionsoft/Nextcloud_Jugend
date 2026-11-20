@@ -541,28 +541,6 @@
     text-decoration: none;
 }
 
-.jugend-settings-group > h4 {
-    margin: var(--jugend-space-5) 0 var(--jugend-space-3);
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.jugend-settings-group > h3 + h4 {
-    margin-top: var(--jugend-space-3);
-}
-
-.jugend-settings-subgroup {
-    margin-top: var(--jugend-space-6);
-    padding-top: var(--jugend-space-5);
-    border-top: 1px solid var(--color-border);
-}
-
-.jugend-settings-subgroup > h4 {
-    margin: 0 0 var(--jugend-space-3);
-    font-size: 16px;
-    font-weight: 600;
-}
-
 .jugend-workspace-nav {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
