@@ -45,8 +45,11 @@ class GroupController extends Controller {
         }
 
         $groups = [];
-        foreach ($this->organization->listActiveGroups() as $group) {
+        foreach ($this->organization->listManageableGroups() as $group) {
             if ($this->authorization->can($uid, 'group.members.manage', 'group', (int)$group['id'])) {
+                // Draft groups are exposed only to users who can manage that
+                // exact group; their resources are deliberately not provisioned
+                // or exposed before the period becomes active.
                 $group['resources'] = $group['period_status'] === 'active'
                     ? $this->resources->getGroupResourceLinks((int)$group['id'])
                     : [];
