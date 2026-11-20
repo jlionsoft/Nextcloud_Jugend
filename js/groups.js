@@ -17,6 +17,7 @@
     const editor = document.getElementById('jugend-leader-membership-form');
     const memberList = document.getElementById('jugend-leader-membership-list');
     const outOfScope = document.getElementById('jugend-leader-out-of-scope');
+    const resourceLinks = document.getElementById('jugend-leader-resource-links');
     const feedback = document.getElementById('jugend-groups-feedback');
     let groups = [];
     let users = [];
@@ -69,6 +70,20 @@
         selectedLabel.textContent = (group.period_title ? group.period_title + ' · ' : '') + group.name;
         editor.hidden = false;
         memberList.replaceChildren();
+        resourceLinks.replaceChildren();
+        const resourceLabels = {talk: 'Talk öffnen', groupfolder: 'Dateiordner öffnen', calendar: 'Kalender öffnen'};
+        Object.entries(resourceLabels).forEach(([key, label]) => {
+            const url = group.resources?.[key];
+            if (url) {
+                const link = element('a', 'button', label);
+                link.href = url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                resourceLinks.append(link);
+            } else {
+                resourceLinks.append(element('span', 'jugend-muted', label + ': noch nicht bereitgestellt'));
+            }
+        });
 
         const available = new Set(users.map((user) => user.uid));
         const currentMembers = new Set(group.members.map((member) => member.user_id));
@@ -140,8 +155,13 @@
 
         const params = new URLSearchParams();
         params.set('groupId', selectedGroup.id);
+        const leaderInputs = [...document.querySelectorAll('.jugend-leader-role-check:checked')];
+        if (leaderInputs.length !== 2) {
+            showFeedback('Bitte markiere genau zwei Personen als Gruppenleitung.', true);
+            return;
+        }
         document.querySelectorAll('.jugend-leader-member-check:checked').forEach((input) => params.append('members[]', input.value));
-        document.querySelectorAll('.jugend-leader-role-check:checked').forEach((input) => params.append('leaders[]', input.value));
+        leaderInputs.forEach((input) => params.append('leaders[]', input.value));
 
         const saveButton = editor.querySelector('button[type="submit"]');
         saveButton.disabled = true;
