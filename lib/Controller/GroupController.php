@@ -5,6 +5,7 @@ namespace OCA\Jugend\Controller;
 
 use OCA\Jugend\Service\AuthorizationService;
 use OCA\Jugend\Service\OrganizationService;
+use OCA\Jugend\Service\ResourceProvisioningService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -16,6 +17,7 @@ class GroupController extends Controller {
         string $appName,
         IRequest $request,
         private OrganizationService $organization,
+        private ResourceProvisioningService $resources,
         private AuthorizationService $authorization,
         private IUserSession $session,
     ) {
@@ -48,6 +50,10 @@ class GroupController extends Controller {
             $groups = $this->organization->listGroupsForLeader($uid);
         }
 
+        foreach ($groups as &$group) {
+            $group['resources'] = $this->resources->getGroupResourceLinks((int)$group['id']);
+        }
+        unset($group);
         return new JSONResponse(['groups' => $groups]);
     }
 
