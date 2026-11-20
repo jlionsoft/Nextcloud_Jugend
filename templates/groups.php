@@ -4,6 +4,7 @@ declare(strict_types=1);
 ?>
 <?php print_unescaped($this->inc('_navigation')); ?>
 <div id="app-content" class="jugend-app-content">
+<div id="app-content-wrapper">
     <div id="jugend-groups" class="jugend-page jugend-organization">
         <header class="jugend-page__header">
             <div>
@@ -37,4 +38,5 @@ declare(strict_types=1);
             </section>
         </main>
     </div>
+</div>
 </div>

@@ -20,7 +20,7 @@ Native Nextcloud app replacing the existing JugendSendClient.
 
 ## User interface
 
-The app uses a responsive, full-width layout with Nextcloud theme variables and panel-based content areas. Administrator settings are grouped by integration, including Matrix homeserver, server name, bot user ID and access token. Secret values are never displayed; entering a new value replaces the stored secret, leaving the field empty keeps it, and the explicit remove action deletes it. Connection tests save the current form values before testing the selected integration.
+The app uses the native Nextcloud app structure with `#app-navigation`, `#app-content-wrapper`, Nextcloud theme variables, and the standard navigation, form, button and status patterns. The sidebar contains only areas available to the signed-in user. Administrator settings are grouped by integration, including Matrix homeserver, server name, bot user ID and access token. Secret values are never displayed; entering a new value replaces the stored secret, leaving the field empty keeps it, and the explicit remove action deletes it. Connection tests save the current form values before testing the selected integration.
 
 ## Runtime behavior and limitations
 

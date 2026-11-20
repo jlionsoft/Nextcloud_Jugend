@@ -4,6 +4,7 @@ declare(strict_types=1);
 ?>
 <?php print_unescaped($this->inc('_navigation')); ?>
 <div id="app-content" class="jugend-app-content">
+<div id="app-content-wrapper">
     <div id="jugend-organization" class="jugend-page jugend-organization">
         <header class="jugend-page__header">
             <div>
@@ -117,6 +118,7 @@ declare(strict_types=1);
                             <label for="jugend-group-description"><?php p($l->t('Beschreibung')); ?></label>
                             <input id="jugend-group-description" name="description" maxlength="500">
                         </div>
+                    </div>
                     </div>
                     <button type="submit" class="primary"><?php p($l->t('Gruppe anlegen')); ?></button>
                 </form>

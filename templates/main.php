@@ -5,6 +5,7 @@ declare(strict_types=1);
 ?>
 <?php print_unescaped($this->inc('_navigation')); ?>
 <div id="app-content" class="jugend-app-content">
+<div id="app-content-wrapper">
 <div id="jugend-app" class="jugend-page">
     <header class="jugend-page__header">
         <div>
@@ -63,5 +64,6 @@ declare(strict_types=1);
             </div>
         </form>
     </dialog>
+</div>
 </div>
 </div>

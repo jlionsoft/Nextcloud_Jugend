@@ -11,12 +11,6 @@
  *  - Type scale: 15px body (--default-font-size), 13px secondary, 20px headings, 24px titles.
  */
 
-/* Nextcloud's #content is a fixed-height, non-scrolling container; #app-content is the scroll area. */
-#app-content.jugend-app-content {
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
 /* ---------------------------------------------------------------------------
  * Tokens (derived from the Nextcloud variables)
  * ------------------------------------------------------------------------- */
