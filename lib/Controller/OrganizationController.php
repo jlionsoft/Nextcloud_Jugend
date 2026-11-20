@@ -164,9 +164,9 @@ class OrganizationController extends Controller {
         try {
             $role = $this->authorization->saveRole($roleId > 0 ? $roleId : null, $roleKey, $name, $description, $permissionKeys, $actor, $this->groups->isAdmin($actor));
             return new JSONResponse(['role' => $role], $roleId > 0 ? 200 : 201);
-        } catch (\\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_input', 'message' => $e->getMessage()], 400);
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             return new JSONResponse(['error' => 'save_failed', 'message' => 'Die Rolle konnte nicht gespeichert werden.'], 500);
         }
     }
@@ -179,7 +179,7 @@ class OrganizationController extends Controller {
         try {
             $this->authorization->deleteRole($roleId, $actor);
             return new JSONResponse(['ok' => true]);
-        } catch (\\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_input', 'message' => $e->getMessage()], 400);
         }
     }
@@ -196,9 +196,9 @@ class OrganizationController extends Controller {
         try {
             $this->authorization->assignRole($userId, $roleId, $scopeType, $scopeId, $actor, $this->groups->isAdmin($actor));
             return new JSONResponse(['ok' => true, 'assignments' => $this->authorization->listRoleAssignments()]);
-        } catch (\\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_input', 'message' => $e->getMessage()], 400);
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             return new JSONResponse(['error' => 'assign_failed', 'message' => 'Die Rolle konnte nicht zugewiesen werden.'], 500);
         }
     }
@@ -211,7 +211,7 @@ class OrganizationController extends Controller {
         try {
             $this->authorization->revokeRoleAssignment($assignmentId, $actor);
             return new JSONResponse(['ok' => true, 'assignments' => $this->authorization->listRoleAssignments()]);
-        } catch (\\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_input', 'message' => $e->getMessage()], 400);
         }
     }
