@@ -145,4 +145,76 @@ class OrganizationController extends Controller {
         return new JSONResponse(['ok' => true, 'admins' => $this->authorization->listAppAdmins()]);
     }
 
+
+    #[NoAdminRequired]
+    public function roles(): JSONResponse {
+        if ($denied = $this->requirePermission('roles.manage')) { return $denied; }
+        return new JSONResponse([
+            'roles' => $this->authorization->listRoles(),
+            'permissions' => $this->authorization->listPermissions(),
+            'assignments' => $this->authorization->listRoleAssignments(),
+        ]);
+    }
+
+    #[NoAdminRequired]
+    public function saveRole(int $roleId = 0, string $roleKey = '', string $name = '', string $description = '', array $permissionKeys = []): JSONResponse {
+        if ($denied = $this->requirePermission('roles.manage')) { return $denied; }
+        $actor = $this->session->getUser()?->getUID();
+        if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
+        try {
+            $role = $this->authorization->saveRole($roleId > 0 ? $roleId : null, $roleKey, $name, $description, $permissionKeys, $actor, $this->groups->isAdmin($actor));
+            return new JSONResponse(['role' => $role], $roleId > 0 ? 200 : 201);
+        } catch (\\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => 'invalid_input', 'message' => $e->getMessage()], 400);
+        } catch (\\Throwable $e) {
+            return new JSONResponse(['error' => 'save_failed', 'message' => 'Die Rolle konnte nicht gespeichert werden.'], 500);
+        }
+    }
+
+    #[NoAdminRequired]
+    public function deleteRole(int $roleId = 0): JSONResponse {
+        if ($denied = $this->requirePermission('roles.manage')) { return $denied; }
+        $actor = $this->session->getUser()?->getUID();
+        if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
+        try {
+            $this->authorization->deleteRole($roleId, $actor);
+            return new JSONResponse(['ok' => true]);
+        } catch (\\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => 'invalid_input', 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    #[NoAdminRequired]
+    public function assignRole(string $userId = '', int $roleId = 0, string $scopeType = 'global', ?int $scopeId = null): JSONResponse {
+        if ($denied = $this->requirePermission('roles.manage')) { return $denied; }
+        $actor = $this->session->getUser()?->getUID();
+        if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
+        $userId = trim($userId);
+        if ($userId === '' || $this->users->get($userId) === null) {
+            return new JSONResponse(['error' => 'invalid_user', 'message' => 'Der Nextcloud-Benutzer wurde nicht gefunden.'], 400);
+        }
+        try {
+            $this->authorization->assignRole($userId, $roleId, $scopeType, $scopeId, $actor, $this->groups->isAdmin($actor));
+            return new JSONResponse(['ok' => true, 'assignments' => $this->authorization->listRoleAssignments()]);
+        } catch (\\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => 'invalid_input', 'message' => $e->getMessage()], 400);
+        } catch (\\Throwable $e) {
+            return new JSONResponse(['error' => 'assign_failed', 'message' => 'Die Rolle konnte nicht zugewiesen werden.'], 500);
+        }
+    }
+
+    #[NoAdminRequired]
+    public function revokeRole(int $assignmentId = 0): JSONResponse {
+        if ($denied = $this->requirePermission('roles.manage')) { return $denied; }
+        $actor = $this->session->getUser()?->getUID();
+        if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
+        try {
+            $this->authorization->revokeRoleAssignment($assignmentId, $actor);
+            return new JSONResponse(['ok' => true, 'assignments' => $this->authorization->listRoleAssignments()]);
+        } catch (\\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => 'invalid_input', 'message' => $e->getMessage()], 400);
+        }
+    }
+
+
 }
