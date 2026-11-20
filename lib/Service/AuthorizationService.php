@@ -242,8 +242,9 @@ class AuthorizationService {
         if ($permissionKeys === [] || array_diff($permissionKeys, $known) !== []) {
             throw new \InvalidArgumentException('Die Rolle muss mindestens eine gültige Berechtigung enthalten.');
         }
-        if (!$allowPrivilegePermissions && in_array('roles.manage', $permissionKeys, true)) {
-            throw new \InvalidArgumentException('Die Berechtigung zur Rollenverwaltung darf nur durch globale Nextcloud-Administratoren vergeben werden.');
+        $privilegePermissions = ['organization.manage', 'roles.manage'];
+        if (!$allowPrivilegePermissions && array_intersect($privilegePermissions, $permissionKeys) !== []) {
+            throw new \InvalidArgumentException('Berechtigungen zur Organisations- oder Rollenverwaltung dürfen nur durch globale Nextcloud-Administratoren vergeben werden.');
         }
 
         if ($roleId !== null) {
@@ -369,8 +370,9 @@ class AuthorizationService {
     public function assignRole(string $uid, int $roleId, string $scopeType, ?int $scopeId, string $actor, bool $allowPrivilegePermissions): void {
         $role = $this->getRole($roleId);
         $this->validateScope($scopeType, $scopeId);
-        if (!$allowPrivilegePermissions && in_array('roles.manage', $role['permissions'], true)) {
-            throw new \InvalidArgumentException('Rollen mit Verwaltungsrechten dürfen nur globale Nextcloud-Administratoren zuweisen.');
+        $privilegePermissions = ['organization.manage', 'roles.manage'];
+        if (!$allowPrivilegePermissions && array_intersect($privilegePermissions, $role['permissions']) !== []) {
+            throw new \InvalidArgumentException('Rollen mit Organisations- oder Rollenverwaltungsrechten dürfen nur globale Nextcloud-Administratoren zuweisen.');
         }
         $qb = $this->db->getQueryBuilder();
         $qb->select('id')->from('jugend_user_roles')
