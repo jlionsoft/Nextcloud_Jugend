@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace OCA\Jugend\Controller;
 
 use OCA\Jugend\AppInfo\Application;
+use OCA\Jugend\Service\AuthorizationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -18,7 +19,7 @@ class OrganizationPageController extends Controller {
     public function __construct(
         string $appName,
         IRequest $request,
-        private IGroupManager $groupManager,
+        private AuthorizationService $authorization,
         private IUserSession $userSession,
         private IInitialState $initialState,
         private IURLGenerator $urlGenerator,
@@ -29,7 +30,7 @@ class OrganizationPageController extends Controller {
     #[NoAdminRequired]
     public function index(): TemplateResponse {
         $uid = $this->userSession->getUser()?->getUID();
-        if ($uid === null || !$this->groupManager->isAdmin($uid)) {
+        if ($uid === null || !$this->authorization->isAppAdmin($uid)) {
             return new TemplateResponse(Application::APP_ID, 'forbidden', [], 'error');
         }
 
