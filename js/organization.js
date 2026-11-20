@@ -137,6 +137,7 @@
             };
             addList('Neue Arbeitsgruppen', summary.addedGroups, (entry) => '+ ' + entry.name);
             addList('Wegfallende Arbeitsgruppen', summary.removedGroups, (entry) => '− ' + entry.name);
+            addList('Umbenannte Arbeitsgruppen', summary.renamedGroups, (entry) => entry.from + ' → ' + entry.to);
             addList('Mitgliedschaftsänderungen', summary.membershipChanges, (entry) => {
                 const changes = [];
                 if (entry.added.length) changes.push('neu: ' + entry.added.join(', '));
@@ -144,7 +145,7 @@
                 if (entry.leadershipChanged.length) changes.push('Leitungswechsel: ' + entry.leadershipChanged.join(', '));
                 return entry.group + ' — ' + changes.join('; ');
             });
-            if (!summary.addedGroups.length && !summary.removedGroups.length && !summary.membershipChanges.length) {
+            if (!summary.addedGroups.length && !summary.removedGroups.length && !summary.renamedGroups.length && !summary.membershipChanges.length) {
                 rolloverSummary.append(element('p', 'jugend-muted', 'Keine Gruppen- oder Mitgliedschaftsänderungen gegenüber der aktiven Periode.'));
             }
             activateButton.disabled = !preview.valid;
