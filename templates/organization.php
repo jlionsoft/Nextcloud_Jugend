@@ -31,7 +31,7 @@ declare(strict_types=1);
                         <button type="button" id="jugend-rollover-refresh" class="secondary">Vorschau aktualisieren</button>
                         <button type="button" id="jugend-rollover-activate" class="primary" disabled>Periode aktivieren</button>
                     </div>
-                    <p class="jugend-muted">Die Aktivierung archiviert die bisher aktive Periode. Externe Talk-, Datei- und Kalenderressourcen werden in dieser Entwicklungsstufe noch nicht provisioniert.</p>
+                    <p class="jugend-muted">Die Aktivierung archiviert die bisher aktive Periode. Talk, Dateiordner und Kalender werden anschließend separat bereitgestellt.</p>
                 </section>
 
                 <section id="jugend-resource-provisioning" class="jugend-organization-form" hidden>
@@ -39,11 +39,15 @@ declare(strict_types=1);
                     <p class="jugend-muted">Erstellt je Arbeitsgruppe einen Talk-Raum. Aktive Räume werden mit den aktuellen Gruppenmitgliedern abgeglichen; archivierte Räume erhalten Zugriff für alle aktuellen Abteilungsmitglieder.</p>
                     <div class="jugend-form-actions">
                         <button type="button" id="jugend-provision-talk" class="primary">Talk-Räume bereitstellen / abgleichen</button>
-                        <button type="button" id="jugend-talk-status-refresh" class="secondary">Status aktualisieren</button>
+                        <button type="button" id="jugend-provision-groupfolders" class="secondary">Dateiordner bereitstellen / abgleichen</button>
+                        <button type="button" id="jugend-provision-calendars" class="secondary">Kalender bereitstellen / abgleichen</button>
+                        <button type="button" id="jugend-talk-status-refresh" class="secondary">Talk-Status aktualisieren</button>
                     </div>
                     <h4>Provisionierungsstatus dieser Periode</h4>
                     <div id="jugend-talk-status" class="jugend-period-list" role="status" aria-live="polite"></div>
                     <div id="jugend-provision-talk-result" class="jugend-period-list" role="status" aria-live="polite"></div>
+                    <div id="jugend-provision-groupfolders-result" class="jugend-period-list" role="status" aria-live="polite"></div>
+                    <div id="jugend-provision-calendars-result" class="jugend-period-list" role="status" aria-live="polite"></div>
                 </section>
 
                 <form id="jugend-period-form" class="jugend-organization-form">
