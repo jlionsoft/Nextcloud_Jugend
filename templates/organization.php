@@ -69,6 +69,14 @@ declare(strict_types=1);
                     </div>
                     <button type="submit" class="primary"><?php p($l->t('Gruppe anlegen')); ?></button>
                 </form>
+                <section id="jugend-membership-editor" class="jugend-organization-form" hidden>
+                    <h3><?php p($l->t('Mitglieder und Gruppenleitung')); ?>: <span id="jugend-selected-group"></span></h3>
+                    <p class="jugend-muted"><?php p($l->t('Wähle die Mitglieder und markiere genau zwei davon als Gruppenleitung.')); ?></p>
+                    <form id="jugend-membership-form">
+                        <div id="jugend-membership-list" class="jugend-membership-list"></div>
+                        <button type="submit" class="primary"><?php p($l->t('Mitgliedschaften speichern')); ?></button>
+                    </form>
+                </section>
             </section>
         </main>
     </div>
