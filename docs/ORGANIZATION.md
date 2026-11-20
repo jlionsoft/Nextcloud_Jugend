@@ -95,11 +95,4 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 
 Die periodischen Organisationsdaten, Rollenverwaltung und Ressourcenadapter sind im Quellcode vorhanden. Die externen Integrationen gelten bis zum erfolgreichen Laufzeittest auf der Zielinstanz jedoch nicht als produktiv verifiziert.
 
-1. Wiederholbare Provisionierungsjobs mit Status-/Fehlerprotokoll für Nextcloud-Gruppen.
-2. Ressourcenadapter für Talk-Räume, Gruppenordner und Kalender.
-3. Vorbereitung und Prüfung aller Ressourcen vor dem finalen Periodenwechsel.
-4. Archivfreigaben für alle aktuellen Mitglieder der App-Zugriffsgruppe.
-5. Eigener Gruppenleitungs-Arbeitsbereich mit ausschließlich gruppenbezogenen Verwaltungsaktionen.
-6. Laufzeit- und Integrationstests auf der Zielinstanz mit Nextcloud Hub 26 / Server 35.
-
-Die App verändert weder die Authentik-Zugriffsgruppe noch historische Mitgliedschafts- oder Ressourceninhalte automatisch beim Austritt einer Person.
+Die App verändert weder die übergeordnete Authentik-Zugriffsgruppe noch historische Mitgliedschafts- oder Ressourceninhalte automatisch beim Austritt einer Person.
