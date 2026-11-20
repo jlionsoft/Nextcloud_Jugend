@@ -1,14 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace OCA\\Jugend\\Migration;
+namespace OCA\Jugend\Migration;
 
 use Closure;
-use OCP\\DB\\Types;
-use OCP\\IDBConnection;
-use OCP\\Migration\\IOutput;
-use OCP\\Migration\\SimpleMigrationStep;
-use OCP\\DB\\ISchemaWrapper;
+use OCP\DB\Types;
+use OCP\Migration\IOutput;
+use OCP\Migration\SimpleMigrationStep;
+use OCP\DB\ISchemaWrapper;
 
 /**
  * Creates the persistent foundation for period-based organisation management.
@@ -17,9 +16,6 @@ use OCP\\DB\\ISchemaWrapper;
  * the migration deliberately does not create Talk, Files or Calendar resources.
  */
 class Version000000Date20261120120000 extends SimpleMigrationStep {
-    public function __construct(private IDBConnection $connection) {
-    }
-
     public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
         /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
