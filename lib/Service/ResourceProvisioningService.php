@@ -516,6 +516,19 @@ class ResourceProvisioningService {
         return 'jugend-p' . $periodId . '-g' . $groupId;
     }
 
+    /** Returns links for the resources belonging to one work group. */
+    public function getGroupResourceLinks(int $groupId): array {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('resource_type', 'resource_url')
+            ->from('jugend_resources')
+            ->where($qb->expr()->eq('group_id', $qb->createNamedParameter($groupId)));
+        $resources = [];
+        foreach ($qb->executeQuery()->fetchAll() as $row) {
+            $resources[(string)$row['resource_type']] = $row['resource_url'];
+        }
+        return $resources;
+    }
+
     /** Returns current and archived status for every provisioned resource type. */
     public function getResourceProvisioningStatus(int $periodId): array {
         $period = $this->organization->getPeriod($periodId);
