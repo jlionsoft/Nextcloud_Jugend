@@ -44,6 +44,7 @@ class OrganizationPageController extends Controller {
             'previewPeriod' => $this->urlGenerator->linkToRoute('jugend.organization.previewPeriod'),
             'activatePeriod' => $this->urlGenerator->linkToRoute('jugend.organization.activatePeriod'),
             'provisionTalkRooms' => $this->urlGenerator->linkToRoute('jugend.organization.provisionTalkRooms'),
+            'talkProvisioningStatus' => $this->urlGenerator->linkToRoute('jugend.organization.talkProvisioningStatus'),
             'groups' => $this->urlGenerator->linkToRoute('jugend.organization.groups'),
             'createGroup' => $this->urlGenerator->linkToRoute('jugend.organization.createGroup'),
             'users' => $this->urlGenerator->linkToRoute('jugend.organization.users'),

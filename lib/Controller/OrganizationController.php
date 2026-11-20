@@ -263,6 +263,18 @@ class OrganizationController extends Controller {
 
 
     #[NoAdminRequired]
+    public function talkProvisioningStatus(int $periodId = 0): JSONResponse {
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
+        try {
+            return new JSONResponse($this->resources->getTalkProvisioningStatus($periodId));
+        } catch (\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return new JSONResponse(['error' => 'status_failed', 'message' => 'Der Provisionierungsstatus konnte nicht geladen werden.'], 500);
+        }
+    }
+
+    #[NoAdminRequired]
     public function provisionTalkRooms(int $periodId = 0): JSONResponse {
         if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
         $actor = $this->session->getUser()?->getUID();

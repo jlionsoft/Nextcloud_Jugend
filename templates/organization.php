@@ -36,10 +36,13 @@ declare(strict_types=1);
 
                 <section id="jugend-resource-provisioning" class="jugend-organization-form" hidden>
                     <h3>Ressourcen der aktiven Periode</h3>
-                    <p class="jugend-muted">Erstellt je Arbeitsgruppe einen eigenen Talk-Raum und lädt die aktuell eingetragenen Gruppenmitglieder ein. Bereits vorhandene Räume werden weiterverwendet.</p>
+                    <p class="jugend-muted">Erstellt je Arbeitsgruppe einen Talk-Raum. Aktive Räume werden mit den aktuellen Gruppenmitgliedern abgeglichen; archivierte Räume erhalten Zugriff für alle aktuellen Abteilungsmitglieder.</p>
                     <div class="jugend-form-actions">
                         <button type="button" id="jugend-provision-talk" class="primary">Talk-Räume bereitstellen / abgleichen</button>
+                        <button type="button" id="jugend-talk-status-refresh" class="secondary">Status aktualisieren</button>
                     </div>
+                    <h4>Provisionierungsstatus dieser Periode</h4>
+                    <div id="jugend-talk-status" class="jugend-period-list" role="status" aria-live="polite"></div>
                     <div id="jugend-provision-talk-result" class="jugend-period-list" role="status" aria-live="polite"></div>
                 </section>
 
