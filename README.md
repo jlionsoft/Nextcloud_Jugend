@@ -56,9 +56,16 @@ The Nextcloud server must be able to reach both Authentik and the MikroTik gatew
 
 The app must be installed and tested on a staging instance first. The CI workflow checks syntax and metadata only; it does not replace a live Nextcloud app installation test.
 
+## Organisation management (foundation in progress)
+
+The initial database schema and architecture decisions for period-based work groups are documented in [`docs/ORGANIZATION.md`](docs/ORGANIZATION.md). This is a foundation only: the management UI, scoped authorization, period activation workflow and Nextcloud resource synchronization are not implemented yet.
+
+- Authentik's existing app-access group remains the outer access gate. Removing a person from that group revokes access to the app and department archives; historical records are retained.
+- The app will own annual organisation periods, work groups, memberships, two equal group leaders per group, app roles and scoped permissions.
+- Each period will receive separate Talk, Files and Calendar resources. Archived Files and Calendar content is read-only for current department members; each period has a separate Talk conversation.
+
 ## Deliberately out of scope
 
 - Matrix room encryption is not implemented. The app sends standard unencrypted Matrix room messages; do not use encrypted rooms for the bot.
 - Separate Blazor/Authentik login.
-- App-specific roles and group-to-role mapping.
 - Native mobile client. The API is versioned at `/api/v1` to leave room for one later.
