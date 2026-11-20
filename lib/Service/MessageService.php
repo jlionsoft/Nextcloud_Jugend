@@ -2,12 +2,15 @@
 declare(strict_types=1);
 namespace OCA\Jugend\Service;
 
+use Psr\Log\LoggerInterface;
+
 class MessageService {
     public function __construct(
         private AuthentikService $authentik,
         private MatrixService $matrix,
         private SmsService $sms,
         private NextcloudTalkService $talk,
+        private LoggerInterface $logger,
     ) {}
 
     public function send(string $message): array {
@@ -26,7 +29,8 @@ class MessageService {
             $this->talk->send($message);
             $result['talk']['ok'] = true;
         } catch (\Throwable $e) {
-            $result['talk']['error'] = $e->getMessage();
+            $this->logger->error('Jugend Talk message delivery failed.', ['exception' => $e]);
+            $result['talk']['error'] = 'Die Nachricht konnte nicht über Nextcloud Talk versendet werden.';
         }
 
         try {
@@ -34,23 +38,46 @@ class MessageService {
             $matrix = $this->matrix->sendToUsers($recipients, $message);
             $result['matrix'] = $matrix;
 
+            if ($result['matrix']['error'] !== null) {
+                $this->logger->error('Jugend Matrix message delivery failed.', [
+                    'error' => $result['matrix']['error'],
+                ]);
+                $result['matrix']['error'] = 'Der Matrix-Versand konnte nicht vollständig durchgeführt werden.';
+            }
+            foreach ($result['matrix']['failed'] as $index => &$failure) {
+                $this->logger->warning('Jugend Matrix recipient delivery failed.', [
+                    'recipientIndex' => $index,
+                    'error' => (string)($failure['error'] ?? 'Unbekannter Fehler'),
+                ]);
+                $failure['error'] = 'Die Zustellung an diesen Matrix-Empfänger ist fehlgeschlagen.';
+            }
+            unset($failure);
+
             $smsRecipients = array_values(array_filter(
                 $recipients,
                 static fn(array $recipient): bool => ($recipient['sms_enabled'] ?? false) && trim((string)($recipient['phone'] ?? '')) !== ''
             ));
             $result['sms']['total'] = count($smsRecipients);
-            foreach ($smsRecipients as $recipient) {
+            foreach ($smsRecipients as $index => $recipient) {
                 $label = $recipient['username'] !== '' ? $recipient['username'] : $recipient['phone'];
                 try {
                     $this->sms->send($recipient['phone'], $message);
                     $result['sms']['sent']++;
                 } catch (\Throwable $e) {
-                    $result['sms']['failed'][] = ['recipient' => $label, 'error' => $e->getMessage()];
+                    $this->logger->warning('Jugend SMS recipient delivery failed.', [
+                        'recipientIndex' => $index,
+                        'exception' => $e,
+                    ]);
+                    $result['sms']['failed'][] = [
+                        'recipient' => $label,
+                        'error' => 'Die SMS-Zustellung an diesen Empfänger ist fehlgeschlagen.',
+                    ];
                 }
             }
         } catch (\Throwable $e) {
-            $result['matrix']['error'] = $e->getMessage();
-            $result['sms']['error'] = $e->getMessage();
+            $this->logger->error('Jugend recipient lookup or message delivery failed.', ['exception' => $e]);
+            $result['matrix']['error'] = 'Die Matrix-Empfänger konnten nicht verarbeitet werden.';
+            $result['sms']['error'] = 'Die SMS-Empfänger konnten nicht verarbeitet werden.';
         }
 
         $result['success'] = $result['talk']['ok']
