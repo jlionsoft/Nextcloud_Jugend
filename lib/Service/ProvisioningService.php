@@ -61,6 +61,21 @@ class ProvisioningService {
         return ['token' => $token, 'roomId' => isset($data['id']) ? (int)$data['id'] : null];
     }
 
+    public function getTalkParticipantIds(string $token): array {
+        $response = $this->request('GET', '/ocs/v2.php/apps/spreed/api/v4/room/' . rawurlencode($token) . '/participants');
+        $payload = json_decode((string)$response->getBody(), true);
+        if (!in_array((int)($payload['ocs']['meta']['statuscode'] ?? 0), [100, 200], true)) {
+            throw new RuntimeException('Die Talk-Teilnehmer konnten nicht gelesen werden.');
+        }
+        $ids = [];
+        foreach (($payload['ocs']['data'] ?? []) as $participant) {
+            if (($participant['actorType'] ?? '') === 'users' && !empty($participant['actorId'])) {
+                $ids[] = (string)$participant['actorId'];
+            }
+        }
+        return $ids;
+    }
+
     public function addTalkParticipant(string $token, string $userId): void {
         $token = trim($token);
         $userId = trim($userId);
