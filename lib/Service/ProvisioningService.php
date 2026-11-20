@@ -125,7 +125,7 @@ class ProvisioningService {
         if ($serviceGroup === '') {
             throw new RuntimeException('Die Dienstgruppe für den Groupfolder-Stamm ist nicht konfiguriert.');
         }
-        $path = '/ocs/v2.php/apps/groupfolders/folders?format=json&mountpoint=' . rawurlencode($mountpoint);
+        $path = '/index.php/apps/groupfolders/folders?format=json&mountpoint=' . rawurlencode($mountpoint);
         $folders = $this->ocsData($this->request('GET', $path));
         foreach ($folders as $folder) {
             if (($folder['mount_point'] ?? '') !== $mountpoint) {
