@@ -39,11 +39,18 @@ class ResourceProvisioningService {
             }
 
             $created = false;
+            $recovered = false;
             try {
                 $resource = $this->findResource($groupId, 'talk');
                 if ($resource === null) {
-                    $roomName = mb_substr('Jugend ' . $period['title'] . ' – ' . $group['name'], 0, 255);
-                    $room = $this->client->createTalkRoom($roomName);
+                    $roomName = $this->talkRoomName($period, $group);
+                    $room = $this->client->findTalkRoomByName($roomName);
+                    if ($room === null) {
+                        $room = $this->client->createTalkRoom($roomName);
+                        $created = true;
+                    } else {
+                        $recovered = true;
+                    }
                     $url = $this->client->getBaseUrl() . '/call/' . rawurlencode($room['token']);
 
                     $qb = $this->db->getQueryBuilder();
@@ -56,8 +63,12 @@ class ResourceProvisioningService {
                     $qb->executeStatement();
 
                     $resource = ['resource_id' => $room['token'], 'resource_url' => $url];
-                    $created = true;
-                    $this->audit($actor, 'resource.talk.created', (string)$groupId, ['periodId' => $periodId]);
+                    $this->audit(
+                        $actor,
+                        $recovered ? 'resource.talk.recovered' : 'resource.talk.created',
+                        (string)$groupId,
+                        ['periodId' => $periodId]
+                    );
                 }
 
                 $expected = [];
@@ -192,8 +203,12 @@ class ResourceProvisioningService {
                         $result['existing'][] = $entry;
                     } else {
                         if ($type === 'talk') {
-                            $roomName = mb_substr('Jugend ' . $period['title'] . ' – ' . $group['name'], 0, 255);
-                            $room = $this->client->createTalkRoom($roomName);
+                            $roomName = $this->talkRoomName($period, $group);
+                            $room = $this->client->findTalkRoomByName($roomName);
+                            $recovered = $room !== null;
+                            if ($room === null) {
+                                $room = $this->client->createTalkRoom($roomName);
+                            }
                             $resourceId = (string)$room['token'];
                             $url = $this->client->getBaseUrl() . '/call/' . rawurlencode($resourceId);
                         } elseif ($type === 'groupfolder') {
@@ -216,10 +231,12 @@ class ResourceProvisioningService {
                             'url' => $url,
                         ];
                         $result['prepared'][] = $entry;
-                        $this->audit($actor, 'resource.' . $type . '.prepared', (string)$groupId, [
-                            'periodId' => $periodId,
-                            'resourceId' => $resourceId,
-                        ]);
+                        $this->audit($actor, $type === 'talk' && $recovered
+                            ? 'resource.talk.recovered'
+                            : 'resource.' . $type . '.prepared', (string)$groupId, [
+                                'periodId' => $periodId,
+                                'resourceId' => $resourceId,
+                            ]);
                     }
                     $this->finishJob($periodId, $groupId, $jobType, 'succeeded', null, $leaseToken);
                 } catch (\Throwable $e) {
@@ -650,6 +667,13 @@ class ResourceProvisioningService {
             ->where($qb->expr()->eq('r.resource_type', $qb->createNamedParameter('calendar')))
             ->andWhere($qb->expr()->eq('p.status', $qb->createNamedParameter('archived')));
         return $qb->executeQuery()->fetchAll();
+    }
+
+    private function talkRoomName(array $period, array $group): string {
+        $identifier = '[' . (string)$period['period_key'] . '/' . (string)$group['slug'] . ']';
+        $base = 'Jugend ' . (string)$period['title'] . ' – ' . (string)$group['name'];
+        $maxBaseLength = 255 - mb_strlen($identifier, 'UTF-8') - 1;
+        return mb_substr($base, 0, $maxBaseLength, 'UTF-8') . ' ' . $identifier;
     }
 
     private function calendarUri(int $periodId, int $groupId): string {
