@@ -118,6 +118,31 @@ class ProvisioningService {
         }
     }
 
+    /** Verify that the configured root is an actual Groupfolder shared to the service-only group. */
+    public function assertGroupFolderRoot(): void {
+        $mountpoint = $this->getProvisioningGroupFolderRoot();
+        $serviceGroup = $this->getProvisioningGroupId();
+        if ($serviceGroup === '') {
+            throw new RuntimeException('Die Dienstgruppe für den Groupfolder-Stamm ist nicht konfiguriert.');
+        }
+        $path = '/ocs/v2.php/apps/groupfolders/folders?format=json&mountpoint=' . rawurlencode($mountpoint);
+        $folders = $this->ocsData($this->request('GET', $path));
+        foreach ($folders as $folder) {
+            if (($folder['mount_point'] ?? '') !== $mountpoint) {
+                continue;
+            }
+            $groups = $folder['groups'] ?? [];
+            if (!array_key_exists($serviceGroup, $groups)) {
+                throw new RuntimeException('Der Dienstgruppe „' . $serviceGroup . '“ wurde kein Zugriff auf den Groupfolder „' . $mountpoint . '“ zugewiesen.');
+            }
+            if (((int)$groups[$serviceGroup] & 31) !== 31) {
+                throw new RuntimeException('Die Dienstgruppe benötigt Vollzugriff auf den Groupfolder-Stamm.');
+            }
+            return;
+        }
+        throw new RuntimeException('Der Groupfolder-Stamm „' . $mountpoint . '“ wurde nicht gefunden. Bitte in Nextcloud zuerst einen Groupfolder anlegen.');
+    }
+
     public function getProvisioningGroupFolderRoot(): string {
         $root = trim($this->config->getValueString('jugend', 'provisioning_groupfolder_root'));
         if ($root === '' || str_contains($root, '/') || in_array($root, ['.', '..'], true)) {
