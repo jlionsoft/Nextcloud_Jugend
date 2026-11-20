@@ -21,6 +21,7 @@ Das Dienstkonto benötigt für die Talk-Raumerstellung die Berechtigung, Gruppen
 - Aktive Talk-Räume werden mit den aktuellen Mitgliedern der jeweiligen Arbeitsgruppe abgeglichen.
 - Mitglieder, die nicht mehr zur aktiven Abteilungsgruppe in Authentik gehören, werden aus aktiven Gruppenräumen entfernt.
 - In archivierten Organisationsperioden werden alle vorhandenen Talk-Räume mit der aktuellen Abteilungsmitgliedschaft abgeglichen: aktuelle Mitglieder erhalten Zugriff, ausgeschiedene Mitglieder werden entfernt.
+- Dieser Abgleich läuft aktuell bei manueller Ausführung durch einen App-Admin. Änderungen an der Authentik-Gruppe werden daher nicht sofort oder automatisch in Talk gespiegelt.
 - Raum-Tokens werden bei Wiederholungen wiederverwendet; fehlende Teilnehmer werden ergänzt und nicht mehr berechtigte Teilnehmer entfernt.
 - Der Provisionierungsstatus wird je Periode und Arbeitsgruppe dauerhaft gespeichert (nicht begonnen, läuft, erfolgreich, fehlgeschlagen).
 - Fehlgeschlagene Einladungen/Entfernungen und letzte Fehlermeldung bleiben sichtbar. App-Admins können den Abgleich manuell erneut starten.
