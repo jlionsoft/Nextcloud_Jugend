@@ -5,6 +5,7 @@ namespace OCA\Jugend\Controller;
 
 use OCA\Jugend\AppInfo\Application;
 use OCA\Jugend\Service\AuthorizationService;
+use OCA\Jugend\Service\OrganizationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -22,6 +23,7 @@ class OrganizationPageController extends Controller {
         string $appName,
         IRequest $request,
         private AuthorizationService $authorization,
+        private OrganizationService $organization,
         private IGroupManager $groupManager,
         private IUserSession $userSession,
         private IInitialState $initialState,
@@ -70,9 +72,17 @@ class OrganizationPageController extends Controller {
             'manageAppAdmins' => $this->groupManager->isAdmin($uid),
             'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
         ]);
+        $groupsUrl = null;
+        foreach ($this->organization->listManageableGroups() as $group) {
+            if ($this->authorization->can($uid, 'group.members.manage', 'group', (int)$group['id'])) {
+                $groupsUrl = $this->urlGenerator->linkToRoute('jugend.groupPage.index');
+                break;
+            }
+        }
         $navigation = [
             'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
             'organization' => $this->urlGenerator->linkToRoute('jugend.organizationPage.index'),
+            'groups' => $groupsUrl,
             'settings' => $this->groupManager->isAdmin($uid)
                 ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => 'jugend'])
                 : null,

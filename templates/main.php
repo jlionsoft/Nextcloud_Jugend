@@ -3,16 +3,15 @@ declare(strict_types=1);
 /** @var array $_ */
 /** @var \OCP\IL10N\IL10N $l */
 ?>
-<div id="app">
-    <nav id="app-navigation" aria-label="<?php p($l->t('App-Navigation')); ?>">
-        <ul>
-            <li class="app-navigation-entry"><a href="<?php p($_['homeUrl']); ?>"><span class="icon icon-home" aria-hidden="true"></span><span><?php p($l->t('Nachrichten')); ?></span></a></li>
-            <?php if (!empty($_['organizationUrl'])) { ?><li class="app-navigation-entry"><a href="<?php p($_['organizationUrl']); ?>"><span class="icon icon-category-monitoring" aria-hidden="true"></span><span><?php p($l->t('Organisation')); ?></span></a></li><?php } ?>
-            <?php if (!empty($_['groupsUrl'])) { ?><li class="app-navigation-entry"><a href="<?php p($_['groupsUrl']); ?>"><span class="icon icon-group" aria-hidden="true"></span><span><?php p($l->t('Arbeitsgruppen')); ?></span></a></li><?php } ?>
-            <?php if (!empty($_['settingsUrl'])) { ?><li class="app-navigation-entry"><a href="<?php p($_['settingsUrl']); ?>"><span class="icon icon-settings" aria-hidden="true"></span><span><?php p($l->t('Einstellungen')); ?></span></a></li><?php } ?>
-        </ul>
-    </nav>
-    <div id="app-content" class="jugend-app-content">
+<div id="app-navigation">
+    <ul id="usergrouplist">
+        <li class="active"><a class="icon-comment" href="<?php p($_['homeUrl']); ?>" aria-current="page"><?php p($l->t('Nachrichten')); ?></a></li>
+        <?php if (!empty($_['organizationUrl'])) { ?><li><a class="icon-category-monitoring" href="<?php p($_['organizationUrl']); ?>"><?php p($l->t('Organisation')); ?></a></li><?php } ?>
+        <?php if (!empty($_['groupsUrl'])) { ?><li><a class="icon-group" href="<?php p($_['groupsUrl']); ?>"><?php p($l->t('Arbeitsgruppen')); ?></a></li><?php } ?>
+        <?php if (!empty($_['settingsUrl'])) { ?><li><a class="icon-settings" href="<?php p($_['settingsUrl']); ?>"><?php p($l->t('Einstellungen')); ?></a></li><?php } ?>
+    </ul>
+</div>
+<div id="app-content" class="jugend-app-content">
 <div id="jugend-app" class="jugend-page">
     <header class="jugend-page__header">
         <div>
@@ -73,4 +72,3 @@ declare(strict_types=1);
     </dialog>
 </div>
     </div>
-</div>
