@@ -54,6 +54,7 @@ Die Aktivierung wird serverseitig abgewiesen, solange nicht für jede Arbeitsgru
 - Bei Archivierung werden die früheren Authentik-Arbeitsgruppen geleert; historische Inhalte werden stattdessen für alle aktuellen Abteilungsmitglieder freigegeben.
 - Der Provisionierungsstatus wird je Periode und Arbeitsgruppe dauerhaft gespeichert (nicht begonnen, läuft, erfolgreich, fehlgeschlagen).
 - Fehlgeschlagene Einladungen/Freigaben und letzte Fehlermeldung bleiben sichtbar. App-Admins können den Abgleich manuell erneut starten.
+- Der 15-Minuten-Hintergrundjob protokolliert Start, Abschluss, letzten erfolgreichen Lauf und den letzten Fehler dauerhaft. App-Admins sehen den globalen Jobstatus auf der Organisationsseite.
 - Audit-Ereignisse werden bei erfolgreicher Ressourcenregistrierung geschrieben.
 
 Die Ressourcen werden soweit möglich bereits vor der Aktivierung angelegt. Die Aktivierung selbst führt weiterhin keine externen API-Aufrufe aus: Sie prüft nur den lokal gespeicherten Vorbereitungsstatus und schaltet die Organisationsperiode transaktional um. Die eigentliche Berechtigungs- und Mitgliedschaftssynchronisierung läuft danach als separater, wiederholbarer Schritt.
