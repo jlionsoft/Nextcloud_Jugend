@@ -16,6 +16,8 @@ if (!empty($_['settingsUrl'])) {
 }
 ?>
 <div id="jugend-vue-root" data-navigation="<?php p(json_encode($navigation, JSON_UNESCAPED_SLASHES)); ?>">
+    <div id="jugend-vue-app"></div>
+    <div class="jugend-server-fallback">
     <div id="app-navigation">
         <ul id="usergrouplist">
             <?php foreach ($navigation as $item) { ?>
@@ -66,5 +68,6 @@ if (!empty($_['settingsUrl'])) {
                 </aside>
             </main>
         </div>
+    </div>
     </div>
 </div>

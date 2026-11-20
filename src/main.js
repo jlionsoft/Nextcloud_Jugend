@@ -12,9 +12,10 @@ import NcModal from '@nextcloud/vue/components/NcModal'
 import NcContent from '@nextcloud/vue/components/NcContent'
 
 const root = document.getElementById('jugend-vue-root')
-if (root) {
+const mountPoint = document.getElementById('jugend-vue-app')
+if (root && mountPoint) {
 	try {
-		createApp({
+		const app = createApp({
 		components: {
 			NcAppNavigation,
 			NcAppNavigationItem,
@@ -139,7 +140,14 @@ if (root) {
 				</NcAppContent>
 			</NcContent>
 		`,
-		}).mount(root)
+		})
+		app.config.errorHandler = (error, _instance, info) => {
+			console.error('Jugend: Vue runtime error (' + info + ').', error)
+			root.querySelector('.jugend-server-fallback')?.removeAttribute('hidden')
+		}
+		app.mount(mountPoint)
+		const fallback = root.querySelector('.jugend-server-fallback')
+		if (fallback) fallback.hidden = true
 	} catch (error) {
 		console.error('Jugend: Vue app could not be mounted; keeping the server-rendered fallback.', error)
 	}
