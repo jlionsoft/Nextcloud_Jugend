@@ -14,6 +14,8 @@ use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
 class TalkWebhookController extends Controller {
+    private const MAX_BODY_SIZE = 1048576;
+
     /** @var \OCP\ICache */
     private $replayCache;
 
@@ -37,9 +39,13 @@ class TalkWebhookController extends Controller {
     #[PublicPage]
     #[NoCSRFRequired]
     public function webhook(): JSONResponse {
-        $body = file_get_contents('php://input');
+        $body = file_get_contents('php://input', false, null, 0, self::MAX_BODY_SIZE + 1);
         if ($body === false || $body === '') {
             return new JSONResponse(['error' => 'empty_body'], 400);
+        }
+        if (strlen($body) > self::MAX_BODY_SIZE) {
+            $this->logger->warning('Jugend Talk webhook rejected: request body exceeds size limit.');
+            return new JSONResponse(['error' => 'payload_too_large'], 413);
         }
         $random = $this->request->getHeader('X-Nextcloud-Talk-Random');
         $signature = strtolower($this->request->getHeader('X-Nextcloud-Talk-Signature'));
