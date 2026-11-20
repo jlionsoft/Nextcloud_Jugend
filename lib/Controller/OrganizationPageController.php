@@ -47,6 +47,12 @@ class OrganizationPageController extends Controller {
             'appAdmins' => $this->urlGenerator->linkToRoute('jugend.organization.appAdmins'),
             'grantAppAdmin' => $this->urlGenerator->linkToRoute('jugend.organization.grantAppAdmin'),
             'revokeAppAdmin' => $this->urlGenerator->linkToRoute('jugend.organization.revokeAppAdmin'),
+            'roles' => $this->urlGenerator->linkToRoute('jugend.organization.roles'),
+            'saveRole' => $this->urlGenerator->linkToRoute('jugend.organization.saveRole'),
+            'deleteRole' => $this->urlGenerator->linkToRoute('jugend.organization.deleteRole'),
+            'assignRole' => $this->urlGenerator->linkToRoute('jugend.organization.assignRole'),
+            'revokeRole' => $this->urlGenerator->linkToRoute('jugend.organization.revokeRole'),
+            'manageRoles' => $this->authorization->can($uid, 'roles.manage'),
             'manageAppAdmins' => $this->groupManager->isAdmin($uid),
             'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
         ]);
