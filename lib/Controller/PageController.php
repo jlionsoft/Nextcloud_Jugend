@@ -59,7 +59,16 @@ class PageController extends Controller {
         $settingsUrl = $isAdmin ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => AdminSection::SECTION_ID]) : null;
         $isAppAdmin = $userId !== null && $this->authorization->isAppAdmin($userId);
         $organizationUrl = $isAppAdmin ? $this->urlGenerator->linkToRoute('jugend.organizationPage.index') : null;
-        $groupsUrl = ($userId !== null && ($isAppAdmin || $this->organization->listGroupsForLeader($userId) !== []))
+        $canManageAnyGroup = false;
+        if ($userId !== null) {
+            foreach ($this->organization->listActiveGroups() as $group) {
+                if ($this->authorization->can($userId, 'group.members.manage', 'group', (int)$group['id'])) {
+                    $canManageAnyGroup = true;
+                    break;
+                }
+            }
+        }
+        $groupsUrl = $canManageAnyGroup
             ? $this->urlGenerator->linkToRoute('jugend.groupPage.index')
             : null;
 
