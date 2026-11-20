@@ -61,6 +61,34 @@ class ProvisioningService {
         return ['token' => $token, 'roomId' => isset($data['id']) ? (int)$data['id'] : null];
     }
 
+    /**
+     * Finds a previously created group room by its deterministic app-owned name.
+     * This recovers a room if its remote creation succeeded but local persistence failed.
+     */
+    public function findTalkRoomByName(string $name): ?array {
+        $name = trim($name);
+        if ($name === '') {
+            throw new \\InvalidArgumentException('Der Talk-Raumname ist ungültig.');
+        }
+        $data = $this->ocsData($this->request('GET', '/ocs/v2.php/apps/spreed/api/v4/room'));
+        $matches = array_values(array_filter(
+            $data,
+            static fn(array $room): bool => (int)($room['type'] ?? 0) === 2
+                && (string)($room['name'] ?? '') === $name
+        ));
+        if (count($matches) > 1) {
+            throw new RuntimeException('Mehrere Talk-Räume besitzen dieselbe App-Kennung. Die automatische Zuordnung wurde abgebrochen.');
+        }
+        if ($matches === []) {
+            return null;
+        }
+        $token = trim((string)($matches[0]['token'] ?? ''));
+        if ($token === '') {
+            throw new RuntimeException('Der gefundene Talk-Raum besitzt kein gültiges Token.');
+        }
+        return ['token' => $token, 'roomId' => isset($matches[0]['id']) ? (int)$matches[0]['id'] : null];
+    }
+
     public function getTalkParticipants(string $token): array {
         $response = $this->request('GET', '/ocs/v2.php/apps/spreed/api/v4/room/' . rawurlencode($token) . '/participants');
         $payload = json_decode((string)$response->getBody(), true);
