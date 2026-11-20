@@ -88,6 +88,13 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 
 ### Noch ausstehende Schritte
 
+1. Eigener Gruppenleitungs-Arbeitsbereich mit ausschließlich gruppenbezogenen Verwaltungsaktionen.
+2. Vollständige Laufzeit- und Integrationstests auf der Zielinstanz mit Nextcloud Hub 26 / Server 35.
+3. Automatische Kompensation verwaister Remote-Ressourcen, falls ein externer Dienst eine Ressource erstellt, aber die lokale Datenbankregistrierung fehlschlägt.
+4. Überwachung und sichtbarer Gesamtstatus des Hintergrundjobs einschließlich des letzten erfolgreichen Laufs.
+
+Die periodischen Organisationsdaten, Rollenverwaltung und Ressourcenadapter sind im Quellcode vorhanden. Die externen Integrationen gelten bis zum erfolgreichen Laufzeittest auf der Zielinstanz jedoch nicht als produktiv verifiziert.
+
 1. Wiederholbare Provisionierungsjobs mit Status-/Fehlerprotokoll für Nextcloud-Gruppen.
 2. Ressourcenadapter für Talk-Räume, Gruppenordner und Kalender.
 3. Vorbereitung und Prüfung aller Ressourcen vor dem finalen Periodenwechsel.
