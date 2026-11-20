@@ -1,18 +1,18 @@
 <?php
 declare(strict_types=1);
-namespace OCA\Jugend\Controller;
+namespace OCA\\Jugend\\Controller;
 
-use OCA\Jugend\Service\AuthentikService;
-use OCA\Jugend\Service\MatrixService;
-use OCA\Jugend\Service\NextcloudTalkService;
-use OCA\Jugend\Service\ProvisioningService;
-use OCA\Jugend\Service\SmsService;
-use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http\JSONResponse;
-use OCP\IAppConfig;
-use OCP\IL10N;
-use OCP\IRequest;
-use Psr\Log\LoggerInterface;
+use OCA\\Jugend\\Service\\AuthentikService;
+use OCA\\Jugend\\Service\\MatrixService;
+use OCA\\Jugend\\Service\\NextcloudTalkService;
+use OCA\\Jugend\\Service\\ProvisioningService;
+use OCA\\Jugend\\Service\\SmsService;
+use OCP\\AppFramework\\Controller;
+use OCP\\AppFramework\\Http\\JSONResponse;
+use OCP\\IAppConfig;
+use OCP\\IL10N;
+use OCP\\IRequest;
+use Psr\\Log\\LoggerInterface;
 
 class SettingsController extends Controller {
     public const SECRET_KEYS = ['authentik_token', 'talk_bot_secret', 'sms_password', 'matrix_bot_token', 'provisioning_app_password'];
@@ -55,9 +55,7 @@ class SettingsController extends Controller {
             'provisioning_url' => $provisioning_url,
         ];
         foreach ($urls as $key => $url) {
-            $url = trim($url);
-            $scheme = strtolower((string)parse_url($url, PHP_URL_SCHEME));
-            if ($url !== '' && (filter_var($url, FILTER_VALIDATE_URL) === false || !in_array($scheme, ['http', 'https'], true))) {
+            if (trim($url) !== '' && !$this->isValidServiceBaseUrl(trim($url))) {
                 return new JSONResponse(['saved' => false, 'message' => $this->l->t('Ungültige URL in %s.', [$key])], 400);
             }
         }
@@ -113,12 +111,34 @@ class SettingsController extends Controller {
                 'sms' => $this->sms->testConnection(),
                 'talk' => $this->talk->testConnection(),
                 'provisioning' => $this->provisioning->testConnection(),
-                default => throw new \InvalidArgumentException($this->l->t('Unbekannter Verbindungstyp.')),
+                default => throw new \\InvalidArgumentException($this->l->t('Unbekannter Verbindungstyp.')),
             };
             return new JSONResponse($result);
-        } catch (\Throwable $e) {
+        } catch (\\Throwable $e) {
             $this->logger->warning('Jugend settings connection test failed for channel "' . $channel . '".', ['exception' => $e]);
             return new JSONResponse(['ok' => false, 'message' => $this->l->t('Verbindungstest fehlgeschlagen. Bitte prüfe die Einstellungen und das Serverprotokoll.')], 400);
         }
+    }
+
+    /**
+     * Validates a service base URL without restricting internal hosts or proxy paths.
+     */
+    private function isValidServiceBaseUrl(string $url): bool {
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+            return false;
+        }
+
+        $parts = parse_url($url);
+        if (!is_array($parts)
+            || !in_array(strtolower((string)($parts['scheme'] ?? '')), ['http', 'https'], true)
+            || empty($parts['host'])
+            || isset($parts['user'])
+            || isset($parts['pass'])
+            || isset($parts['query'])
+            || isset($parts['fragment'])) {
+            return false;
+        }
+
+        return !isset($parts['port']) || ($parts['port'] >= 1 && $parts['port'] <= 65535);
     }
 }
