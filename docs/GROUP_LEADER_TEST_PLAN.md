@@ -28,13 +28,20 @@ Dieser Test prüft insbesondere, dass globale App-Admin-Berechtigungen nicht dur
 3. Erwartung: Gruppe A wird angezeigt, Gruppe B nicht.
 4. Eine API-Anfrage auf die Gruppenliste muss dasselbe Ergebnis liefern.
 
-### 3. Fremde Gruppe bleibt serverseitig geschützt
+### 3. Geplante Gruppe für die nächste Periode bearbeiten
+
+1. Eine Entwurfsperiode aus der aktiven Periode kopieren.
+2. Als aktuelle Gruppenleitung die passende Gruppe mit identischem technischem Slug im Gruppenleitungsbereich auswählen.
+3. Mitglieder und die beiden Leitungsrollen für den Entwurf ändern.
+4. Erwartung: Die Änderung ist möglich und wird historisiert. Die aktuelle aktive Gruppe bleibt unverändert; externe Ressourcen werden für den Entwurf noch nicht freigegeben.
+
+### 4. Fremde Gruppe bleibt serverseitig geschützt
 
 1. Als Gruppenleitung von Gruppe A die Gruppen-ID von Gruppe B verwenden.
 2. Den Endpunkt zum Speichern der Mitgliedschaften direkt mit dieser Gruppen-ID aufrufen.
 3. Erwartung: HTTP 403; keine Datenbankänderung.
 
-### 4. Aktive Mitgliedschaften ändern
+### 5. Aktive Mitgliedschaften ändern
 
 1. Als Gruppenleitung von Gruppe A ein aktuelles Mitglied hinzufügen.
 2. Genau zwei Personen als Gruppenleitung markieren.
@@ -42,26 +49,26 @@ Dieser Test prüft insbesondere, dass globale App-Admin-Berechtigungen nicht dur
 4. Erwartung: Änderung wird in der Tabelle jugend_members als neues Mitgliedschaftsintervall gespeichert.
 5. Innerhalb des nächsten 15-Minuten-Laufs müssen Authentik-Mitgliedschaft, Talk-Teilnehmer, Groupfolder-Freigabe und Kalenderfreigabe abgeglichen werden.
 
-### 5. Nicht zugelassene Personen
+### 6. Nicht zugelassene Personen
 
 1. Eine Person verwenden, die nicht in der aktuellen Authentik-App-Zugriffsgruppe ist.
 2. Diese Person über den API-Endpunkt als Mitglied übermitteln.
 3. Erwartung: HTTP 400 und keine Änderung an der Mitgliedschaft.
 
-### 6. Gruppenleitung entziehen
+### 7. Gruppenleitung entziehen
 
 1. Als berechtigte Person die bisherige Gruppenleitung durch eine andere Person ersetzen.
 2. Speichern.
 3. Erwartung: Die bisherige Gruppenleitung verliert beim nächsten Request die dynamische Berechtigung für diese Gruppe.
 
-### 7. Ressourcenkurzlinks
+### 8. Ressourcenkurzlinks
 
 1. Für eine aktive Gruppe Talk, Groupfolder und Kalender bereitstellen.
 2. Gruppenleitungsbereich neu laden.
 3. Erwartung: Die drei Kurzlinks öffnen die zugehörigen Ressourcen.
 4. Nicht bereitgestellte Ressourcen werden als solche angezeigt; es dürfen keine erfundenen Links entstehen.
 
-### 8. Benutzer ohne Gruppenberechtigung
+### 9. Benutzer ohne Gruppenberechtigung
 
 1. Als normaler Benutzer ohne Gruppenleitung und ohne Gruppenberechtigung anmelden.
 2. /apps/jugend/groups direkt aufrufen und API-Endpunkte testen.
