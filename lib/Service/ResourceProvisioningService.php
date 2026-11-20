@@ -36,7 +36,7 @@ class ResourceProvisioningService {
             try {
                 $roomName = mb_substr('Jugend ' . $period['title'] . ' – ' . $group['name'], 0, 255);
                 $room = $this->client->createTalkRoom($roomName);
-                $baseUrl = rtrim((string)$this->getProvisioningUrl(), '/');
+                $baseUrl = rtrim($this->client->getBaseUrl(), '/');
                 $url = $baseUrl . '/call/' . rawurlencode($room['token']);
 
                 $qb = $this->db->getQueryBuilder();
@@ -73,12 +73,6 @@ class ResourceProvisioningService {
             ->andWhere($qb->expr()->eq('resource_type', $qb->createNamedParameter($type)));
         $row = $qb->executeQuery()->fetch();
         return $row ?: null;
-    }
-
-    private function getProvisioningUrl(): string {
-        // The configured URL is exposed by the client only through its validated
-        // connection; the stored resource URL is reconstructed by the caller.
-        return '';
     }
 
     private function audit(string $actor, string $action, string $subjectId, array $details): void {
