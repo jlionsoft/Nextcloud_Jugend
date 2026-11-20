@@ -13,6 +13,7 @@ return [
         ['name' => 'organization#provisionGroupFolders', 'url' => '/api/v1/organization/periods/provision-groupfolders', 'verb' => 'POST'],
         ['name' => 'organization#provisionCalendars', 'url' => '/api/v1/organization/periods/provision-calendars', 'verb' => 'POST'],
         ['name' => 'organization#talkProvisioningStatus', 'url' => '/api/v1/organization/periods/provision-talk/status', 'verb' => 'GET'],
+        ['name' => 'organization#resourceProvisioningStatus', 'url' => '/api/v1/organization/periods/provisioning/status', 'verb' => 'GET'],
         ['name' => 'organization#groups', 'url' => '/api/v1/organization/groups', 'verb' => 'GET'],
         ['name' => 'organization#createGroup', 'url' => '/api/v1/organization/groups', 'verb' => 'POST'],
         ['name' => 'organization#users', 'url' => '/api/v1/organization/users', 'verb' => 'GET'],
