@@ -779,7 +779,8 @@ class ResourceProvisioningService {
             ->set('attempts', $qb->createNamedParameter((int)$row['attempts'] + 1))
             ->set('last_error', $qb->createNamedParameter(null))
             ->set('updated_at', $qb->createNamedParameter($now))
-            ->set('started_at', $qb->createNamedParameter($leaseToken))
+            ->set('started_at', $qb->createNamedParameter($now))
+            ->set('lease_token', $qb->createNamedParameter($leaseToken))
             ->set('finished_at', $qb->createNamedParameter(null))
             ->where($qb->expr()->eq('id', $qb->createNamedParameter((int)$row['id'])))
             ->andWhere($qb->expr()->orX(
@@ -807,11 +808,12 @@ class ResourceProvisioningService {
             ->set('last_error', $qb->createNamedParameter($error === null ? null : mb_substr($error, 0, 4000)))
             ->set('updated_at', $qb->createNamedParameter(time()))
             ->set('finished_at', $qb->createNamedParameter(time()))
+            ->set('lease_token', $qb->createNamedParameter(null))
             ->where($qb->expr()->eq('period_id', $qb->createNamedParameter($periodId)))
             ->andWhere($qb->expr()->eq('group_id', $qb->createNamedParameter($groupId)))
             ->andWhere($qb->expr()->eq('resource_type', $qb->createNamedParameter($type)))
             ->andWhere($qb->expr()->eq('status', $qb->createNamedParameter('running')))
-            ->andWhere($qb->expr()->eq('started_at', $qb->createNamedParameter($leaseToken)));
+            ->andWhere($qb->expr()->eq('lease_token', $qb->createNamedParameter($leaseToken)));
         $qb->executeStatement();
     }
 
