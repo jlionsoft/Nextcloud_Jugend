@@ -157,11 +157,11 @@ class ResourceProvisioningService {
     public function preparePeriodResources(int $periodId, string $actor): array {
         $period = $this->organization->getPeriod($periodId);
         if ($period['status'] !== 'draft') {
-            throw new \\InvalidArgumentException('Nur geplante Organisationsperioden können vorbereitet werden.');
+            throw new \InvalidArgumentException('Nur geplante Organisationsperioden können vorbereitet werden.');
         }
         $preview = $this->organization->previewPeriod($periodId);
         if (!$preview['valid']) {
-            throw new \\InvalidArgumentException('Die Periode enthält noch Organisationsfehler: ' . implode(' ', $preview['errors']));
+            throw new \InvalidArgumentException('Die Periode enthält noch Organisationsfehler: ' . implode(' ', $preview['errors']));
         }
 
         $this->client->assertGroupFolderRoot();
@@ -222,7 +222,7 @@ class ResourceProvisioningService {
                         ]);
                     }
                     $this->finishJob($periodId, $groupId, $jobType, 'succeeded', null, $leaseToken);
-                } catch (\\Throwable $e) {
+                } catch (\Throwable $e) {
                     $this->finishJob($periodId, $groupId, $jobType, 'failed', $e->getMessage(), $leaseToken);
                     $result['failed'][] = [
                         'groupId' => $groupId,
@@ -285,7 +285,7 @@ class ResourceProvisioningService {
         if (!$status['ready']) {
             $missing = $status['missing'];
             $detail = $missing === [] ? 'Es sind keine Arbeitsgruppen vorhanden.' : implode(', ', array_slice($missing, 0, 8));
-            throw new \\RuntimeException('Die Organisationsperiode ist noch nicht vollständig vorbereitet: ' . $detail);
+            throw new \RuntimeException('Die Organisationsperiode ist noch nicht vollständig vorbereitet: ' . $detail);
         }
     }
 
