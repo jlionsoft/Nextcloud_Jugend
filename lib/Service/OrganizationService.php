@@ -140,6 +140,22 @@ class OrganizationService {
         return $row;
     }
 
+    /** Returns all groups in active or draft periods for scoped authorization filtering. */
+    public function listManageableGroups(): array {
+        $groups = [];
+        foreach ($this->listPeriods() as $period) {
+            if (!in_array($period['status'], ['active', 'draft'], true)) {
+                continue;
+            }
+            foreach ($this->listGroups((int)$period['id']) as $group) {
+                $group['period_title'] = $period['title'];
+                $group['period_status'] = $period['status'];
+                $groups[] = $group;
+            }
+        }
+        return $groups;
+    }
+
     /** Returns all groups in the current active period, including their period label. */
     public function listActiveGroups(): array {
         $groups = [];
