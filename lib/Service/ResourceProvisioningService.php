@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace OCA\Jugend\Service;
 
 use OCP\DB\IDBConnection;
-use RuntimeException;
 
 class ResourceProvisioningService {
     public function __construct(
@@ -15,9 +14,8 @@ class ResourceProvisioningService {
     }
 
     /**
-     * Idempotently creates one private Talk room for each group in an active
-     * period. Persisting each token immediately makes retries safe after a
-     * partial failure.
+     * Creates one private Talk room per active-period group and reconciles
+     * current group members. Existing room tokens are reused on retries.
      */
     public function provisionTalkRooms(int $periodId, string $actor): array {
         $period = $this->organization->getPeriod($periodId);
@@ -27,37 +25,71 @@ class ResourceProvisioningService {
 
         $result = ['created' => [], 'existing' => [], 'failed' => []];
         foreach ($this->organization->listGroups($periodId) as $group) {
-            $existing = $this->findResource((int)$group['id'], 'talk');
-            if ($existing !== null) {
-                $result['existing'][] = ['groupId' => (int)$group['id'], 'groupName' => $group['name'], 'token' => $existing['resource_id']];
-                continue;
-            }
+            $groupId = (int)$group['id'];
+            $resource = $this->findResource($groupId, 'talk');
+            $created = false;
 
             try {
-                $roomName = mb_substr('Jugend ' . $period['title'] . ' – ' . $group['name'], 0, 255);
-                $room = $this->client->createTalkRoom($roomName);
-                $baseUrl = rtrim($this->client->getBaseUrl(), '/');
-                $url = $baseUrl . '/call/' . rawurlencode($room['token']);
+                if ($resource === null) {
+                    $roomName = mb_substr('Jugend ' . $period['title'] . ' – ' . $group['name'], 0, 255);
+                    $room = $this->client->createTalkRoom($roomName);
+                    $url = $this->client->getBaseUrl() . '/call/' . rawurlencode($room['token']);
 
-                $qb = $this->db->getQueryBuilder();
-                $qb->insert('jugend_resources')
-                    ->setValue('group_id', $qb->createNamedParameter((int)$group['id']))
-                    ->setValue('resource_type', $qb->createNamedParameter('talk'))
-                    ->setValue('resource_id', $qb->createNamedParameter($room['token']))
-                    ->setValue('resource_url', $qb->createNamedParameter($url))
-                    ->setValue('created_at', $qb->createNamedParameter(time()));
-                $qb->executeStatement();
+                    $qb = $this->db->getQueryBuilder();
+                    $qb->insert('jugend_resources')
+                        ->setValue('group_id', $qb->createNamedParameter($groupId))
+                        ->setValue('resource_type', $qb->createNamedParameter('talk'))
+                        ->setValue('resource_id', $qb->createNamedParameter($room['token']))
+                        ->setValue('resource_url', $qb->createNamedParameter($url))
+                        ->setValue('created_at', $qb->createNamedParameter(time()));
+                    $qb->executeStatement();
 
-                $result['created'][] = [
-                    'groupId' => (int)$group['id'],
+                    $resource = ['resource_id' => $room['token'], 'resource_url' => $url];
+                    $created = true;
+                    $this->audit($actor, 'resource.talk.created', (string)$groupId, ['periodId' => $periodId, 'token' => $room['token']]);
+                }
+
+                $token = (string)$resource['resource_id'];
+                $existingParticipants = $this->client->getTalkParticipantIds($token);
+                $added = [];
+                $participantErrors = [];
+                foreach ($group['members'] as $member) {
+                    $uid = (string)$member['user_id'];
+                    if (in_array($uid, $existingParticipants, true)) {
+                        continue;
+                    }
+                    try {
+                        $this->client->addTalkParticipant($token, $uid);
+                        $added[] = $uid;
+                    } catch (\Throwable $e) {
+                        $participantErrors[] = ['userId' => $uid, 'message' => $e->getMessage()];
+                    }
+                }
+
+                $entry = [
+                    'groupId' => $groupId,
                     'groupName' => $group['name'],
-                    'token' => $room['token'],
-                    'url' => $url,
+                    'token' => $token,
+                    'url' => $resource['resource_url'],
+                    'participantsAdded' => $added,
+                    'participantErrors' => $participantErrors,
                 ];
-                $this->audit($actor, 'resource.talk.created', (string)$group['id'], ['periodId' => $periodId, 'token' => $room['token']]);
+                if ($created) {
+                    $result['created'][] = $entry;
+                } else {
+                    $result['existing'][] = $entry;
+                }
+                if ($participantErrors !== []) {
+                    $result['failed'][] = [
+                        'groupId' => $groupId,
+                        'groupName' => $group['name'],
+                        'message' => 'Einige Gruppenmitglieder konnten nicht zum Talk-Raum hinzugefügt werden.',
+                        'participants' => $participantErrors,
+                    ];
+                }
             } catch (\Throwable $e) {
                 $result['failed'][] = [
-                    'groupId' => (int)$group['id'],
+                    'groupId' => $groupId,
                     'groupName' => $group['name'],
                     'message' => $e->getMessage(),
                 ];
