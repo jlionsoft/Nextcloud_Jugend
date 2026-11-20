@@ -71,7 +71,7 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 
 ### Jahreswechsel
 
-- Neue Perioden und Arbeitsgruppen können als Entwürfe unabhängig von der aktiven Periode vorbereitet werden.
+- Neue Perioden und Arbeitsgruppen können als Entwürfe unabhängig von der aktiven Periode vorbereitet werden. Beim Anlegen lässt sich optional eine bestehende Periode als Vorlage kopieren; Gruppen, aktuelle Mitglieder und Gruppenleitungen werden in einem Datenbankvorgang in den neuen Entwurf übernommen.
 - Die Aktivierungsvorschau vergleicht Gruppen anhand ihres technischen Slugs und zeigt neue/entfallende Gruppen sowie Mitgliedschafts- und Leitungsänderungen.
 - Vor der Aktivierung werden alle Gruppen auf genau zwei aktive Leitungen und alle Mitglieder auf vorhandene Nextcloud-Konten innerhalb der aktuellen Authentik-Empfängermenge geprüft.
 - Die Aktivierung archiviert die bisher aktive Periode und aktiviert die ausgewählte Entwurfsperiode in einer Datenbanktransaktion. Schlägt der Statuswechsel fehl, wird die Transaktion zurückgerollt.
