@@ -111,6 +111,25 @@ class AuthentikService {
         ];
     }
 
+    public function clearWorkgroupGroup(string $name, int $periodId, int $groupId): void {
+        $group = $this->findGroupByName($name);
+        if ($group === null) {
+            return;
+        }
+        $attributes = is_array($group['attributes'] ?? null) ? $group['attributes'] : [];
+        if (($attributes['managed_by'] ?? '') !== 'nextcloud-jugend'
+            || (int)($attributes['period_id'] ?? 0) !== $periodId
+            || (int)($attributes['group_id'] ?? 0) !== $groupId) {
+            throw new RuntimeException('Die Authentik-Gruppe „' . $name . '“ gehört nicht dieser App und wird nicht verändert.');
+        }
+        $uuid = (string)($group['pk'] ?? '');
+        foreach (array_unique(array_map('intval', $group['users'] ?? [])) as $pk) {
+            if ($pk > 0) {
+                $this->requestJson('POST', '/api/v3/core/groups/' . rawurlencode($uuid) . '/remove_user/', ['pk' => $pk], [200, 204]);
+            }
+        }
+    }
+
     private function findGroupByName(string $name): ?array {
         $path = '/api/v3/core/groups/?search=' . rawurlencode($name) . '&include_users=true';
         $data = $this->requestJson('GET', $path);
