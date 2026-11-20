@@ -135,10 +135,18 @@ class AuthorizationService {
         $qb = $this->db->getQueryBuilder();
         $qb->select('ur.id')
             ->from('jugend_user_roles', 'ur')
+            ->innerJoin('ur', 'jugend_roles', 'r', $qb->expr()->eq('ur.role_id', 'r.id'))
             ->innerJoin('ur', 'jugend_role_perm', 'rp', $qb->expr()->eq('ur.role_id', 'rp.role_id'))
             ->innerJoin('rp', 'jugend_perms', 'p', $qb->expr()->eq('rp.permission_id', 'p.id'))
             ->where($qb->expr()->eq('ur.user_id', $qb->createNamedParameter($uid)))
             ->andWhere($qb->expr()->eq('p.permission_key', $qb->createNamedParameter($permission)));
+        // Privileged permissions are effective only through the dedicated system
+        // app-admin role. This also neutralizes legacy custom-role assignments
+        // created before privileged permission grants were restricted.
+        if (in_array($permission, ['organization.manage', 'roles.manage'], true)) {
+            $qb->andWhere($qb->expr()->eq('r.role_key', $qb->createNamedParameter(self::ROLE_KEY)))
+                ->andWhere($qb->expr()->eq('r.is_system', $qb->createNamedParameter(true)));
+        }
         $scopeConditions = [$qb->expr()->andX(
             $qb->expr()->eq('ur.scope_type', $qb->createNamedParameter('global')),
             $qb->expr()->isNull('ur.scope_id')
