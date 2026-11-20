@@ -318,6 +318,144 @@ class ResourceProvisioningService {
         $qb->executeStatement();
     }
 
+    /**
+     * Creates one CalDAV calendar per active work group. Active calendars are
+     * shared with current group members; archived calendars are shared read-only
+     * with the current department access group.
+     */
+    public function provisionCalendars(int $periodId, string $actor): array {
+        $period = $this->organization->getPeriod($periodId);
+        if ($period['status'] !== 'active') {
+            throw new \InvalidArgumentException('Kalender können nur für die aktive Organisationsperiode bereitgestellt werden.');
+        }
+        $departmentGroup = $this->client->getDepartmentGroupId();
+        if ($departmentGroup === '') {
+            throw new \RuntimeException('Bitte die Nextcloud-Zugriffsgruppe der Abteilung in den Jugendeinstellungen konfigurieren.');
+        }
+        $currentMembers = $this->currentDepartmentMembers();
+        $result = ['created' => [], 'existing' => [], 'archivedSynced' => [], 'failed' => [], 'inProgress' => []];
+
+        foreach ($this->organization->listGroups($periodId) as $group) {
+            $groupId = (int)$group['id'];
+            if (!$this->claimJob($periodId, $groupId, 'calendar')) {
+                $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $group['name']];
+                continue;
+            }
+            $created = false;
+            try {
+                $uri = $this->calendarUri($periodId, $groupId);
+                $name = 'Jugend ' . $period['title'] . ' – ' . $group['name'];
+                $existing = $this->findResource($groupId, 'calendar');
+                $url = $this->client->ensureCalendar($uri, $name);
+                if ($existing === null) {
+                    $created = true;
+                    $this->storeResource($groupId, 'calendar', $uri, $url);
+                    $this->audit($actor, 'resource.calendar.created', (string)$groupId, ['periodId' => $periodId, 'calendarUri' => $uri]);
+                }
+
+                $expected = [];
+                foreach ($group['members'] as $member) {
+                    $uid = trim((string)$member['user_id']);
+                    if ($uid !== '' && isset($currentMembers[$uid])) {
+                        $expected[] = 'principal:principals/users/' . rawurlencode($uid);
+                    }
+                }
+                $changes = $this->reconcileCalendarShares($uri, $expected, false);
+                if ($changes['errors'] !== []) {
+                    $this->finishJob($periodId, $groupId, 'calendar', 'failed', 'Mindestens eine Kalenderfreigabe konnte nicht abgeglichen werden.');
+                    $result['failed'][] = ['groupId' => $groupId, 'groupName' => $group['name'], 'message' => 'Mindestens eine Kalenderfreigabe konnte nicht abgeglichen werden.', 'shares' => $changes['errors']];
+                } else {
+                    $this->finishJob($periodId, $groupId, 'calendar', 'succeeded', null);
+                    $result[$created ? 'created' : 'existing'][] = [
+                        'groupId' => $groupId,
+                        'groupName' => $group['name'],
+                        'calendarUri' => $uri,
+                        'url' => $url,
+                        'sharesAdded' => $changes['added'],
+                        'sharesRemoved' => $changes['removed'],
+                    ];
+                }
+            } catch (\Throwable $e) {
+                $this->finishJob($periodId, $groupId, 'calendar', 'failed', $e->getMessage());
+                $result['failed'][] = ['groupId' => $groupId, 'groupName' => $group['name'], 'message' => $e->getMessage()];
+            }
+        }
+
+        foreach ($this->listArchivedCalendarResources() as $resource) {
+            $archivedPeriodId = (int)$resource['period_id'];
+            $groupId = (int)$resource['group_id'];
+            if (!$this->claimJob($archivedPeriodId, $groupId, 'calendar')) {
+                $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true];
+                continue;
+            }
+            try {
+                $uri = $this->calendarUri($archivedPeriodId, $groupId);
+                $principal = 'principal:principals/groups/' . rawurlencode($departmentGroup);
+                $changes = $this->reconcileCalendarShares($uri, [$principal], true);
+                if ($changes['errors'] !== []) {
+                    $this->finishJob($archivedPeriodId, $groupId, 'calendar', 'failed', 'Archivzugriff auf den Kalender konnte nicht vollständig abgeglichen werden.');
+                    $result['failed'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true, 'message' => 'Archivzugriff auf den Kalender konnte nicht vollständig abgeglichen werden.', 'shares' => $changes['errors']];
+                } else {
+                    $this->finishJob($archivedPeriodId, $groupId, 'calendar', 'succeeded', null);
+                    $result['archivedSynced'][] = [
+                        'groupId' => $groupId,
+                        'groupName' => $resource['group_name'],
+                        'periodTitle' => $resource['period_title'],
+                        'sharesAdded' => $changes['added'],
+                        'sharesRemoved' => $changes['removed'],
+                        'url' => $resource['resource_url'],
+                    ];
+                }
+            } catch (\Throwable $e) {
+                $this->finishJob($archivedPeriodId, $groupId, 'calendar', 'failed', $e->getMessage());
+                $result['failed'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true, 'message' => $e->getMessage()];
+            }
+        }
+        return $result;
+    }
+
+    private function reconcileCalendarShares(string $calendarUri, array $expectedPrincipals, bool $readOnly): array {
+        $existing = $this->client->getCalendarShares($calendarUri);
+        $expected = array_values(array_unique($expectedPrincipals));
+        $toAdd = array_values(array_diff($expected, $existing));
+        $toRemove = array_values(array_diff($existing, $expected));
+        $added = [];
+        $removed = [];
+        $errors = [];
+        if ($toAdd !== []) {
+            try {
+                $this->client->shareCalendar($calendarUri, $toAdd, $readOnly);
+                $added = $toAdd;
+            } catch (\Throwable $e) {
+                $errors[] = ['action' => 'add', 'principals' => $toAdd, 'message' => $e->getMessage()];
+            }
+        }
+        if ($toRemove !== []) {
+            try {
+                $this->client->unshareCalendar($calendarUri, $toRemove);
+                $removed = $toRemove;
+            } catch (\Throwable $e) {
+                $errors[] = ['action' => 'remove', 'principals' => $toRemove, 'message' => $e->getMessage()];
+            }
+        }
+        return ['added' => $added, 'removed' => $removed, 'errors' => $errors];
+    }
+
+    private function listArchivedCalendarResources(): array {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('r.group_id', 'r.resource_url', 'g.name AS group_name', 'p.id AS period_id', 'p.title AS period_title')
+            ->from('jugend_resources', 'r')
+            ->innerJoin('r', 'jugend_groups', 'g', $qb->expr()->eq('r.group_id', 'g.id'))
+            ->innerJoin('g', 'jugend_periods', 'p', $qb->expr()->eq('g.period_id', 'p.id'))
+            ->where($qb->expr()->eq('r.resource_type', $qb->createNamedParameter('calendar')))
+            ->andWhere($qb->expr()->eq('p.status', $qb->createNamedParameter('archived')));
+        return $qb->executeQuery()->fetchAll();
+    }
+
+    private function calendarUri(int $periodId, int $groupId): string {
+        return 'jugend-p' . $periodId . '-g' . $groupId;
+    }
+
     /** Returns persisted provisioning state for the selected period. */
     public function getTalkProvisioningStatus(int $periodId): array {
         $period = $this->organization->getPeriod($periodId);
