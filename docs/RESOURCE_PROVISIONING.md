@@ -46,6 +46,7 @@ Die Aktivierung wird serverseitig abgewiesen, solange nicht für jede Arbeitsgru
 - Aktive Talk-Räume werden mit den aktuellen Mitgliedern der jeweiligen Arbeitsgruppe abgeglichen.
 - In archivierten Talk-Räumen erhalten alle aktuellen Abteilungsmitglieder Zugriff; nicht mehr aktuelle Teilnehmer werden entfernt.
 - Je Arbeitsgruppe wird eine dedizierte Authentik-Gruppe `jugend-{period_key}-{group_slug}` angelegt und mit der geplanten Mitgliedschaft synchronisiert. Diese Gruppe ist die Zugriffsgruppe für die aktiven Dateiordner und Kalender.
+- Änderungen aktiver Gruppenmitgliedschaften durch Gruppenleitungen werden in der App-Datenbank historisiert. Der reguläre Ressourcenabgleich übernimmt die Änderungen innerhalb des nächsten 15-Minuten-Laufs in Authentik, Nextcloud-Gruppen, Talk, Dateiordner und Kalender.
 - Die Authentik-Mitgliedschaften werden durch einen Nextcloud-Hintergrundjob alle 15 Minuten abgeglichen. Damit werden ausgeschiedene Mitglieder aus den aktiven Arbeitsgruppen-Gruppen entfernt; die tatsächliche Übernahme in Nextcloud hängt zusätzlich vom konfigurierten Authentik-Gruppensync ab.
 - Groupfolder-Unterordner werden unter dem vorkonfigurierten Groupfolder-Stamm per WebDAV angelegt. Aktive Gruppen erhalten Lese-/Schreibzugriff über ihre Authentik-synchronisierte Nextcloud-Gruppe.
 - Archivierte Dateiordner werden mit der aktuellen Abteilungsgruppe geteilt und sind schreibgeschützt.

@@ -140,6 +140,60 @@ class OrganizationService {
         return $row;
     }
 
+    /** Returns all groups in active or draft periods for scoped authorization filtering. */
+    public function listManageableGroups(): array {
+        $groups = [];
+        foreach ($this->listPeriods() as $period) {
+            if (!in_array($period['status'], ['active', 'draft'], true)) {
+                continue;
+            }
+            foreach ($this->listGroups((int)$period['id']) as $group) {
+                $group['period_title'] = $period['title'];
+                $group['period_status'] = $period['status'];
+                $groups[] = $group;
+            }
+        }
+        return $groups;
+    }
+
+    /** Returns all groups in the current active period, including their period label. */
+    public function listActiveGroups(): array {
+        $groups = [];
+        foreach ($this->listPeriods() as $period) {
+            if ($period['status'] !== 'active') {
+                continue;
+            }
+            foreach ($this->listGroups((int)$period['id']) as $group) {
+                $group['period_title'] = $period['title'];
+                $groups[] = $group;
+            }
+        }
+        return $groups;
+    }
+
+    /** Returns active work groups where the user is a current leader. */
+    public function listGroupsForLeader(string $userId): array {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('g.id', 'p.title AS period_title')
+            ->from('jugend_groups', 'g')
+            ->innerJoin('g', 'jugend_periods', 'p', $qb->expr()->eq('g.period_id', 'p.id'))
+            ->innerJoin('g', 'jugend_members', 'm', $qb->expr()->eq('m.group_id', 'g.id'))
+            ->where($qb->expr()->eq('p.status', $qb->createNamedParameter('active')))
+            ->andWhere($qb->expr()->eq('m.user_id', $qb->createNamedParameter($userId)))
+            ->andWhere($qb->expr()->eq('m.is_leader', $qb->createNamedParameter(true)))
+            ->andWhere($qb->expr()->isNull('m.left_at'))
+            ->orderBy('g.sort_order', 'ASC')
+            ->addOrderBy('g.name', 'ASC');
+
+        $groups = [];
+        foreach ($qb->executeQuery()->fetchAll() as $row) {
+            $group = $this->getGroup((int)$row['id']);
+            $group['period_title'] = $row['period_title'];
+            $groups[] = $group;
+        }
+        return $groups;
+    }
+
     public function listGroups(int $periodId): array {
         $this->getPeriod($periodId);
         $qb = $this->db->getQueryBuilder();
@@ -211,8 +265,8 @@ class OrganizationService {
     public function setMembers(int $groupId, array $memberUids, array $leaderUids, string $actor): array {
         $group = $this->getGroup($groupId);
         $period = $this->getPeriod((int)$group['period_id']);
-        if ($period['status'] !== 'draft') {
-            throw new \InvalidArgumentException('Mitgliedschaften können nur in einer geplanten Organisationsperiode geändert werden.');
+        if (!in_array($period['status'], ['draft', 'active'], true)) {
+            throw new \InvalidArgumentException('Mitgliedschaften können nur in geplanten oder aktiven Organisationsperioden geändert werden.');
         }
         $members = array_values(array_unique(array_filter(array_map('trim', $memberUids), static fn(string $uid): bool => $uid !== '')));
         $leaders = array_values(array_unique(array_filter(array_map('trim', $leaderUids), static fn(string $uid): bool => $uid !== '')));
@@ -222,9 +276,16 @@ class OrganizationService {
         if (array_diff($leaders, $members) !== []) {
             throw new \InvalidArgumentException('Beide Gruppenleiter müssen auch Mitglieder der Arbeitsgruppe sein.');
         }
+        $allowedUsers = [];
+        foreach ($this->authentik->getRecipients() as $recipient) {
+            $allowedUid = trim((string)($recipient['username'] ?? ''));
+            if ($allowedUid !== '') {
+                $allowedUsers[$allowedUid] = true;
+            }
+        }
         foreach ($members as $uid) {
-            if ($this->users->get($uid) === null) {
-                throw new \InvalidArgumentException('Der Nextcloud-Benutzer „' . $uid . '“ existiert nicht.');
+            if (!isset($allowedUsers[$uid]) || $this->users->get($uid) === null) {
+                throw new \InvalidArgumentException('Der Benutzer „' . $uid . '“ ist nicht mehr Mitglied der aktuellen App-Zugriffsgruppe oder existiert nicht in Nextcloud.');
             }
         }
 
