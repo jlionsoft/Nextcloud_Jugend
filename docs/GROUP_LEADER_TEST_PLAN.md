@@ -74,6 +74,15 @@ Dieser Test prüft insbesondere, dass globale App-Admin-Berechtigungen nicht dur
 2. /apps/jugend/groups direkt aufrufen und API-Endpunkte testen.
 3. Erwartung: Die Seite wird verweigert; die Benutzerliste und Mitgliedschaftsänderung liefern HTTP 403.
 
+### 10. Perioden- und Gruppen-Scopes
+
+1. Einer Testperson die Berechtigung group.members.manage mit Perioden-Scope für die aktive Periode zuweisen.
+2. Erwartung: Die Person sieht und verwaltet alle Gruppen dieser aktiven Periode.
+3. Die Berechtigung stattdessen mit Gruppen-Scope nur für Gruppe A zuweisen.
+4. Erwartung: Gruppe A ist sichtbar und bearbeitbar; Gruppe B bleibt verborgen und serverseitig mit HTTP 403 geschützt.
+5. Die Periode archivieren.
+6. Erwartung: Perioden- und Gruppen-Scope gewähren keine Schreibrechte mehr.
+
 ## Integrations- und Regressionstests
 
 - Authentik-Gruppen-Synchronisierung in Nextcloud.
