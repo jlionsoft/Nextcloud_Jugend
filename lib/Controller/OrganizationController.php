@@ -11,6 +11,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
+use OCP\IUserManager;
 
 class OrganizationController extends Controller {
     public function __construct(
@@ -19,6 +20,7 @@ class OrganizationController extends Controller {
         private OrganizationService $organization,
         private AuthorizationService $authorization,
         private IGroupManager $groups,
+        private IUserManager $users,
         private IUserSession $session,
     ) {
         parent::__construct($appName, $request);
@@ -45,7 +47,7 @@ class OrganizationController extends Controller {
         ?string $startsOn = null,
         ?string $endsOn = null,
     ): JSONResponse {
-        if ($denied = $this->requireAdmin()) { return $denied; }
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
         try {
             $actor = $this->session->getUser()?->getUID();
             if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
