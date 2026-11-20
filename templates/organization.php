@@ -2,9 +2,16 @@
 declare(strict_types=1);
 /** @var \OCP\IL10N\IL10N $l */
 ?>
-<?php print_unescaped($this->inc('_navigation')); ?>
-<div id="app-content" class="jugend-app-content">
-<div id="app-content-wrapper">
+<div id="app">
+    <nav id="app-navigation" aria-label="<?php p($l->t('App-Navigation')); ?>">
+        <ul>
+            <li class="app-navigation-entry"><a href="<?php p($_['navigation']['home']); ?>"><span class="icon icon-home" aria-hidden="true"></span><span><?php p($l->t('Nachrichten')); ?></span></a></li>
+            <li class="app-navigation-entry active"><a href="<?php p($_['navigation']['organization']); ?>"><span class="icon icon-category-monitoring" aria-hidden="true"></span><span><?php p($l->t('Organisation')); ?></span></a></li>
+            <?php if (!empty($_['navigation']['groups'])) { ?><li class="app-navigation-entry"><a href="<?php p($_['navigation']['groups']); ?>"><span class="icon icon-group" aria-hidden="true"></span><span><?php p($l->t('Arbeitsgruppen')); ?></span></a></li><?php } ?>
+            <?php if (!empty($_['navigation']['settings'])) { ?><li class="app-navigation-entry"><a href="<?php p($_['navigation']['settings']); ?>"><span class="icon icon-settings" aria-hidden="true"></span><span><?php p($l->t('Einstellungen')); ?></span></a></li><?php } ?>
+        </ul>
+    </nav>
+    <div id="app-content" class="jugend-app-content">
     <div id="jugend-organization" class="jugend-page jugend-organization">
         <header class="jugend-page__header">
             <div>
@@ -92,7 +99,6 @@ declare(strict_types=1);
                             </select>
                             <small class="jugend-muted"><?php p($l->t('Optional: Gruppen, Mitglieder und Gruppenleitungen aus einer bestehenden Periode übernehmen.')); ?></small>
                         </div>
-                    </div>
                     <button type="submit" class="primary"><?php p($l->t('Entwurf erstellen')); ?></button>
                 </form>
             </section>
@@ -214,5 +220,6 @@ declare(strict_types=1);
                 </div>
             </div>
         </section>
+    </div>
     </div>
 </div>

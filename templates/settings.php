@@ -10,13 +10,6 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
     <h2><?php p($l->t('Jugend')); ?></h2>
     <p class="settings-hint"><?php p($l->t('Verwalte die Verbindungen und Zugangsdaten für den Nachrichtenversand.')); ?></p>
 
-    <nav class="jugend-settings-nav" aria-label="<?php p($l->t('Einstellungsbereiche')); ?>">
-        <a class="button" href="#jugend-settings-authentik"><?php p($l->t('Zugriff und Empfänger')); ?></a>
-        <a class="button" href="#jugend-settings-talk"><?php p($l->t('Talk')); ?></a>
-        <a class="button" href="#jugend-settings-resources"><?php p($l->t('Ressourcen')); ?></a>
-        <a class="button" href="#jugend-settings-matrix"><?php p($l->t('Matrix')); ?></a>
-        <a class="button" href="#jugend-settings-sms"><?php p($l->t('SMS')); ?></a>
-    </nav>
 
     <form id="jugend-settings-form" class="jugend-settings-form" novalidate>
         <section id="jugend-settings-authentik" class="jugend-settings-group">

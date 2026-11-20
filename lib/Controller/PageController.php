@@ -110,6 +110,7 @@ class PageController extends Controller {
         }
 
         return new TemplateResponse($this->appName, 'main', [
+            'homeUrl' => $this->urlGenerator->linkToRoute('jugend.page.index'),
             'settingsUrl' => $settingsUrl,
             'organizationUrl' => $organizationUrl,
             'groupsUrl' => $groupsUrl,

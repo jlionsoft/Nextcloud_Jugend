@@ -70,19 +70,13 @@ class OrganizationPageController extends Controller {
             'manageAppAdmins' => $this->groupManager->isAdmin($uid),
             'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
         ]);
-        $homeUrl = $this->urlGenerator->linkToRoute('jugend.page.index');
-        $settingsUrl = $this->groupManager->isAdmin($uid)
-            ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => 'jugend'])
-            : null;
         $navigation = [
-            ['label' => $this->l->t('Nachricht senden'), 'url' => $homeUrl, 'icon' => 'icon-comment', 'active' => false],
-            ['label' => $this->l->t('Organisation'), 'url' => $this->urlGenerator->linkToRoute('jugend.organizationPage.index'), 'icon' => 'icon-category-organization', 'active' => true],
+            'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
+            'organization' => $this->urlGenerator->linkToRoute('jugend.organizationPage.index'),
+            'settings' => $this->groupManager->isAdmin($uid)
+                ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => 'jugend'])
+                : null,
         ];
-        if ($settingsUrl !== null) {
-            $navigation[] = ['label' => $this->l->t('Einstellungen'), 'url' => $settingsUrl, 'icon' => 'icon-settings', 'active' => false];
-        }
-        return new TemplateResponse(Application::APP_ID, 'organization', [
-            'navigation' => $navigation,
-        ]);
+        return new TemplateResponse(Application::APP_ID, 'organization', ['navigation' => $navigation]);
     }
 }

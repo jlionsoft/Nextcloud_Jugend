@@ -12,9 +12,9 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\IRequest;
+use OCP\IGroupManager;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
-use OCP\IL10N;
 use OCP\Util;
 
 class GroupPageController extends Controller {
@@ -26,7 +26,7 @@ class GroupPageController extends Controller {
         private IUserSession $session,
         private IInitialState $initialState,
         private IURLGenerator $urlGenerator,
-        private IL10N $l,
+        private IGroupManager $groupManager,
     ) {
         parent::__construct($appName, $request);
     }
@@ -58,10 +58,16 @@ class GroupPageController extends Controller {
         ]);
         $homeUrl = $this->urlGenerator->linkToRoute('jugend.page.index');
         return new TemplateResponse(Application::APP_ID, 'groups', [
-            'homeUrl' => $homeUrl,
+            'homeUrl' => $this->urlGenerator->linkToRoute('jugend.page.index'),
             'navigation' => [
-                ['label' => $this->l->t('Nachricht senden'), 'url' => $homeUrl, 'icon' => 'icon-comment', 'active' => false],
-                ['label' => $this->l->t('Meine Arbeitsgruppen'), 'url' => $this->urlGenerator->linkToRoute('jugend.groupPage.index'), 'icon' => 'icon-group', 'active' => true],
+                'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
+                'groups' => $this->urlGenerator->linkToRoute('jugend.groupPage.index'),
+                'organization' => $this->authorization->isAppAdmin($uid)
+                    ? $this->urlGenerator->linkToRoute('jugend.organizationPage.index')
+                    : null,
+                'settings' => $this->groupManager->isAdmin($uid)
+                    ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => 'jugend'])
+                    : null,
             ],
         ]);
     }

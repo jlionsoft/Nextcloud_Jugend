@@ -3,9 +3,16 @@ declare(strict_types=1);
 /** @var array $_ */
 /** @var \OCP\IL10N\IL10N $l */
 ?>
-<?php print_unescaped($this->inc('_navigation')); ?>
-<div id="app-content" class="jugend-app-content">
-<div id="app-content-wrapper">
+<div id="app">
+    <nav id="app-navigation" aria-label="<?php p($l->t('App-Navigation')); ?>">
+        <ul>
+            <li class="app-navigation-entry"><a href="<?php p($_['homeUrl']); ?>"><span class="icon icon-home" aria-hidden="true"></span><span><?php p($l->t('Nachrichten')); ?></span></a></li>
+            <?php if (!empty($_['organizationUrl'])) { ?><li class="app-navigation-entry"><a href="<?php p($_['organizationUrl']); ?>"><span class="icon icon-category-monitoring" aria-hidden="true"></span><span><?php p($l->t('Organisation')); ?></span></a></li><?php } ?>
+            <?php if (!empty($_['groupsUrl'])) { ?><li class="app-navigation-entry"><a href="<?php p($_['groupsUrl']); ?>"><span class="icon icon-group" aria-hidden="true"></span><span><?php p($l->t('Arbeitsgruppen')); ?></span></a></li><?php } ?>
+            <?php if (!empty($_['settingsUrl'])) { ?><li class="app-navigation-entry"><a href="<?php p($_['settingsUrl']); ?>"><span class="icon icon-settings" aria-hidden="true"></span><span><?php p($l->t('Einstellungen')); ?></span></a></li><?php } ?>
+        </ul>
+    </nav>
+    <div id="app-content" class="jugend-app-content">
 <div id="jugend-app" class="jugend-page">
     <header class="jugend-page__header">
         <div>
@@ -65,5 +72,5 @@ declare(strict_types=1);
         </form>
     </dialog>
 </div>
-</div>
+    </div>
 </div>
