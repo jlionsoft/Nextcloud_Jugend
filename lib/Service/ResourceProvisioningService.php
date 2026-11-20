@@ -169,7 +169,36 @@ class ResourceProvisioningService {
                 'updatedAt' => isset($job['updated_at']) ? (int)$job['updated_at'] : null,
             ];
         }
-        return ['period' => $period, 'groups' => $groups];
+        $archivedQuery = $this->db->getQueryBuilder();
+        $archivedQuery->select(
+            'jp.period_id',
+            'jp.status',
+            'jp.attempts',
+            'jp.last_error',
+            'jp.updated_at',
+            'g.name AS group_name',
+            'p.title AS period_title'
+        )
+            ->from('jugend_provisioning', 'jp')
+            ->innerJoin('jp', 'jugend_groups', 'g', $archivedQuery->expr()->eq('jp.group_id', 'g.id'))
+            ->innerJoin('g', 'jugend_periods', 'p', $archivedQuery->expr()->eq('g.period_id', 'p.id'))
+            ->where($archivedQuery->expr()->eq('jp.resource_type', $archivedQuery->createNamedParameter('talk')))
+            ->andWhere($archivedQuery->expr()->eq('p.status', $archivedQuery->createNamedParameter('archived')))
+            ->orderBy('p.starts_on', 'DESC')
+            ->addOrderBy('g.sort_order', 'ASC');
+        $archived = [];
+        foreach ($archivedQuery->executeQuery()->fetchAll() as $row) {
+            $archived[] = [
+                'periodTitle' => $row['period_title'],
+                'groupName' => $row['group_name'],
+                'status' => $row['status'],
+                'attempts' => (int)$row['attempts'],
+                'lastError' => $row['last_error'],
+                'updatedAt' => (int)$row['updated_at'],
+            ];
+        }
+
+        return ['period' => $period, 'groups' => $groups, 'archivedGroups' => $archived];
     }
 
     private function currentDepartmentMembers(): array {
