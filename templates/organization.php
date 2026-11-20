@@ -151,7 +151,7 @@ declare(strict_types=1);
                         </div>
                         <div class="jugend-field" id="jugend-assignment-scope-id-wrap" hidden>
                             <label for="jugend-assignment-scope-id"><?php p($l->t('ID des Geltungsbereichs')); ?></label>
-                            <input id="jugend-assignment-scope-id" name="scopeId" type="number" min="1" step="1">
+                            <select id="jugend-assignment-scope-id" name="scopeId" disabled><option value="">Geltungsbereich auswählen …</option></select>
                             <small class="jugend-muted"><?php p($l->t('Die ID findest du in der jeweiligen Organisationsperiode bzw. Arbeitsgruppe.')); ?></small>
                         </div>
                         <button type="submit" class="primary"><?php p($l->t('Rolle zuweisen')); ?></button>
