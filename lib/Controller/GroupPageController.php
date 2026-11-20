@@ -8,6 +8,7 @@ use OCA\Jugend\Service\AuthorizationService;
 use OCA\Jugend\Service\OrganizationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\IRequest;
@@ -38,6 +39,7 @@ class GroupPageController extends Controller {
     }
 
     #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function index(): TemplateResponse {
         $uid = $this->session->getUser()?->getUID();
         if ($uid === null || !$this->hasManagedGroups($uid)) {
