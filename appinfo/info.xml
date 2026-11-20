@@ -3,9 +3,9 @@
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
   <id>jugend</id>
   <name>Jugend</name>
-  <summary>Nachrichten an die Jugendgruppe versenden</summary>
-  <description>Native Nextcloud-App als Ersatz für den bisherigen JugendSendClient.</description>
-  <version>0.4.4</version>
+  <summary>Organisationsverwaltung und Kommunikation für die Jugendabteilung</summary>
+  <description>Verwaltet Organisationsperioden, Arbeitsgruppen und Kommunikation der Jugendabteilung.</description>
+  <version>0.5.0</version>
   <licence>agpl</licence>
   <author>jlionsoft</author>
   <namespace>Jugend</namespace>

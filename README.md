@@ -69,3 +69,10 @@ The initial database schema and architecture decisions for period-based work gro
 - Matrix room encryption is not implemented. The app sends standard unencrypted Matrix room messages; do not use encrypted rooms for the bot.
 - Separate Blazor/Authentik login.
 - Native mobile client. The API is versioned at `/api/v1` to leave room for one later.
+
+
+## Organisation planning (implementation in progress)
+
+The organisation page is available at `/apps/jugend/organization` to Nextcloud administrators in this first iteration. It currently supports creating draft periods, adding work groups, selecting users from the configured Authentik access group, and assigning exactly two group leaders per group. Membership intervals are retained in the database history.
+
+This is intentionally not yet the final authorization model: the current management page/API is restricted to Nextcloud global administrators. App-admin and scoped group-leader permissions will replace this bootstrap restriction in a later step. Period activation, Nextcloud group provisioning, Talk room creation, Files group folders, Calendar provisioning and archival resource permissions are not implemented yet. Do not use this iteration to roll out a live annual organization change.
