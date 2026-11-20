@@ -13,9 +13,6 @@
   <website>https://github.com/jlionsoft/Nextcloud_Jugend</website>
   <bugs>https://github.com/jlionsoft/Nextcloud_Jugend/issues</bugs>
   <repository type="git">https://github.com/jlionsoft/Nextcloud_Jugend.git</repository>
-  <background-jobs>
-    <job>OCA\Jugend\BackgroundJob\ResourceSyncJob</job>
-  </background-jobs>
   <dependencies>
     <nextcloud min-version="35" max-version="35" />
   </dependencies>
