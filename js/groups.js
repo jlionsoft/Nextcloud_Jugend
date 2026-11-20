@@ -72,19 +72,23 @@
         editor.hidden = false;
         memberList.replaceChildren();
         resourceLinks.replaceChildren();
-        const resourceLabels = {talk: 'Talk öffnen', groupfolder: 'Dateiordner öffnen', calendar: 'Kalender öffnen'};
-        Object.entries(resourceLabels).forEach(([key, label]) => {
-            const url = group.resources?.[key];
-            if (url) {
-                const link = element('a', 'button', label);
-                link.href = url;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                resourceLinks.append(link);
-            } else {
-                resourceLinks.append(element('span', 'jugend-muted', label + ': noch nicht bereitgestellt'));
-            }
-        });
+        if (group.period_status === 'draft') {
+            resourceLinks.append(element('span', 'jugend-muted', 'Ressourcen werden erst nach Aktivierung für die Gruppe freigegeben.'));
+        } else {
+            const resourceLabels = {talk: 'Talk öffnen', groupfolder: 'Dateiordner öffnen', calendar: 'Kalender öffnen'};
+            Object.entries(resourceLabels).forEach(([key, label]) => {
+                const url = group.resources?.[key];
+                if (url) {
+                    const link = element('a', 'button', label);
+                    link.href = url;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    resourceLinks.append(link);
+                } else {
+                    resourceLinks.append(element('span', 'jugend-muted', label + ': noch nicht bereitgestellt'));
+                }
+            });
+        }
 
         const available = new Set(users.map((user) => user.uid));
         const currentMembers = new Set(group.members.map((member) => member.user_id));
