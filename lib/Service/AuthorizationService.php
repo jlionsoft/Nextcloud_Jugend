@@ -76,6 +76,8 @@ class AuthorizationService {
         // organization administrators) remain effective for draft planning.
         $scopeIsActive = true;
         $targetPeriodId = null;
+        $targetGroupSlug = null;
+        $targetGroupStatus = null;
         if ($scopeType === 'period' && $scopeId !== null) {
             $periodQuery = $this->db->getQueryBuilder();
             $periodQuery->select('id')->from('jugend_periods')
@@ -85,26 +87,45 @@ class AuthorizationService {
             $targetPeriodId = $scopeIsActive ? $scopeId : null;
         } elseif ($scopeType === 'group' && $scopeId !== null) {
             $groupQuery = $this->db->getQueryBuilder();
-            $groupQuery->select('g.period_id')->from('jugend_groups', 'g')
+            $groupQuery->select('g.period_id', 'g.slug', 'p.status')->from('jugend_groups', 'g')
                 ->innerJoin('g', 'jugend_periods', 'p', $groupQuery->expr()->eq('g.period_id', 'p.id'))
-                ->where($groupQuery->expr()->eq('g.id', $groupQuery->createNamedParameter($scopeId)))
-                ->andWhere($groupQuery->expr()->eq('p.status', $groupQuery->createNamedParameter('active')));
+                ->where($groupQuery->expr()->eq('g.id', $groupQuery->createNamedParameter($scopeId)));
             $groupRow = $groupQuery->executeQuery()->fetch();
-            $scopeIsActive = $groupRow !== false;
-            $targetPeriodId = $scopeIsActive ? (int)$groupRow['period_id'] : null;
+            $targetGroupStatus = $groupRow['status'] ?? null;
+            $targetGroupSlug = $groupRow['slug'] ?? null;
+            $targetPeriodId = $groupRow !== false ? (int)$groupRow['period_id'] : null;
+            $scopeIsActive = $targetGroupStatus === 'active';
         }
 
         // The leader flag is a convenient built-in scoped grant. It is evaluated
         // against the current membership row and only for active groups.
-        if ($scopeIsActive && $permission === 'group.members.manage' && $scopeType === 'group' && $scopeId !== null) {
-            $leaderQuery = $this->db->getQueryBuilder();
-            $leaderQuery->select('id')->from('jugend_members')
-                ->where($leaderQuery->expr()->eq('group_id', $leaderQuery->createNamedParameter($scopeId)))
-                ->andWhere($leaderQuery->expr()->eq('user_id', $leaderQuery->createNamedParameter($uid)))
-                ->andWhere($leaderQuery->expr()->eq('is_leader', $leaderQuery->createNamedParameter(true)))
-                ->andWhere($leaderQuery->expr()->isNull('left_at'));
-            if ($leaderQuery->executeQuery()->fetchOne() !== false) {
-                return true;
+        if ($permission === 'group.members.manage' && $scopeType === 'group' && $scopeId !== null) {
+            if ($scopeIsActive) {
+                $leaderQuery = $this->db->getQueryBuilder();
+                $leaderQuery->select('id')->from('jugend_members')
+                    ->where($leaderQuery->expr()->eq('group_id', $leaderQuery->createNamedParameter($scopeId)))
+                    ->andWhere($leaderQuery->expr()->eq('user_id', $leaderQuery->createNamedParameter($uid)))
+                    ->andWhere($leaderQuery->expr()->eq('is_leader', $leaderQuery->createNamedParameter(true)))
+                    ->andWhere($leaderQuery->expr()->isNull('left_at'));
+                if ($leaderQuery->executeQuery()->fetchOne() !== false) {
+                    return true;
+                }
+            } elseif ($targetGroupStatus === 'draft' && $targetGroupSlug !== null) {
+                // A current leader may plan the matching group in a draft period.
+                // Stable group slugs carry the leadership scope across periods.
+                $plannedLeaderQuery = $this->db->getQueryBuilder();
+                $plannedLeaderQuery->select('m.id')
+                    ->from('jugend_members', 'm')
+                    ->innerJoin('m', 'jugend_groups', 'g', $plannedLeaderQuery->expr()->eq('m.group_id', 'g.id'))
+                    ->innerJoin('g', 'jugend_periods', 'p', $plannedLeaderQuery->expr()->eq('g.period_id', 'p.id'))
+                    ->where($plannedLeaderQuery->expr()->eq('g.slug', $plannedLeaderQuery->createNamedParameter($targetGroupSlug)))
+                    ->andWhere($plannedLeaderQuery->expr()->eq('p.status', $plannedLeaderQuery->createNamedParameter('active')))
+                    ->andWhere($plannedLeaderQuery->expr()->eq('m.user_id', $plannedLeaderQuery->createNamedParameter($uid)))
+                    ->andWhere($plannedLeaderQuery->expr()->eq('m.is_leader', $plannedLeaderQuery->createNamedParameter(true)))
+                    ->andWhere($plannedLeaderQuery->expr()->isNull('m.left_at'));
+                if ($plannedLeaderQuery->executeQuery()->fetchOne() !== false) {
+                    return true;
+                }
             }
         }
 
