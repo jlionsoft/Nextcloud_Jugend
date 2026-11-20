@@ -83,6 +83,15 @@ Dieser Test prüft insbesondere, dass globale App-Admin-Berechtigungen nicht dur
 5. Die Periode archivieren.
 6. Erwartung: Perioden- und Gruppen-Scope gewähren keine Schreibrechte mehr.
 
+### 13. Talk-Raum nach fehlgeschlagener lokaler Registrierung wiederfinden
+
+1. Ausschließlich auf einer Testinstanz eine geplante Periode mit einer Gruppe vorbereiten und den erzeugten Talk-Raum notieren.
+2. Nur den lokalen Ressourcen-Datensatz dieses Talk-Raums aus der Testdatenbank entfernen; den Talk-Raum selbst nicht löschen.
+3. Die Ressourcen-Vorbereitung erneut ausführen.
+4. Erwartung: Die App findet den vorhandenen privaten Gruppenraum anhand der eindeutigen Perioden-/Gruppenkennung im Namen, registriert dessen Token erneut und erstellt keinen zweiten Raum.
+5. Erwartung: Der Provisionierungsstatus wird erfolgreich abgeschlossen und die Ressourcenliste enthält genau einen Talk-Eintrag für die Gruppe.
+
+
 ## Integrations- und Regressionstests
 
 - Authentik-Gruppen-Synchronisierung in Nextcloud.
