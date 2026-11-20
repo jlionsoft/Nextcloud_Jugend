@@ -71,9 +71,9 @@ class AuthorizationService {
         }
         $this->ensureDefinitions();
 
-        // Scoped grants and the built-in group-leader capability are effective
-        // only while their owning period is active. Global grants (notably
-        // organization administrators) remain effective for draft planning.
+        // Period/group role assignments are effective only for active scopes.
+        // Global grants remain effective for draft planning. A current group
+        // leader also inherits membership management for the matching draft group.
         $scopeIsActive = true;
         $targetPeriodId = null;
         $targetGroupSlug = null;
