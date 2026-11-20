@@ -147,6 +147,233 @@ class AuthorizationService {
         $this->audit($actor, 'role.revoked', $uid, ['role' => self::ROLE_KEY]);
     }
 
+
+    public function listPermissions(): array {
+        $this->ensureDefinitions();
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('permission_key', 'name', 'description')->from('jugend_perms')->orderBy('permission_key', 'ASC');
+        return $qb->executeQuery()->fetchAll();
+    }
+
+    public function listRoles(): array {
+        $this->ensureDefinitions();
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('id', 'role_key', 'name', 'description', 'is_system', 'created_at')
+            ->from('jugend_roles')->orderBy('is_system', 'DESC')->addOrderBy('name', 'ASC');
+        $roles = $qb->executeQuery()->fetchAll();
+        foreach ($roles as &$role) {
+            $permissions = $this->db->getQueryBuilder();
+            $permissions->select('p.permission_key')->from('jugend_role_perm', 'rp')
+                ->innerJoin('rp', 'jugend_perms', 'p', $permissions->expr()->eq('rp.permission_id', 'p.id'))
+                ->where($permissions->expr()->eq('rp.role_id', $permissions->createNamedParameter((int)$role['id'])))
+                ->orderBy('p.permission_key', 'ASC');
+            $role['permissions'] = array_column($permissions->executeQuery()->fetchAll(), 'permission_key');
+            $role['is_system'] = (bool)$role['is_system'];
+        }
+        unset($role);
+        return $roles;
+    }
+
+    public function saveRole(?int $roleId, string $roleKey, string $name, string $description, array $permissionKeys, string $actor, bool $allowPrivilegePermissions): array {
+        $this->ensureDefinitions();
+        $roleKey = strtolower(trim($roleKey));
+        $name = trim($name);
+        $description = trim($description);
+        if (!preg_match('/^[a-z][a-z0-9_.-]{1,63}$/', $roleKey) || $roleKey === self::ROLE_KEY) {
+            throw new \\InvalidArgumentException('Der Rollenschlüssel ist ungültig oder reserviert.');
+        }
+        if ($name === '' || mb_strlen($name) > 128 || mb_strlen($description) > 2000) {
+            throw new \\InvalidArgumentException('Bitte gib einen gültigen Rollennamen und eine gültige Beschreibung an.');
+        }
+        $permissionKeys = array_values(array_unique(array_map('strval', $permissionKeys)));
+        $known = array_column($this->listPermissions(), 'permission_key');
+        if ($permissionKeys === [] || array_diff($permissionKeys, $known) !== []) {
+            throw new \\InvalidArgumentException('Die Rolle muss mindestens eine gültige Berechtigung enthalten.');
+        }
+        if (!$allowPrivilegePermissions && in_array('roles.manage', $permissionKeys, true)) {
+            throw new \\InvalidArgumentException('Die Berechtigung zur Rollenverwaltung darf nur durch globale Nextcloud-Administratoren vergeben werden.');
+        }
+
+        if ($roleId !== null) {
+            $qb = $this->db->getQueryBuilder();
+            $qb->select('id', 'role_key', 'is_system')->from('jugend_roles')
+                ->where($qb->expr()->eq('id', $qb->createNamedParameter($roleId)));
+            $existing = $qb->executeQuery()->fetch();
+            if (!$existing || (bool)$existing['is_system']) {
+                throw new \\InvalidArgumentException('Diese Systemrolle kann nicht bearbeitet werden.');
+            }
+            if ($existing['role_key'] !== $roleKey) {
+                throw new \\InvalidArgumentException('Der Rollenschlüssel kann nach dem Anlegen nicht geändert werden.');
+            }
+        } else {
+            $qb = $this->db->getQueryBuilder();
+            $qb->select('id')->from('jugend_roles')
+                ->where($qb->expr()->eq('role_key', $qb->createNamedParameter($roleKey)));
+            if ($qb->executeQuery()->fetchOne() !== false) {
+                throw new \\InvalidArgumentException('Dieser Rollenschlüssel ist bereits vergeben.');
+            }
+        }
+
+        $this->db->beginTransaction();
+        try {
+            if ($roleId === null) {
+                $qb = $this->db->getQueryBuilder();
+                $qb->insert('jugend_roles')
+                    ->setValue('role_key', $qb->createNamedParameter($roleKey))
+                    ->setValue('name', $qb->createNamedParameter($name))
+                    ->setValue('description', $qb->createNamedParameter($description ?: null))
+                    ->setValue('is_system', $qb->createNamedParameter(false))
+                    ->setValue('created_at', $qb->createNamedParameter(time()));
+                $qb->executeStatement();
+                $roleId = (int)$this->db->lastInsertId('*PREFIX*jugend_roles');
+                $action = 'role.created';
+            } else {
+                $qb = $this->db->getQueryBuilder();
+                $qb->update('jugend_roles')
+                    ->set('name', $qb->createNamedParameter($name))
+                    ->set('description', $qb->createNamedParameter($description ?: null))
+                    ->where($qb->expr()->eq('id', $qb->createNamedParameter($roleId)));
+                $qb->executeStatement();
+                $action = 'role.updated';
+            }
+
+            $qb = $this->db->getQueryBuilder();
+            $qb->delete('jugend_role_perm')->where($qb->expr()->eq('role_id', $qb->createNamedParameter($roleId)));
+            $qb->executeStatement();
+            foreach ($permissionKeys as $permissionKey) {
+                $qb = $this->db->getQueryBuilder();
+                $qb->select('id')->from('jugend_perms')
+                    ->where($qb->expr()->eq('permission_key', $qb->createNamedParameter($permissionKey)));
+                $permissionId = (int)$qb->executeQuery()->fetchOne();
+                $qb = $this->db->getQueryBuilder();
+                $qb->insert('jugend_role_perm')
+                    ->setValue('role_id', $qb->createNamedParameter($roleId))
+                    ->setValue('permission_id', $qb->createNamedParameter($permissionId));
+                $qb->executeStatement();
+            }
+            $this->audit($actor, $action, (string)$roleId, ['roleKey' => $roleKey, 'permissions' => $permissionKeys]);
+            $this->db->commit();
+        } catch (\\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+        return $this->getRole($roleId);
+    }
+
+    public function getRole(int $roleId): array {
+        foreach ($this->listRoles() as $role) {
+            if ((int)$role['id'] === $roleId) {
+                return $role;
+            }
+        }
+        throw new \\InvalidArgumentException('Die Rolle wurde nicht gefunden.');
+    }
+
+    public function deleteRole(int $roleId, string $actor): void {
+        $role = $this->getRole($roleId);
+        if ($role['is_system']) {
+            throw new \\InvalidArgumentException('Systemrollen können nicht gelöscht werden.');
+        }
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('id')->from('jugend_user_roles')
+            ->where($qb->expr()->eq('role_id', $qb->createNamedParameter($roleId)));
+        if ($qb->executeQuery()->fetchOne() !== false) {
+            throw new \\InvalidArgumentException('Die Rolle ist noch zugewiesen. Entferne zuerst alle Zuweisungen.');
+        }
+        $this->db->beginTransaction();
+        try {
+            $qb = $this->db->getQueryBuilder();
+            $qb->delete('jugend_role_perm')->where($qb->expr()->eq('role_id', $qb->createNamedParameter($roleId)));
+            $qb->executeStatement();
+            $qb = $this->db->getQueryBuilder();
+            $qb->delete('jugend_roles')->where($qb->expr()->eq('id', $qb->createNamedParameter($roleId)));
+            $qb->executeStatement();
+            $this->audit($actor, 'role.deleted', (string)$roleId, ['roleKey' => $role['role_key']]);
+            $this->db->commit();
+        } catch (\\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
+    private function validateScope(string $scopeType, ?int $scopeId): void {
+        if ($scopeType === 'global') {
+            if ($scopeId !== null) {
+                throw new \\InvalidArgumentException('Globale Rollen dürfen keine Scope-ID besitzen.');
+            }
+            return;
+        }
+        if (!in_array($scopeType, ['period', 'group'], true) || $scopeId === null || $scopeId < 1) {
+            throw new \\InvalidArgumentException('Der Geltungsbereich ist ungültig.');
+        }
+        $table = $scopeType === 'period' ? 'jugend_periods' : 'jugend_groups';
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('id')->from($table)->where($qb->expr()->eq('id', $qb->createNamedParameter($scopeId)));
+        if ($qb->executeQuery()->fetchOne() === false) {
+            throw new \\InvalidArgumentException('Der ausgewählte Geltungsbereich existiert nicht.');
+        }
+    }
+
+    public function assignRole(string $uid, int $roleId, string $scopeType, ?int $scopeId, string $actor, bool $allowPrivilegePermissions): void {
+        $role = $this->getRole($roleId);
+        $this->validateScope($scopeType, $scopeId);
+        if (!$allowPrivilegePermissions && in_array('roles.manage', $role['permissions'], true)) {
+            throw new \\InvalidArgumentException('Rollen mit Verwaltungsrechten dürfen nur globale Nextcloud-Administratoren zuweisen.');
+        }
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('id')->from('jugend_user_roles')
+            ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($uid)))
+            ->andWhere($qb->expr()->eq('role_id', $qb->createNamedParameter($roleId)))
+            ->andWhere($qb->expr()->eq('scope_type', $qb->createNamedParameter($scopeType)));
+        if ($scopeId === null) {
+            $qb->andWhere($qb->expr()->isNull('scope_id'));
+        } else {
+            $qb->andWhere($qb->expr()->eq('scope_id', $qb->createNamedParameter($scopeId)));
+        }
+        if ($qb->executeQuery()->fetchOne() !== false) {
+            return;
+        }
+        $qb = $this->db->getQueryBuilder();
+        $qb->insert('jugend_user_roles')
+            ->setValue('user_id', $qb->createNamedParameter($uid))
+            ->setValue('role_id', $qb->createNamedParameter($roleId))
+            ->setValue('scope_type', $qb->createNamedParameter($scopeType))
+            ->setValue('scope_id', $qb->createNamedParameter($scopeId))
+            ->setValue('granted_by', $qb->createNamedParameter($actor))
+            ->setValue('granted_at', $qb->createNamedParameter(time()));
+        $qb->executeStatement();
+        $this->audit($actor, 'role.assigned', $uid, ['roleId' => $roleId, 'roleKey' => $role['role_key'], 'scopeType' => $scopeType, 'scopeId' => $scopeId]);
+    }
+
+    public function revokeRoleAssignment(int $assignmentId, string $actor): void {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('ur.id', 'ur.user_id', 'ur.role_id', 'ur.scope_type', 'ur.scope_id', 'r.role_key', 'r.is_system')
+            ->from('jugend_user_roles', 'ur')
+            ->innerJoin('ur', 'jugend_roles', 'r', $qb->expr()->eq('ur.role_id', 'r.id'))
+            ->where($qb->expr()->eq('ur.id', $qb->createNamedParameter($assignmentId)));
+        $assignment = $qb->executeQuery()->fetch();
+        if (!$assignment) {
+            throw new \\InvalidArgumentException('Die Rollenzuweisung wurde nicht gefunden.');
+        }
+        if ((bool)$assignment['is_system']) {
+            throw new \\InvalidArgumentException('Systemrollen müssen über die dafür vorgesehene Administration verwaltet werden.');
+        }
+        $qb = $this->db->getQueryBuilder();
+        $qb->delete('jugend_user_roles')->where($qb->expr()->eq('id', $qb->createNamedParameter($assignmentId)));
+        $qb->executeStatement();
+        $this->audit($actor, 'role.unassigned', (string)$assignment['user_id'], ['roleId' => (int)$assignment['role_id'], 'roleKey' => $assignment['role_key'], 'scopeType' => $assignment['scope_type'], 'scopeId' => $assignment['scope_id']]);
+    }
+
+    public function listRoleAssignments(): array {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('ur.id', 'ur.user_id', 'ur.role_id', 'ur.scope_type', 'ur.scope_id', 'ur.granted_by', 'ur.granted_at', 'r.role_key', 'r.name')
+            ->from('jugend_user_roles', 'ur')
+            ->innerJoin('ur', 'jugend_roles', 'r', $qb->expr()->eq('ur.role_id', 'r.id'))
+            ->orderBy('ur.user_id', 'ASC')->addOrderBy('r.name', 'ASC');
+        return $qb->executeQuery()->fetchAll();
+    }
+
+
     private function audit(string $actor, string $action, string $subjectUid, array $details): void {
         $qb = $this->db->getQueryBuilder();
         $qb->insert('jugend_audit')
