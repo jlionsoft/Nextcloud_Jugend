@@ -8,6 +8,7 @@ return [
         ['name' => 'group#groups', 'url' => '/api/v1/groups', 'verb' => 'GET'],
         ['name' => 'group#users', 'url' => '/api/v1/groups/users', 'verb' => 'GET'],
         ['name' => 'group#setMembers', 'url' => '/api/v1/groups/members', 'verb' => 'PUT'],
+        ['name' => 'organization#resourceSyncStatus', 'url' => '/api/v1/organization/resource-sync-status', 'verb' => 'GET'],
         ['name' => 'organization#periods', 'url' => '/api/v1/organization/periods', 'verb' => 'GET'],
         ['name' => 'organization#createPeriod', 'url' => '/api/v1/organization/periods', 'verb' => 'POST'],
         ['name' => 'organization#clonePeriod', 'url' => '/api/v1/organization/periods/clone', 'verb' => 'POST'],
