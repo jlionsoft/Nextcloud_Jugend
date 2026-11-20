@@ -86,6 +86,6 @@ Die Organisationsverwaltung ist unter `/apps/jugend/organization` für App-Admin
 
 ### Technische Grenzen
 
-Die Ressourcenbereitstellung für eine neue Periode erfolgt im aktuellen Hauptzweig nach der Aktivierung. Eine Vorab-Provisionierung ohne Freigabe der Ressourcen ist in Arbeit und wird separat nachgereicht. Vollständige Laufzeit- und Integrationstests gegen die konkrete Nextcloud-35-/Talk-/Groupfolders-/Calendar-/Authentik-Installation stehen noch aus.
+Die Ressourcenorchestrierung ist noch nicht durch vollständige Laufzeit- und Integrationstests gegen die konkrete Nextcloud-35-/Talk-/Groupfolders-/Calendar-/Authentik-Installation verifiziert. Die einmalige Groupfolder-Einrichtung und die Authentik-Gruppensynchronisierung müssen vor dem Produktiveinsatz praktisch geprüft werden.
 
 Die CI prüft Syntax und Metadaten, ersetzt aber keine Integrationstests auf der Zielinstanz.
