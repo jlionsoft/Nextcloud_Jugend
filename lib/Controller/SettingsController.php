@@ -17,7 +17,7 @@ use OCP\IRequest;
  * Controller methods are admin-only unless marked #[NoAdminRequired].
  */
 class SettingsController extends Controller {
-    public const SECRET_KEYS = ['authentik_token', 'talk_bot_secret', 'sms_password', 'matrix_bot_token'];
+    public const SECRET_KEYS = ['authentik_token', 'talk_bot_secret', 'sms_password', 'matrix_bot_token', 'provisioning_app_password'];
 
     public function __construct(
         string $appName,
@@ -48,7 +48,7 @@ class SettingsController extends Controller {
             'authentik_url' => $authentik_url,
             'talk_url' => $talk_url,
             'sms_gateway_url' => $sms_gateway_url,
-            'matrix_homeserver' => $matrix_homeserver,
+            'matrix_homeserver' => $matrix_homeserver,\n            'provisioning_url' => $provisioning_url,
         ];
         foreach ($urls as $key => $url) {
             $url = trim($url);
@@ -67,7 +67,7 @@ class SettingsController extends Controller {
             'sms_interface' => trim($sms_interface) ?: 'lte1',
             'matrix_homeserver' => rtrim(trim($matrix_homeserver), '/'),
             'matrix_server_name' => trim($matrix_server_name),
-            'matrix_bot_user_id' => trim($matrix_bot_user_id),
+            'matrix_bot_user_id' => trim($matrix_bot_user_id),\n            'provisioning_url' => rtrim(trim($provisioning_url), '/'),\n            'provisioning_user' => trim($provisioning_user),
         ];
         foreach ($plain as $key => $value) {
             $this->appConfig->setValueString($this->appName, $key, $value);
@@ -76,7 +76,7 @@ class SettingsController extends Controller {
             'authentik_token' => [$authentik_token, $clear_authentik_token],
             'talk_bot_secret' => [$talk_bot_secret, $clear_talk_bot_secret],
             'sms_password' => [$sms_password, $clear_sms_password],
-            'matrix_bot_token' => [$matrix_bot_token, $clear_matrix_bot_token],
+            'matrix_bot_token' => [$matrix_bot_token, $clear_matrix_bot_token],\n            'provisioning_app_password' => [$provisioning_app_password, $clear_provisioning_app_password],
         ];
         foreach ($secrets as $key => [$value, $clear]) {
             if ($clear) {
@@ -98,7 +98,7 @@ class SettingsController extends Controller {
                 'authentik' => $this->authentik->testConnection(),
                 'matrix' => $this->matrix->testConnection(),
                 'sms' => $this->sms->testConnection(),
-                'talk' => $this->talk->testConnection(),
+                'talk' => $this->talk->testConnection(),\n                'provisioning' => $this->provisioning->testConnection(),
                 default => throw new \InvalidArgumentException($this->l->t('Unbekannter Verbindungstyp.')),
             };
             return new JSONResponse($result);
