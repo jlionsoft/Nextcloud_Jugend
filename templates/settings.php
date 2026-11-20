@@ -10,9 +10,16 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
     <h2><?php p($l->t('Jugend')); ?></h2>
     <p class="settings-hint"><?php p($l->t('Verwalte die Verbindungen und Zugangsdaten für den Nachrichtenversand.')); ?></p>
 
+    <nav class="jugend-settings-nav" aria-label="<?php p($l->t('Einstellungsbereiche')); ?>">
+        <a class="button" href="#jugend-settings-access"><?php p($l->t('Zugriff')); ?></a>
+        <a class="button" href="#jugend-settings-communication"><?php p($l->t('Kommunikation')); ?></a>
+        <a class="button" href="#jugend-settings-resources"><?php p($l->t('Ressourcen')); ?></a>
+    </nav>
+
     <form id="jugend-settings-form" class="jugend-settings-form" novalidate>
-        <section class="jugend-settings-group">
-            <h3>Authentik</h3>
+        <section id="jugend-settings-access" class="jugend-settings-group" aria-labelledby="jugend-settings-access-title">
+            <h3 id="jugend-settings-access-title"><?php p($l->t('Zugriff und Benutzer')); ?></h3>
+            <h4>Authentik</h4>
             <p class="settings-hint"><?php p($l->t('Diese Gruppe bestimmt die zugelassenen Benutzer der Jugend-App und die Empfänger der Nachrichten. Wer aus der Gruppe entfernt wird, verliert den App-Zugriff. SMS werden nur bei aktivierter SMS-Freigabe versendet.')); ?></p>
             <div class="jugend-fields">
                 <div class="jugend-field">
@@ -40,8 +47,9 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             </div>
         </section>
 
-        <section class="jugend-settings-group">
-            <h3>Nextcloud Talk</h3>
+        <section id="jugend-settings-communication" class="jugend-settings-group" aria-labelledby="jugend-settings-communication-title">
+            <h3 id="jugend-settings-communication-title"><?php p($l->t('Kommunikationsdienste')); ?></h3>
+            <h4>Nextcloud Talk</h4>
             <p class="settings-hint"><?php p($l->t('Gruppenraum und Bot-Anbindung')); ?></p>
             <div class="jugend-fields">
                 <div class="jugend-field">
@@ -72,9 +80,11 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
                 <span class="jugend-test-result" role="status" aria-live="polite" data-test-result="talk"></span>
             </div>
         </section>
+        </section>
 
-        <section class="jugend-settings-group">
-            <h3>Nextcloud-Dienstkonto für Ressourcen</h3>
+        <section id="jugend-settings-resources" class="jugend-settings-group" aria-labelledby="jugend-settings-resources-title">
+            <h3 id="jugend-settings-resources-title"><?php p($l->t('Ressourcenverwaltung')); ?></h3>
+            <h4>Nextcloud-Dienstkonto</h4>
             <p class="settings-hint"><?php p($l->t('Separates Dienstkonto zur automatischen Anlage von Talk-Räumen und weiteren Organisationsressourcen. Verwende ein dediziertes Konto mit App-Passwort und nur den benötigten Berechtigungen.')); ?></p>
             <div class="jugend-fields">
                 <div class="jugend-field">
@@ -117,8 +127,8 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             </div>
         </section>
 
-        <section class="jugend-settings-group">
-            <h3>Matrix</h3>
+        <section class="jugend-settings-subgroup">
+            <h4>Matrix</h4>
             <p class="settings-hint"><?php p($l->t('Persönliche Direktnachrichten an alle Mitglieder der Jugendgruppe')); ?></p>
             <div class="jugend-fields">
                 <div class="jugend-field">
@@ -151,8 +161,8 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             </div>
         </section>
 
-        <section class="jugend-settings-group">
-            <h3>MikroTik SMS-Gateway</h3>
+        <section class="jugend-settings-subgroup">
+            <h4>MikroTik SMS-Gateway</h4>
             <p class="settings-hint"><?php p($l->t('RouterOS REST API und LTE-Schnittstelle')); ?></p>
             <div class="jugend-fields">
                 <div class="jugend-field">
