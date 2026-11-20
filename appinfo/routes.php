@@ -10,6 +10,8 @@ return [
         ['name' => 'organization#previewPeriod', 'url' => '/api/v1/organization/periods/preview', 'verb' => 'GET'],
         ['name' => 'organization#activatePeriod', 'url' => '/api/v1/organization/periods/activate', 'verb' => 'POST'],
         ['name' => 'organization#provisionTalkRooms', 'url' => '/api/v1/organization/periods/provision-talk', 'verb' => 'POST'],
+        ['name' => 'organization#provisionGroupFolders', 'url' => '/api/v1/organization/periods/provision-groupfolders', 'verb' => 'POST'],
+        ['name' => 'organization#provisionCalendars', 'url' => '/api/v1/organization/periods/provision-calendars', 'verb' => 'POST'],
         ['name' => 'organization#talkProvisioningStatus', 'url' => '/api/v1/organization/periods/provision-talk/status', 'verb' => 'GET'],
         ['name' => 'organization#groups', 'url' => '/api/v1/organization/groups', 'verb' => 'GET'],
         ['name' => 'organization#createGroup', 'url' => '/api/v1/organization/groups', 'verb' => 'POST'],
