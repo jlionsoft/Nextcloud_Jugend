@@ -13,6 +13,9 @@ declare(strict_types=1);
         <?php if (!empty($_['organizationUrl'])) { ?>
             <a class="button" href="<?php p($_['organizationUrl']); ?>"><?php p($l->t('Organisation')); ?></a>
         <?php } ?>
+        <?php if (!empty($_['groupsUrl'])) { ?>
+            <a class="button" href="<?php p($_['groupsUrl']); ?>"><?php p($l->t('Meine Arbeitsgruppen')); ?></a>
+        <?php } ?>
         <?php if (!empty($_['settingsUrl'])) { ?>
             <a class="button" href="<?php p($_['settingsUrl']); ?>"><?php p($l->t('Einstellungen')); ?></a>
         <?php } ?>
