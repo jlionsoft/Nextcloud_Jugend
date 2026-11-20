@@ -157,26 +157,13 @@ class OrganizationService {
             $qb->executeStatement();
 
             foreach ($members as $uid) {
-                $lookup = $this->db->getQueryBuilder();
-                $lookup->select('id')->from('jugend_members')
-                    ->where($lookup->expr()->eq('group_id', $lookup->createNamedParameter($groupId)))
-                    ->andWhere($lookup->expr()->eq('user_id', $lookup->createNamedParameter($uid)));
-                $existingId = $lookup->executeQuery()->fetchOne();
                 $qb = $this->db->getQueryBuilder();
-                if ($existingId !== false) {
-                    $qb->update('jugend_members')
-                        ->set('is_leader', $qb->createNamedParameter(in_array($uid, $leaders, true)))
-                        ->set('joined_at', $qb->createNamedParameter($now))
-                        ->set('left_at', $qb->createNamedParameter(null))
-                        ->where($qb->expr()->eq('id', $qb->createNamedParameter((int)$existingId)));
-                } else {
-                    $qb->insert('jugend_members')
-                        ->setValue('group_id', $qb->createNamedParameter($groupId))
-                        ->setValue('user_id', $qb->createNamedParameter($uid))
-                        ->setValue('is_leader', $qb->createNamedParameter(in_array($uid, $leaders, true)))
-                        ->setValue('joined_at', $qb->createNamedParameter($now))
-                        ->setValue('left_at', $qb->createNamedParameter(null));
-                }
+                $qb->insert('jugend_members')
+                    ->setValue('group_id', $qb->createNamedParameter($groupId))
+                    ->setValue('user_id', $qb->createNamedParameter($uid))
+                    ->setValue('is_leader', $qb->createNamedParameter(in_array($uid, $leaders, true)))
+                    ->setValue('joined_at', $qb->createNamedParameter($now))
+                    ->setValue('left_at', $qb->createNamedParameter(null));
                 $qb->executeStatement();
             }
             $this->audit($actor, 'group.members_replaced', 'group', (string)$groupId, [
