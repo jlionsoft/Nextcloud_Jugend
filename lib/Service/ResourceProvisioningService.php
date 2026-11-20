@@ -32,7 +32,8 @@ class ResourceProvisioningService {
 
         foreach ($this->organization->listGroups($periodId) as $group) {
             $groupId = (int)$group['id'];
-            if (!$this->claimJob($periodId, $groupId, 'talk')) {
+            $leaseToken = $this->claimJob($periodId, $groupId, 'talk');
+            if ($leaseToken === null) {
                 $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $group['name']];
                 continue;
             }
@@ -77,7 +78,7 @@ class ResourceProvisioningService {
                     'participantErrors' => $changes['errors'],
                 ];
                 if ($changes['errors'] !== []) {
-                    $this->finishJob($periodId, $groupId, 'talk', 'failed', 'Mindestens eine Talk-Mitgliedschaft konnte nicht abgeglichen werden.');
+                    $this->finishJob($periodId, $groupId, 'talk', 'failed', 'Mindestens eine Talk-Mitgliedschaft konnte nicht abgeglichen werden.', $leaseToken);
                     $result['failed'][] = [
                         'groupId' => $groupId,
                         'groupName' => $group['name'],
@@ -85,11 +86,11 @@ class ResourceProvisioningService {
                         'participants' => $changes['errors'],
                     ];
                 } else {
-                    $this->finishJob($periodId, $groupId, 'talk', 'succeeded', null);
+                    $this->finishJob($periodId, $groupId, 'talk', 'succeeded', null, $leaseToken);
                     $result[$created ? 'created' : 'existing'][] = $entry;
                 }
             } catch (\Throwable $e) {
-                $this->finishJob($periodId, $groupId, 'talk', 'failed', $e->getMessage());
+                $this->finishJob($periodId, $groupId, 'talk', 'failed', $e->getMessage(), $leaseToken);
                 $result['failed'][] = [
                     'groupId' => $groupId,
                     'groupName' => $group['name'],
@@ -103,7 +104,8 @@ class ResourceProvisioningService {
         foreach ($this->listArchivedTalkResources() as $resource) {
             $archivedPeriodId = (int)$resource['period_id'];
             $groupId = (int)$resource['group_id'];
-            if (!$this->claimJob($archivedPeriodId, $groupId, 'talk')) {
+            $leaseToken = $this->claimJob($archivedPeriodId, $groupId, 'talk');
+            if ($leaseToken === null) {
                 $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true];
                 continue;
             }
@@ -114,7 +116,7 @@ class ResourceProvisioningService {
                 );
                 $changes = $this->reconcileParticipants((string)$resource['resource_id'], $currentMembers);
                 if ($changes['errors'] !== []) {
-                    $this->finishJob($archivedPeriodId, $groupId, 'talk', 'failed', 'Archivzugriff konnte nicht vollständig abgeglichen werden.');
+                    $this->finishJob($archivedPeriodId, $groupId, 'talk', 'failed', 'Archivzugriff konnte nicht vollständig abgeglichen werden.', $leaseToken);
                     $result['failed'][] = [
                         'groupId' => $groupId,
                         'groupName' => $resource['group_name'],
@@ -123,7 +125,7 @@ class ResourceProvisioningService {
                         'participants' => $changes['errors'],
                     ];
                 } else {
-                    $this->finishJob($archivedPeriodId, $groupId, 'talk', 'succeeded', null);
+                    $this->finishJob($archivedPeriodId, $groupId, 'talk', 'succeeded', null, $leaseToken);
                     $result['archivedSynced'][] = [
                         'groupId' => $groupId,
                         'groupName' => $resource['group_name'],
@@ -134,7 +136,7 @@ class ResourceProvisioningService {
                     ];
                 }
             } catch (\Throwable $e) {
-                $this->finishJob($archivedPeriodId, $groupId, 'talk', 'failed', $e->getMessage());
+                $this->finishJob($archivedPeriodId, $groupId, 'talk', 'failed', $e->getMessage(), $leaseToken);
                 $result['failed'][] = [
                     'groupId' => $groupId,
                     'groupName' => $resource['group_name'],
@@ -203,7 +205,8 @@ class ResourceProvisioningService {
 
         foreach ($this->organization->listGroups($periodId) as $group) {
             $groupId = (int)$group['id'];
-            if (!$this->claimJob($periodId, $groupId, 'groupfolder')) {
+            $leaseToken = $this->claimJob($periodId, $groupId, 'groupfolder');
+            if ($leaseToken === null) {
                 $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $group['name']];
                 continue;
             }
@@ -219,10 +222,10 @@ class ResourceProvisioningService {
                 ];
                 $changes = $this->reconcileGroupFolderShares('/' . $relativePath, $expected);
                 if ($changes['errors'] !== []) {
-                    $this->finishJob($periodId, $groupId, 'groupfolder', 'failed', 'Mindestens eine Groupfolder-Freigabe konnte nicht abgeglichen werden.');
+                    $this->finishJob($periodId, $groupId, 'groupfolder', 'failed', 'Mindestens eine Groupfolder-Freigabe konnte nicht abgeglichen werden.', $leaseToken);
                     $result['failed'][] = ['groupId' => $groupId, 'groupName' => $group['name'], 'message' => 'Mindestens eine Groupfolder-Freigabe konnte nicht abgeglichen werden.', 'shares' => $changes['errors']];
                 } else {
-                    $this->finishJob($periodId, $groupId, 'groupfolder', 'succeeded', null);
+                    $this->finishJob($periodId, $groupId, 'groupfolder', 'succeeded', null, $leaseToken);
                     $entry = [
                         'groupId' => $groupId,
                         'groupName' => $group['name'],
@@ -239,7 +242,7 @@ class ResourceProvisioningService {
                     }
                 }
             } catch (\Throwable $e) {
-                $this->finishJob($periodId, $groupId, 'groupfolder', 'failed', $e->getMessage());
+                $this->finishJob($periodId, $groupId, 'groupfolder', 'failed', $e->getMessage(), $leaseToken);
                 $result['failed'][] = ['groupId' => $groupId, 'groupName' => $group['name'], 'message' => $e->getMessage()];
             }
         }
@@ -247,7 +250,8 @@ class ResourceProvisioningService {
         foreach ($this->listArchivedGroupFolderResources() as $resource) {
             $archivedPeriodId = (int)$resource['period_id'];
             $groupId = (int)$resource['group_id'];
-            if (!$this->claimJob($archivedPeriodId, $groupId, 'groupfolder')) {
+            $leaseToken = $this->claimJob($archivedPeriodId, $groupId, 'groupfolder');
+            if ($leaseToken === null) {
                 $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true];
                 continue;
             }
@@ -261,10 +265,10 @@ class ResourceProvisioningService {
                 $expected = ['1:' . $departmentGroup => ['type' => 1, 'with' => $departmentGroup, 'permissions' => 1]];
                 $changes = $this->reconcileGroupFolderShares('/' . $relativePath, $expected);
                 if ($changes['errors'] !== []) {
-                    $this->finishJob($archivedPeriodId, $groupId, 'groupfolder', 'failed', 'Archivzugriff konnte nicht vollständig abgeglichen werden.');
+                    $this->finishJob($archivedPeriodId, $groupId, 'groupfolder', 'failed', 'Archivzugriff konnte nicht vollständig abgeglichen werden.', $leaseToken);
                     $result['failed'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true, 'message' => 'Archivzugriff konnte nicht vollständig abgeglichen werden.', 'shares' => $changes['errors']];
                 } else {
-                    $this->finishJob($archivedPeriodId, $groupId, 'groupfolder', 'succeeded', null);
+                    $this->finishJob($archivedPeriodId, $groupId, 'groupfolder', 'succeeded', null, $leaseToken);
                     $result['archivedSynced'][] = [
                         'groupId' => $groupId,
                         'groupName' => $resource['group_name'],
@@ -275,7 +279,7 @@ class ResourceProvisioningService {
                     ];
                 }
             } catch (\Throwable $e) {
-                $this->finishJob($archivedPeriodId, $groupId, 'groupfolder', 'failed', $e->getMessage());
+                $this->finishJob($archivedPeriodId, $groupId, 'groupfolder', 'failed', $e->getMessage(), $leaseToken);
                 $result['failed'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true, 'message' => $e->getMessage()];
             }
         }
@@ -390,7 +394,8 @@ class ResourceProvisioningService {
 
         foreach ($this->organization->listGroups($periodId) as $group) {
             $groupId = (int)$group['id'];
-            if (!$this->claimJob($periodId, $groupId, 'calendar')) {
+            $leaseToken = $this->claimJob($periodId, $groupId, 'calendar');
+            if ($leaseToken === null) {
                 $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $group['name']];
                 continue;
             }
@@ -410,10 +415,10 @@ class ResourceProvisioningService {
                 $expected = ['principal:principals/groups/' . rawurlencode($nextcloudGroup)];
                 $changes = $this->reconcileCalendarShares($uri, $expected, false);
                 if ($changes['errors'] !== []) {
-                    $this->finishJob($periodId, $groupId, 'calendar', 'failed', 'Mindestens eine Kalenderfreigabe konnte nicht abgeglichen werden.');
+                    $this->finishJob($periodId, $groupId, 'calendar', 'failed', 'Mindestens eine Kalenderfreigabe konnte nicht abgeglichen werden.', $leaseToken);
                     $result['failed'][] = ['groupId' => $groupId, 'groupName' => $group['name'], 'message' => 'Mindestens eine Kalenderfreigabe konnte nicht abgeglichen werden.', 'shares' => $changes['errors']];
                 } else {
-                    $this->finishJob($periodId, $groupId, 'calendar', 'succeeded', null);
+                    $this->finishJob($periodId, $groupId, 'calendar', 'succeeded', null, $leaseToken);
                     $result[$created ? 'created' : 'existing'][] = [
                         'groupId' => $groupId,
                         'groupName' => $group['name'],
@@ -424,7 +429,7 @@ class ResourceProvisioningService {
                     ];
                 }
             } catch (\Throwable $e) {
-                $this->finishJob($periodId, $groupId, 'calendar', 'failed', $e->getMessage());
+                $this->finishJob($periodId, $groupId, 'calendar', 'failed', $e->getMessage(), $leaseToken);
                 $result['failed'][] = ['groupId' => $groupId, 'groupName' => $group['name'], 'message' => $e->getMessage()];
             }
         }
@@ -432,7 +437,8 @@ class ResourceProvisioningService {
         foreach ($this->listArchivedCalendarResources() as $resource) {
             $archivedPeriodId = (int)$resource['period_id'];
             $groupId = (int)$resource['group_id'];
-            if (!$this->claimJob($archivedPeriodId, $groupId, 'calendar')) {
+            $leaseToken = $this->claimJob($archivedPeriodId, $groupId, 'calendar');
+            if ($leaseToken === null) {
                 $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true];
                 continue;
             }
@@ -445,10 +451,10 @@ class ResourceProvisioningService {
                 $principal = 'principal:principals/groups/' . rawurlencode($departmentGroup);
                 $changes = $this->reconcileCalendarShares($uri, [$principal], true);
                 if ($changes['errors'] !== []) {
-                    $this->finishJob($archivedPeriodId, $groupId, 'calendar', 'failed', 'Archivzugriff auf den Kalender konnte nicht vollständig abgeglichen werden.');
+                    $this->finishJob($archivedPeriodId, $groupId, 'calendar', 'failed', 'Archivzugriff auf den Kalender konnte nicht vollständig abgeglichen werden.', $leaseToken);
                     $result['failed'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true, 'message' => 'Archivzugriff auf den Kalender konnte nicht vollständig abgeglichen werden.', 'shares' => $changes['errors']];
                 } else {
-                    $this->finishJob($archivedPeriodId, $groupId, 'calendar', 'succeeded', null);
+                    $this->finishJob($archivedPeriodId, $groupId, 'calendar', 'succeeded', null, $leaseToken);
                     $result['archivedSynced'][] = [
                         'groupId' => $groupId,
                         'groupName' => $resource['group_name'],
@@ -459,7 +465,7 @@ class ResourceProvisioningService {
                     ];
                 }
             } catch (\Throwable $e) {
-                $this->finishJob($archivedPeriodId, $groupId, 'calendar', 'failed', $e->getMessage());
+                $this->finishJob($archivedPeriodId, $groupId, 'calendar', 'failed', $e->getMessage(), $leaseToken);
                 $result['failed'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true, 'message' => $e->getMessage()];
             }
         }
@@ -741,8 +747,10 @@ class ResourceProvisioningService {
      * requests from provisioning the same group simultaneously. A running
      * claim is recoverable after the stale timeout if the request was killed.
      */
-    private function claimJob(int $periodId, int $groupId, string $type): bool {
+    private function claimJob(int $periodId, int $groupId, string $type): ?int {
         $now = time();
+        // Microsecond lease token fences off completion writes from an expired worker.
+        $leaseToken = (int)floor(microtime(true) * 1000000);
         $row = $this->findJob($periodId, $groupId, $type);
         if ($row === null) {
             try {
@@ -772,13 +780,14 @@ class ResourceProvisioningService {
             ->set('last_error', $qb->createNamedParameter(null))
             ->set('updated_at', $qb->createNamedParameter($now))
             ->set('started_at', $qb->createNamedParameter($now))
+            ->set('lease_token', $qb->createNamedParameter($leaseToken))
             ->set('finished_at', $qb->createNamedParameter(null))
             ->where($qb->expr()->eq('id', $qb->createNamedParameter((int)$row['id'])))
             ->andWhere($qb->expr()->orX(
                 $qb->expr()->neq('status', $qb->createNamedParameter('running')),
                 $qb->expr()->lt('updated_at', $qb->createNamedParameter($now - self::JOB_STALE_AFTER))
             ));
-        return $qb->executeStatement() === 1;
+        return $qb->executeStatement() === 1 ? $leaseToken : null;
     }
 
     private function findJob(int $periodId, int $groupId, string $type): ?array {
@@ -792,16 +801,19 @@ class ResourceProvisioningService {
         return $row ?: null;
     }
 
-    private function finishJob(int $periodId, int $groupId, string $type, string $status, ?string $error): void {
+    private function finishJob(int $periodId, int $groupId, string $type, string $status, ?string $error, int $leaseToken): void {
         $qb = $this->db->getQueryBuilder();
         $qb->update('jugend_provisioning')
             ->set('status', $qb->createNamedParameter($status))
             ->set('last_error', $qb->createNamedParameter($error === null ? null : mb_substr($error, 0, 4000)))
             ->set('updated_at', $qb->createNamedParameter(time()))
             ->set('finished_at', $qb->createNamedParameter(time()))
+            ->set('lease_token', $qb->createNamedParameter(null))
             ->where($qb->expr()->eq('period_id', $qb->createNamedParameter($periodId)))
             ->andWhere($qb->expr()->eq('group_id', $qb->createNamedParameter($groupId)))
-            ->andWhere($qb->expr()->eq('resource_type', $qb->createNamedParameter($type)));
+            ->andWhere($qb->expr()->eq('resource_type', $qb->createNamedParameter($type)))
+            ->andWhere($qb->expr()->eq('status', $qb->createNamedParameter('running')))
+            ->andWhere($qb->expr()->eq('lease_token', $qb->createNamedParameter($leaseToken)));
         $qb->executeStatement();
     }
 
