@@ -185,6 +185,15 @@ class ProvisioningService {
         return $id;
     }
 
+    public function updateFileSharePermissions(int $shareId, int $permissions): void {
+        if ($shareId <= 0 || $permissions < 1 || $permissions > 31) {
+            throw new \InvalidArgumentException('Freigabe-ID oder Berechtigungen sind ungültig.');
+        }
+        $this->ocsData($this->request('PUT', '/ocs/v2.php/apps/files_sharing/api/v1/shares/' . $shareId, [
+            'permissions' => $permissions,
+        ]));
+    }
+
     public function deleteFileShare(int $shareId): void {
         if ($shareId <= 0) {
             throw new \InvalidArgumentException('Die Freigabe-ID ist ungültig.');
@@ -209,7 +218,7 @@ class ProvisioningService {
             'Content-Type' => 'application/xml; charset=utf-8',
         ], [207, 404]);
         if ($probe->getStatusCode() === 207) {
-            return $this->baseUrl() . $url;
+            return $this->baseUrl() . '/apps/calendar/';
         }
 
         $xml = '<?xml version="1.0" encoding="utf-8"?>'
@@ -256,20 +265,22 @@ class ProvisioningService {
         if ($principals === []) {
             return;
         }
-        $items = '';
-        foreach ($principals as $principal) {
-            if (!preg_match('#^principal:principals/(users|groups)/[^/]+$#', $principal)) {
-                throw new \InvalidArgumentException('Ungültiger Kalender-Share-Principal.');
+        foreach (array_chunk($principals, 10) as $batch) {
+            $items = '';
+            foreach ($batch as $principal) {
+                if (!preg_match('#^principal:principals/(users|groups)/[^/]+$#', $principal)) {
+                    throw new \InvalidArgumentException('Ungültiger Kalender-Share-Principal.');
+                }
+                $items .= '<oc:set><d:href>' . htmlspecialchars($principal, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</d:href>'
+                    . ($readOnly ? '' : '<oc:read-write/>')
+                    . '</oc:set>';
             }
-            $items .= '<oc:set><d:href>' . htmlspecialchars($principal, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</d:href>'
-                . ($readOnly ? '<oc:read-only/>' : '<oc:read-write/>')
-                . '</oc:set>';
+            $xml = '<?xml version="1.0" encoding="utf-8"?>'
+                . '<oc:share xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">' . $items . '</oc:share>';
+            $this->requestRaw('POST', $this->calendarPath($calendarUri), $xml, [
+                'Content-Type' => 'application/xml; charset=utf-8',
+            ], [200, 201, 204]);
         }
-        $xml = '<?xml version="1.0" encoding="utf-8"?>'
-            . '<oc:share xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">' . $items . '</oc:share>';
-        $this->requestRaw('POST', $this->calendarPath($calendarUri), $xml, [
-            'Content-Type' => 'application/xml; charset=utf-8',
-        ], [200, 201, 204]);
     }
 
     /** Removes specific calendar shares without touching any other principal. */
@@ -278,18 +289,20 @@ class ProvisioningService {
         if ($principals === []) {
             return;
         }
-        $items = '';
-        foreach ($principals as $principal) {
-            if (!preg_match('#^principal:principals/(users|groups)/[^/]+$#', $principal)) {
-                throw new \InvalidArgumentException('Ungültiger Kalender-Share-Principal.');
+        foreach (array_chunk($principals, 10) as $batch) {
+            $items = '';
+            foreach ($batch as $principal) {
+                if (!preg_match('#^principal:principals/(users|groups)/[^/]+$#', $principal)) {
+                    throw new \InvalidArgumentException('Ungültiger Kalender-Share-Principal.');
+                }
+                $items .= '<oc:remove><d:href>' . htmlspecialchars($principal, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</d:href></oc:remove>';
             }
-            $items .= '<oc:remove><d:href>' . htmlspecialchars($principal, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</d:href></oc:remove>';
+            $xml = '<?xml version="1.0" encoding="utf-8"?>'
+                . '<oc:share xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">' . $items . '</oc:share>';
+            $this->requestRaw('POST', $this->calendarPath($calendarUri), $xml, [
+                'Content-Type' => 'application/xml; charset=utf-8',
+            ], [200, 201, 204]);
         }
-        $xml = '<?xml version="1.0" encoding="utf-8"?>'
-            . '<oc:share xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">' . $items . '</oc:share>';
-        $this->requestRaw('POST', $this->calendarPath($calendarUri), $xml, [
-            'Content-Type' => 'application/xml; charset=utf-8',
-        ], [200, 201, 204]);
     }
 
     private function calendarPath(string $calendarUri): string {
