@@ -18,14 +18,16 @@ Das Dienstkonto benötigt für die Talk-Raumerstellung die Berechtigung, Gruppen
 - Erstellung privater Talk-Gruppenräume über die Talk OCS API v4.
 - Bereitstellung eines Talk-Raums je Gruppe der aktiven Organisationsperiode.
 - Speicherung des Raum-Tokens und der Raum-URL in jugend_resources.
-- Wiederholungen überspringen bereits registrierte Räume; Teilergebnisse werden pro Gruppe zurückgegeben.
+- Einladen der aktuellen Mitglieder der jeweiligen Arbeitsgruppe in den Raum.
+- Wiederholungen verwenden vorhandene Raum-Tokens und gleichen fehlende Gruppenmitglieder ab.
+- Teilergebnisse und fehlgeschlagene Einladungen werden pro Gruppe zurückgegeben.
 - Audit-Ereignis bei erfolgreicher Raumregistrierung.
 
 Die Bereitstellung wird bewusst als separater, autorisierter Schritt nach der Aktivierung ausgeführt. Die Periodenaktivierung selbst führt keine externen API-Aufrufe aus und bleibt damit unabhängig von temporären Nextcloud-/Talk-Ausfällen.
 
 ## Noch nicht umgesetzt
 
-- Teilnehmerabgleich und Entfernung ausgeschiedener Mitglieder aus Talk-Räumen.
+- Entfernung ausgeschiedener Mitglieder aus Talk-Räumen sowie Zugriffsgewährung für alle aktuellen Abteilungsmitglieder auf archivierte Talk-Inhalte.
 - Groupfolders und Berechtigungen für aktive sowie archivierte Gruppen.
 - Kalenderanlage und Kalenderberechtigungen.
 - Persistente Job-Warteschlange mit Retry/Backoff und explizitem Fehlerstatus.
