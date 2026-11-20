@@ -2,6 +2,7 @@
 declare(strict_types=1);
 /** @var \OCP\IL10N\IL10N $l */
 ?>
+<?php print_unescaped($this->inc('_navigation')); ?>
 <div id="app-content" class="jugend-app-content">
     <div id="jugend-groups" class="jugend-page jugend-organization">
         <header class="jugend-page__header">

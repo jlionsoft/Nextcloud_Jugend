@@ -76,10 +76,44 @@ class PageController extends Controller {
             ? $this->urlGenerator->linkToRoute('jugend.groupPage.index')
             : null;
 
+        $navigation = [
+            [
+                'label' => $this->l->t('Nachricht senden'),
+                'url' => $this->urlGenerator->linkToRoute('jugend.page.index'),
+                'icon' => 'icon-comment',
+                'active' => true,
+            ],
+        ];
+        if ($groupsUrl !== null) {
+            $navigation[] = [
+                'label' => $this->l->t('Meine Arbeitsgruppen'),
+                'url' => $groupsUrl,
+                'icon' => 'icon-group',
+                'active' => false,
+            ];
+        }
+        if ($organizationUrl !== null) {
+            $navigation[] = [
+                'label' => $this->l->t('Organisation'),
+                'url' => $organizationUrl,
+                'icon' => 'icon-category-organization',
+                'active' => false,
+            ];
+        }
+        if ($settingsUrl !== null) {
+            $navigation[] = [
+                'label' => $this->l->t('Einstellungen'),
+                'url' => $settingsUrl,
+                'icon' => 'icon-settings',
+                'active' => false,
+            ];
+        }
+
         return new TemplateResponse($this->appName, 'main', [
             'settingsUrl' => $settingsUrl,
             'organizationUrl' => $organizationUrl,
             'groupsUrl' => $groupsUrl,
+            'navigation' => $navigation,
         ]);
     }
 }

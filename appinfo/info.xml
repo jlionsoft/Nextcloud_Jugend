@@ -13,6 +13,10 @@
   <website>https://github.com/jlionsoft/Nextcloud_Jugend</website>
   <bugs>https://github.com/jlionsoft/Nextcloud_Jugend/issues</bugs>
   <repository type="git">https://github.com/jlionsoft/Nextcloud_Jugend.git</repository>
+  <documentation>
+    <admin>https://github.com/jlionsoft/Nextcloud_Jugend#readme</admin>
+    <developer>https://github.com/nextcloud/documentation/tree/master/developer_manual</developer>
+  </documentation>
   <dependencies>
     <nextcloud min-version="35" max-version="35" />
   </dependencies>

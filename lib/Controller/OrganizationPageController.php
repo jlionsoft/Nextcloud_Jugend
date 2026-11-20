@@ -11,6 +11,7 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
@@ -25,6 +26,7 @@ class OrganizationPageController extends Controller {
         private IUserSession $userSession,
         private IInitialState $initialState,
         private IURLGenerator $urlGenerator,
+        private IL10N $l,
     ) {
         parent::__construct($appName, $request);
     }
@@ -68,6 +70,19 @@ class OrganizationPageController extends Controller {
             'manageAppAdmins' => $this->groupManager->isAdmin($uid),
             'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
         ]);
-        return new TemplateResponse(Application::APP_ID, 'organization');
+        $homeUrl = $this->urlGenerator->linkToRoute('jugend.page.index');
+        $settingsUrl = $this->groupManager->isAdmin($uid)
+            ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => 'jugend'])
+            : null;
+        $navigation = [
+            ['label' => $this->l->t('Nachricht senden'), 'url' => $homeUrl, 'icon' => 'icon-comment', 'active' => false],
+            ['label' => $this->l->t('Organisation'), 'url' => $this->urlGenerator->linkToRoute('jugend.organizationPage.index'), 'icon' => 'icon-category-organization', 'active' => true],
+        ];
+        if ($settingsUrl !== null) {
+            $navigation[] = ['label' => $this->l->t('Einstellungen'), 'url' => $settingsUrl, 'icon' => 'icon-settings', 'active' => false];
+        }
+        return new TemplateResponse(Application::APP_ID, 'organization', [
+            'navigation' => $navigation,
+        ]);
     }
 }
