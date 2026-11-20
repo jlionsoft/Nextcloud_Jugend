@@ -6,6 +6,8 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\BackgroundJob\IJobList;
+use OCA\Jugend\BackgroundJob\ResourceSyncJob;
 
 class Application extends App implements IBootstrap {
     public const APP_ID = 'jugend';
@@ -19,5 +21,8 @@ class Application extends App implements IBootstrap {
     }
 
     public function boot(IBootContext $context): void {
+        $context->injectFn(static function (IJobList $jobs): void {
+            $jobs->add(ResourceSyncJob::class);
+        });
     }
 }

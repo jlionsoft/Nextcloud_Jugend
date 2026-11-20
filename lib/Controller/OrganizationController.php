@@ -263,6 +263,18 @@ class OrganizationController extends Controller {
 
 
     #[NoAdminRequired]
+    public function resourceProvisioningStatus(int $periodId = 0): JSONResponse {
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
+        try {
+            return new JSONResponse($this->resources->getResourceProvisioningStatus($periodId));
+        } catch (\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return new JSONResponse(['error' => 'status_failed', 'message' => 'Der Ressourcenstatus konnte nicht geladen werden.'], 500);
+        }
+    }
+
+    #[NoAdminRequired]
     public function talkProvisioningStatus(int $periodId = 0): JSONResponse {
         if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
         try {
@@ -271,6 +283,34 @@ class OrganizationController extends Controller {
             return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
         } catch (\Throwable $e) {
             return new JSONResponse(['error' => 'status_failed', 'message' => 'Der Provisionierungsstatus konnte nicht geladen werden.'], 500);
+        }
+    }
+
+    #[NoAdminRequired]
+    public function provisionGroupFolders(int $periodId = 0): JSONResponse {
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
+        $actor = $this->session->getUser()?->getUID();
+        if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
+        try {
+            return new JSONResponse($this->resources->provisionGroupFolders($periodId, $actor));
+        } catch (\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return new JSONResponse(['error' => 'groupfolder_provisioning_failed', 'message' => 'Die Dateiordner konnten nicht vollständig bereitgestellt werden.'], 500);
+        }
+    }
+
+    #[NoAdminRequired]
+    public function provisionCalendars(int $periodId = 0): JSONResponse {
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
+        $actor = $this->session->getUser()?->getUID();
+        if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
+        try {
+            return new JSONResponse($this->resources->provisionCalendars($periodId, $actor));
+        } catch (\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return new JSONResponse(['error' => 'calendar_provisioning_failed', 'message' => 'Die Kalender konnten nicht vollständig bereitgestellt werden.'], 500);
         }
     }
 

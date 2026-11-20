@@ -164,16 +164,12 @@
 
 
     async function loadTalkStatus() {
-        if (!selectedPeriod || selectedPeriod.status !== 'active' || !urls.talkProvisioningStatus) return;
+        if (!selectedPeriod || selectedPeriod.status !== 'active' || !urls.resourceProvisioningStatus) return;
         const target = document.getElementById('jugend-talk-status');
         target.replaceChildren(element('p', 'jugend-muted', 'Provisionierungsstatus wird geladen …'));
         try {
-            const payload = await request(urls.talkProvisioningStatus + '?periodId=' + encodeURIComponent(selectedPeriod.id));
+            const payload = await request(urls.resourceProvisioningStatus + '?periodId=' + encodeURIComponent(selectedPeriod.id));
             target.replaceChildren();
-            if (!payload.groups.length) {
-                target.append(element('p', 'jugend-muted', 'Keine Arbeitsgruppen in dieser Periode.'));
-                return;
-            }
             const labels = {
                 not_started: 'Noch nicht bereitgestellt',
                 pending: 'Wartet',
@@ -181,22 +177,28 @@
                 succeeded: 'Erfolgreich',
                 failed: 'Fehler – erneuter Versuch möglich'
             };
-            payload.groups.forEach((group) => {
+            const resourceLabels = {talk: 'Talk', groupfolder: 'Dateiordner', calendar: 'Kalender'};
+            const renderGroup = (group, prefix = '') => {
                 const row = element('div', 'jugend-member-row');
-                const detail = element('span', '', group.groupName + ' · ' + (labels[group.status] || group.status) + ' · Versuche: ' + group.attempts);
-                row.append(detail);
-                if (group.lastError) row.append(element('small', 'error', group.lastError));
-                target.append(row);
-            });
-            if ((payload.archivedGroups || []).length) {
-                target.append(element('h4', '', 'Archivierte Talk-Räume'));
-                payload.archivedGroups.forEach((group) => {
-                    const row = element('div', 'jugend-member-row');
-                    row.append(element('span', '', group.periodTitle + ' · ' + group.groupName + ' · ' +
-                        (labels[group.status] || group.status) + ' · Versuche: ' + group.attempts));
-                    if (group.lastError) row.append(element('small', 'error', group.lastError));
-                    target.append(row);
+                const parts = Object.entries(resourceLabels).map(([key, label]) => {
+                    const state = group.resources?.[key];
+                    return label + ': ' + (labels[state?.status || 'not_started'] || state?.status || 'Noch nicht bereitgestellt') +
+                        (state ? ' (' + state.attempts + ' Versuche)' : '');
                 });
+                row.append(element('span', '', prefix + group.groupName + ' · ' + parts.join(' · ')));
+                Object.values(group.resources || {}).forEach((state) => {
+                    if (state.lastError) row.append(element('small', 'error', state.lastError));
+                });
+                target.append(row);
+            };
+            if (payload.groups.length) {
+                payload.groups.forEach((group) => renderGroup(group));
+            } else {
+                target.append(element('p', 'jugend-muted', 'Keine Arbeitsgruppen in dieser Periode.'));
+            }
+            if ((payload.archivedGroups || []).length) {
+                target.append(element('h4', '', 'Archivierte Ressourcen'));
+                payload.archivedGroups.forEach((group) => renderGroup(group, group.periodTitle + ' · '));
             }
         } catch (error) {
             target.replaceChildren(element('p', 'error', error.message));
@@ -256,6 +258,57 @@
     });
 
     document.getElementById('jugend-talk-status-refresh').addEventListener('click', loadTalkStatus);
+
+    async function runResourceProvisioning(buttonId, outputId, endpoint, resourceLabel) {
+        if (!selectedPeriod || selectedPeriod.status !== 'active') return;
+        const button = document.getElementById(buttonId);
+        const output = document.getElementById(outputId);
+        button.disabled = true;
+        output.replaceChildren(element('p', 'jugend-muted', resourceLabel + ' werden bereitgestellt und Berechtigungen abgeglichen …'));
+        try {
+            const result = await request(endpoint, 'POST', {periodId: selectedPeriod.id});
+            output.replaceChildren();
+            const render = (title, entries) => {
+                if (!entries?.length) return;
+                output.append(element('h4', '', title));
+                entries.forEach((entry) => {
+                    const counts = ' · ' + (entry.sharesAdded?.length || 0) + ' Freigaben hinzugefügt, ' +
+                        (entry.sharesRemoved?.length || 0) + ' entfernt';
+                    const row = element('p', 'jugend-muted', (entry.periodTitle ? entry.periodTitle + ' · ' : '') + entry.groupName + counts);
+                    if (entry.url) {
+                        const link = element('a', '', resourceLabel + ' öffnen');
+                        link.href = entry.url;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        row.append(document.createTextNode(' · '), link);
+                    }
+                    output.append(row);
+                });
+            };
+            render('Neu bereitgestellt', result.created || []);
+            render('Bereits vorhanden / abgeglichen', result.existing || []);
+            render('Archivzugriff abgeglichen', result.archivedSynced || []);
+            (result.failed || []).forEach((failure) => output.append(element('p', 'error', failure.groupName + ': ' + failure.message)));
+            (result.inProgress || []).forEach((item) => output.append(element('p', 'jugend-muted', item.groupName + ': Provisionierung läuft bereits.')));
+            if (!(result.created || []).length && !(result.existing || []).length && !(result.archivedSynced || []).length &&
+                !(result.failed || []).length && !(result.inProgress || []).length) {
+                output.append(element('p', 'jugend-muted', 'Keine Arbeitsgruppen für diese Periode vorhanden.'));
+            }
+            showFeedback(resourceLabel + ' wurden verarbeitet. Bitte prüfe die Ergebnisse je Arbeitsgruppe.');
+        } catch (error) {
+            output.replaceChildren(element('p', 'error', error.message));
+            showFeedback(error.message, true);
+        } finally {
+            button.disabled = false;
+            await loadTalkStatus();
+        }
+    }
+
+    document.getElementById('jugend-provision-groupfolders').addEventListener('click', () =>
+        runResourceProvisioning('jugend-provision-groupfolders', 'jugend-provision-groupfolders-result', urls.provisionGroupFolders, 'Dateiordner'));
+    document.getElementById('jugend-provision-calendars').addEventListener('click', () =>
+        runResourceProvisioning('jugend-provision-calendars', 'jugend-provision-calendars-result', urls.provisionCalendars, 'Kalender'));
+
 
     document.getElementById('jugend-rollover-refresh').addEventListener('click', loadRolloverPreview);
     activateButton.addEventListener('click', async () => {

@@ -108,6 +108,10 @@ class ResourceProvisioningService {
                 continue;
             }
             try {
+                $this->clearArchivedAuthentikGroup(
+                    ['id' => $archivedPeriodId, 'period_key' => $resource['period_key']],
+                    ['id' => $groupId, 'slug' => $resource['group_slug']],
+                );
                 $changes = $this->reconcileParticipants((string)$resource['resource_id'], $currentMembers);
                 if ($changes['errors'] !== []) {
                     $this->finishJob($archivedPeriodId, $groupId, 'talk', 'failed', 'Archivzugriff konnte nicht vollständig abgeglichen werden.');
@@ -141,6 +145,432 @@ class ResourceProvisioningService {
         }
 
         return $result;
+    }
+
+    /** Reconcile all external resources for the active period. */
+    public function reconcileAllResources(): void {
+        if (!$this->client->isConfigured()) {
+            return;
+        }
+        $active = null;
+        foreach ($this->organization->listPeriods() as $period) {
+            if ($period['status'] === 'active') {
+                $active = $period;
+                break;
+            }
+        }
+        if ($active === null) {
+            return;
+        }
+        $periodId = (int)$active['id'];
+        $errors = [];
+        foreach ([
+            'Talk' => fn() => $this->provisionTalkRooms($periodId, 'system'),
+            'Groupfolders' => fn() => $this->provisionGroupFolders($periodId, 'system'),
+            'Kalender' => fn() => $this->provisionCalendars($periodId, 'system'),
+        ] as $label => $operation) {
+            try {
+                $result = $operation();
+                foreach (($result['failed'] ?? []) as $failure) {
+                    $errors[] = $label . ' / ' . ($failure['groupName'] ?? 'Gruppe') . ': ' . ($failure['message'] ?? 'Unbekannter Fehler');
+                }
+            } catch (\Throwable $e) {
+                $errors[] = $label . ': ' . $e->getMessage();
+            }
+        }
+        if ($errors !== []) {
+            throw new \RuntimeException(implode(' | ', array_slice($errors, 0, 10)));
+        }
+    }
+
+    /**
+     * Creates a private Groupfolder per active work group. The provisioning
+     * account remains the only native group member on the folder; actual
+     * access is granted through managed user shares. Archived folders are
+     * shared to the Authentik-synchronised department group.
+     */
+    public function provisionGroupFolders(int $periodId, string $actor): array {
+        $period = $this->organization->getPeriod($periodId);
+        if ($period['status'] !== 'active') {
+            throw new \InvalidArgumentException('Groupfolders können nur für die aktive Organisationsperiode bereitgestellt werden.');
+        }
+        if ($this->client->getProvisioningGroupId() === '' || $this->client->getDepartmentGroupId() === '') {
+            throw new \RuntimeException('Bitte Dienstgruppe und Abteilungs-Zugriffsgruppe in den Jugendeinstellungen konfigurieren.');
+        }
+        $this->client->assertGroupFolderRoot();
+        $currentMembers = $this->currentDepartmentMembers();
+        $result = ['created' => [], 'existing' => [], 'archivedSynced' => [], 'failed' => [], 'inProgress' => []];
+
+        foreach ($this->organization->listGroups($periodId) as $group) {
+            $groupId = (int)$group['id'];
+            if (!$this->claimJob($periodId, $groupId, 'groupfolder')) {
+                $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $group['name']];
+                continue;
+            }
+            try {
+                $relativePath = $this->groupFolderPath((string)$period['period_key'], (string)$group['slug']);
+                $existing = $this->findResource($groupId, 'groupfolder');
+                $this->client->ensureGroupFolderPath($relativePath);
+                $this->storeResource($groupId, 'groupfolder', $relativePath, $this->groupFolderUrl($relativePath));
+
+                $nextcloudGroup = $this->ensureAuthentikWorkgroupGroup($period, $group, $currentMembers);
+                $expected = [
+                    '1:' . $nextcloudGroup => ['type' => 1, 'with' => $nextcloudGroup, 'permissions' => 31],
+                ];
+                $changes = $this->reconcileGroupFolderShares('/' . $relativePath, $expected);
+                if ($changes['errors'] !== []) {
+                    $this->finishJob($periodId, $groupId, 'groupfolder', 'failed', 'Mindestens eine Groupfolder-Freigabe konnte nicht abgeglichen werden.');
+                    $result['failed'][] = ['groupId' => $groupId, 'groupName' => $group['name'], 'message' => 'Mindestens eine Groupfolder-Freigabe konnte nicht abgeglichen werden.', 'shares' => $changes['errors']];
+                } else {
+                    $this->finishJob($periodId, $groupId, 'groupfolder', 'succeeded', null);
+                    $entry = [
+                        'groupId' => $groupId,
+                        'groupName' => $group['name'],
+                        'path' => $relativePath,
+                        'url' => $this->groupFolderUrl($relativePath),
+                        'sharesAdded' => $changes['added'],
+                        'sharesRemoved' => $changes['removed'],
+                    ];
+                    if ($existing === null) {
+                        $this->audit($actor, 'resource.groupfolder.created', (string)$groupId, ['periodId' => $periodId, 'path' => $relativePath]);
+                        $result['created'][] = $entry;
+                    } else {
+                        $result['existing'][] = $entry;
+                    }
+                }
+            } catch (\Throwable $e) {
+                $this->finishJob($periodId, $groupId, 'groupfolder', 'failed', $e->getMessage());
+                $result['failed'][] = ['groupId' => $groupId, 'groupName' => $group['name'], 'message' => $e->getMessage()];
+            }
+        }
+
+        foreach ($this->listArchivedGroupFolderResources() as $resource) {
+            $archivedPeriodId = (int)$resource['period_id'];
+            $groupId = (int)$resource['group_id'];
+            if (!$this->claimJob($archivedPeriodId, $groupId, 'groupfolder')) {
+                $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true];
+                continue;
+            }
+            try {
+                $relativePath = $this->groupFolderPath((string)$resource['period_key'], (string)$resource['group_slug']);
+                $this->clearArchivedAuthentikGroup(
+                    ['id' => $archivedPeriodId, 'period_key' => $resource['period_key']],
+                    ['id' => $groupId, 'slug' => $resource['group_slug']],
+                );
+                $departmentGroup = $this->client->getDepartmentGroupId();
+                $expected = ['1:' . $departmentGroup => ['type' => 1, 'with' => $departmentGroup, 'permissions' => 1]];
+                $changes = $this->reconcileGroupFolderShares('/' . $relativePath, $expected);
+                if ($changes['errors'] !== []) {
+                    $this->finishJob($archivedPeriodId, $groupId, 'groupfolder', 'failed', 'Archivzugriff konnte nicht vollständig abgeglichen werden.');
+                    $result['failed'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true, 'message' => 'Archivzugriff konnte nicht vollständig abgeglichen werden.', 'shares' => $changes['errors']];
+                } else {
+                    $this->finishJob($archivedPeriodId, $groupId, 'groupfolder', 'succeeded', null);
+                    $result['archivedSynced'][] = [
+                        'groupId' => $groupId,
+                        'groupName' => $resource['group_name'],
+                        'periodTitle' => $resource['period_title'],
+                        'sharesAdded' => $changes['added'],
+                        'sharesRemoved' => $changes['removed'],
+                        'url' => $this->groupFolderUrl($relativePath),
+                    ];
+                }
+            } catch (\Throwable $e) {
+                $this->finishJob($archivedPeriodId, $groupId, 'groupfolder', 'failed', $e->getMessage());
+                $result['failed'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true, 'message' => $e->getMessage()];
+            }
+        }
+        return $result;
+    }
+
+    private function reconcileGroupFolderShares(string $path, array $expected): array {
+        $existing = $this->client->getManagedFileShares($path);
+        $existingByKey = [];
+        foreach ($existing as $share) {
+            $key = (int)($share['share_type'] ?? -1) . ':' . (string)($share['share_with'] ?? '');
+            $existingByKey[$key] = (int)($share['id'] ?? 0);
+        }
+        $added = [];
+        $removed = [];
+        $errors = [];
+        foreach ($expected as $key => $share) {
+            if (isset($existingByKey[$key])) {
+                $shareId = $existingByKey[$key];
+                unset($existingByKey[$key]);
+                $current = null;
+                foreach ($existing as $candidate) {
+                    if ((int)($candidate['id'] ?? 0) === $shareId) {
+                        $current = (int)($candidate['permissions'] ?? 0);
+                        break;
+                    }
+                }
+                if ($current !== (int)$share['permissions'] && $shareId > 0) {
+                    try {
+                        $this->client->updateFileSharePermissions($shareId, (int)$share['permissions']);
+                    } catch (\Throwable $e) {
+                        $errors[] = ['share' => $key, 'action' => 'update', 'message' => $e->getMessage()];
+                    }
+                }
+                continue;
+            }
+            try {
+                $this->client->createFileShare($path, $share['type'], $share['with'], (int)$share['permissions']);
+                $added[] = $key;
+            } catch (\Throwable $e) {
+                $errors[] = ['share' => $key, 'action' => 'add', 'message' => $e->getMessage()];
+            }
+        }
+        foreach ($existingByKey as $key => $shareId) {
+            if ($shareId <= 0) {
+                continue;
+            }
+            try {
+                $this->client->deleteFileShare($shareId);
+                $removed[] = $key;
+            } catch (\Throwable $e) {
+                $errors[] = ['share' => $key, 'action' => 'remove', 'message' => $e->getMessage()];
+            }
+        }
+        return ['added' => $added, 'removed' => $removed, 'errors' => $errors];
+    }
+
+    private function listArchivedGroupFolderResources(): array {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('r.group_id', 'g.slug AS group_slug', 'g.name AS group_name', 'p.id AS period_id', 'p.period_key', 'p.title AS period_title')
+            ->from('jugend_resources', 'r')
+            ->innerJoin('r', 'jugend_groups', 'g', $qb->expr()->eq('r.group_id', 'g.id'))
+            ->innerJoin('g', 'jugend_periods', 'p', $qb->expr()->eq('g.period_id', 'p.id'))
+            ->where($qb->expr()->eq('r.resource_type', $qb->createNamedParameter('groupfolder')))
+            ->andWhere($qb->expr()->eq('p.status', $qb->createNamedParameter('archived')));
+        return $qb->executeQuery()->fetchAll();
+    }
+
+    private function groupFolderPath(string $periodKey, string $slug): string {
+        $root = $this->client->getProvisioningGroupFolderRoot();
+        $periodKey = preg_replace('/[^a-z0-9_-]/i', '-', $periodKey) ?: 'period';
+        $slug = preg_replace('/[^a-z0-9_-]/i', '-', $slug) ?: 'group';
+        return $root . '/' . substr($periodKey, 0, 32) . '/' . substr($slug, 0, 64);
+    }
+
+    private function groupFolderUrl(string $relativePath): string {
+        $encoded = implode('/', array_map('rawurlencode', explode('/', $relativePath)));
+        return $this->client->getBaseUrl() . '/apps/files/?dir=%2F' . str_replace('/', '%2F', $encoded);
+    }
+
+    private function storeResource(int $groupId, string $type, string $resourceId, string $url): void {
+        $existing = $this->findResource($groupId, $type);
+        if ($existing !== null) {
+            return;
+        }
+        $qb = $this->db->getQueryBuilder();
+        $qb->insert('jugend_resources')
+            ->setValue('group_id', $qb->createNamedParameter($groupId))
+            ->setValue('resource_type', $qb->createNamedParameter($type))
+            ->setValue('resource_id', $qb->createNamedParameter($resourceId))
+            ->setValue('resource_url', $qb->createNamedParameter($url))
+            ->setValue('created_at', $qb->createNamedParameter(time()));
+        $qb->executeStatement();
+    }
+
+    /**
+     * Creates one CalDAV calendar per active work group. Active calendars are
+     * shared with current group members; archived calendars are shared read-only
+     * with the current department access group.
+     */
+    public function provisionCalendars(int $periodId, string $actor): array {
+        $period = $this->organization->getPeriod($periodId);
+        if ($period['status'] !== 'active') {
+            throw new \InvalidArgumentException('Kalender können nur für die aktive Organisationsperiode bereitgestellt werden.');
+        }
+        $departmentGroup = $this->client->getDepartmentGroupId();
+        if ($departmentGroup === '') {
+            throw new \RuntimeException('Bitte die Nextcloud-Zugriffsgruppe der Abteilung in den Jugendeinstellungen konfigurieren.');
+        }
+        $currentMembers = $this->currentDepartmentMembers();
+        $result = ['created' => [], 'existing' => [], 'archivedSynced' => [], 'failed' => [], 'inProgress' => []];
+
+        foreach ($this->organization->listGroups($periodId) as $group) {
+            $groupId = (int)$group['id'];
+            if (!$this->claimJob($periodId, $groupId, 'calendar')) {
+                $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $group['name']];
+                continue;
+            }
+            $created = false;
+            try {
+                $uri = $this->calendarUri($periodId, $groupId);
+                $name = 'Jugend ' . $period['title'] . ' – ' . $group['name'];
+                $existing = $this->findResource($groupId, 'calendar');
+                $url = $this->client->ensureCalendar($uri, $name);
+                if ($existing === null) {
+                    $created = true;
+                    $this->storeResource($groupId, 'calendar', $uri, $url);
+                    $this->audit($actor, 'resource.calendar.created', (string)$groupId, ['periodId' => $periodId, 'calendarUri' => $uri]);
+                }
+
+                $nextcloudGroup = $this->ensureAuthentikWorkgroupGroup($period, $group, $currentMembers);
+                $expected = ['principal:principals/groups/' . rawurlencode($nextcloudGroup)];
+                $changes = $this->reconcileCalendarShares($uri, $expected, false);
+                if ($changes['errors'] !== []) {
+                    $this->finishJob($periodId, $groupId, 'calendar', 'failed', 'Mindestens eine Kalenderfreigabe konnte nicht abgeglichen werden.');
+                    $result['failed'][] = ['groupId' => $groupId, 'groupName' => $group['name'], 'message' => 'Mindestens eine Kalenderfreigabe konnte nicht abgeglichen werden.', 'shares' => $changes['errors']];
+                } else {
+                    $this->finishJob($periodId, $groupId, 'calendar', 'succeeded', null);
+                    $result[$created ? 'created' : 'existing'][] = [
+                        'groupId' => $groupId,
+                        'groupName' => $group['name'],
+                        'calendarUri' => $uri,
+                        'url' => $url,
+                        'sharesAdded' => $changes['added'],
+                        'sharesRemoved' => $changes['removed'],
+                    ];
+                }
+            } catch (\Throwable $e) {
+                $this->finishJob($periodId, $groupId, 'calendar', 'failed', $e->getMessage());
+                $result['failed'][] = ['groupId' => $groupId, 'groupName' => $group['name'], 'message' => $e->getMessage()];
+            }
+        }
+
+        foreach ($this->listArchivedCalendarResources() as $resource) {
+            $archivedPeriodId = (int)$resource['period_id'];
+            $groupId = (int)$resource['group_id'];
+            if (!$this->claimJob($archivedPeriodId, $groupId, 'calendar')) {
+                $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true];
+                continue;
+            }
+            try {
+                $uri = $this->calendarUri($archivedPeriodId, $groupId);
+                $this->clearArchivedAuthentikGroup(
+                    ['id' => $archivedPeriodId, 'period_key' => $resource['period_key']],
+                    ['id' => $groupId, 'slug' => $resource['group_slug']],
+                );
+                $principal = 'principal:principals/groups/' . rawurlencode($departmentGroup);
+                $changes = $this->reconcileCalendarShares($uri, [$principal], true);
+                if ($changes['errors'] !== []) {
+                    $this->finishJob($archivedPeriodId, $groupId, 'calendar', 'failed', 'Archivzugriff auf den Kalender konnte nicht vollständig abgeglichen werden.');
+                    $result['failed'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true, 'message' => 'Archivzugriff auf den Kalender konnte nicht vollständig abgeglichen werden.', 'shares' => $changes['errors']];
+                } else {
+                    $this->finishJob($archivedPeriodId, $groupId, 'calendar', 'succeeded', null);
+                    $result['archivedSynced'][] = [
+                        'groupId' => $groupId,
+                        'groupName' => $resource['group_name'],
+                        'periodTitle' => $resource['period_title'],
+                        'sharesAdded' => $changes['added'],
+                        'sharesRemoved' => $changes['removed'],
+                        'url' => $resource['resource_url'],
+                    ];
+                }
+            } catch (\Throwable $e) {
+                $this->finishJob($archivedPeriodId, $groupId, 'calendar', 'failed', $e->getMessage());
+                $result['failed'][] = ['groupId' => $groupId, 'groupName' => $resource['group_name'], 'archived' => true, 'message' => $e->getMessage()];
+            }
+        }
+        return $result;
+    }
+
+    private function reconcileCalendarShares(string $calendarUri, array $expectedPrincipals, bool $readOnly): array {
+        $existing = $this->client->getCalendarShares($calendarUri);
+        $expected = array_values(array_unique($expectedPrincipals));
+        $toAdd = array_values(array_diff($expected, $existing));
+        $toRemove = array_values(array_diff($existing, $expected));
+        $added = [];
+        $removed = [];
+        $errors = [];
+        if ($expected !== []) {
+            try {
+                // Re-send existing shares as well: Nextcloud replaces their
+                // permission level, which is important when a calendar becomes archived.
+                $this->client->shareCalendar($calendarUri, $expected, $readOnly);
+                $added = $toAdd;
+            } catch (\Throwable $e) {
+                $errors[] = ['action' => 'add_or_update', 'principals' => $expected, 'message' => $e->getMessage()];
+            }
+        }
+        if ($toRemove !== []) {
+            try {
+                $this->client->unshareCalendar($calendarUri, $toRemove);
+                $removed = $toRemove;
+            } catch (\Throwable $e) {
+                $errors[] = ['action' => 'remove', 'principals' => $toRemove, 'message' => $e->getMessage()];
+            }
+        }
+        return ['added' => $added, 'removed' => $removed, 'errors' => $errors];
+    }
+
+    private function listArchivedCalendarResources(): array {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('r.group_id', 'r.resource_url', 'g.slug AS group_slug', 'g.name AS group_name', 'p.id AS period_id', 'p.period_key', 'p.title AS period_title')
+            ->from('jugend_resources', 'r')
+            ->innerJoin('r', 'jugend_groups', 'g', $qb->expr()->eq('r.group_id', 'g.id'))
+            ->innerJoin('g', 'jugend_periods', 'p', $qb->expr()->eq('g.period_id', 'p.id'))
+            ->where($qb->expr()->eq('r.resource_type', $qb->createNamedParameter('calendar')))
+            ->andWhere($qb->expr()->eq('p.status', $qb->createNamedParameter('archived')));
+        return $qb->executeQuery()->fetchAll();
+    }
+
+    private function calendarUri(int $periodId, int $groupId): string {
+        return 'jugend-p' . $periodId . '-g' . $groupId;
+    }
+
+    /** Returns current and archived status for every provisioned resource type. */
+    public function getResourceProvisioningStatus(int $periodId): array {
+        $period = $this->organization->getPeriod($periodId);
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('group_id', 'resource_type', 'status', 'attempts', 'last_error', 'updated_at')
+            ->from('jugend_provisioning')
+            ->where($qb->expr()->eq('period_id', $qb->createNamedParameter($periodId)));
+        $byGroup = [];
+        foreach ($qb->executeQuery()->fetchAll() as $row) {
+            $byGroup[(int)$row['group_id']][(string)$row['resource_type']] = [
+                'status' => $row['status'],
+                'attempts' => (int)$row['attempts'],
+                'lastError' => $row['last_error'],
+                'updatedAt' => (int)$row['updated_at'],
+            ];
+        }
+        $groups = [];
+        foreach ($this->organization->listGroups($periodId) as $group) {
+            $groups[] = [
+                'groupId' => (int)$group['id'],
+                'groupName' => $group['name'],
+                'resources' => $byGroup[(int)$group['id']] ?? [],
+            ];
+        }
+
+        $archivedQuery = $this->db->getQueryBuilder();
+        $archivedQuery->select(
+            'jp.period_id',
+            'jp.group_id',
+            'jp.resource_type',
+            'jp.status',
+            'jp.attempts',
+            'jp.last_error',
+            'jp.updated_at',
+            'g.name AS group_name',
+            'p.title AS period_title'
+        )
+            ->from('jugend_provisioning', 'jp')
+            ->innerJoin('jp', 'jugend_groups', 'g', $archivedQuery->expr()->eq('jp.group_id', 'g.id'))
+            ->innerJoin('g', 'jugend_periods', 'p', $archivedQuery->expr()->eq('g.period_id', 'p.id'))
+            ->where($archivedQuery->expr()->eq('p.status', $archivedQuery->createNamedParameter('archived')))
+            ->orderBy('p.starts_on', 'DESC')
+            ->addOrderBy('g.sort_order', 'ASC');
+        $archivedByGroup = [];
+        foreach ($archivedQuery->executeQuery()->fetchAll() as $row) {
+            $key = (int)$row['period_id'] . ':' . (int)$row['group_id'];
+            if (!isset($archivedByGroup[$key])) {
+                $archivedByGroup[$key] = [
+                    'periodTitle' => $row['period_title'],
+                    'groupName' => $row['group_name'],
+                    'resources' => [],
+                ];
+            }
+            $archivedByGroup[$key]['resources'][(string)$row['resource_type']] = [
+                'status' => $row['status'],
+                'attempts' => (int)$row['attempts'],
+                'lastError' => $row['last_error'],
+                'updatedAt' => (int)$row['updated_at'],
+            ];
+        }
+        return ['period' => $period, 'groups' => $groups, 'archivedGroups' => array_values($archivedByGroup)];
     }
 
     /** Returns persisted provisioning state for the selected period. */
@@ -201,12 +631,42 @@ class ResourceProvisioningService {
         return ['period' => $period, 'groups' => $groups, 'archivedGroups' => $archived];
     }
 
+    /**
+     * Mirrors the app's current membership snapshot into a dedicated
+     * Authentik group. The configured Authentik-to-Nextcloud group sync then
+     * becomes the authoritative ACL for active group resources.
+     */
+    private function clearArchivedAuthentikGroup(array $period, array $group): void {
+        $name = 'jugend-' . $period['period_key'] . '-' . $group['slug'];
+        $this->authentik->clearWorkgroupGroup($name, (int)$period['id'], (int)$group['id']);
+    }
+
+    private function ensureAuthentikWorkgroupGroup(array $period, array $group, array $currentMembers): string {
+        $name = 'jugend-' . $period['period_key'] . '-' . $group['slug'];
+        $userPks = [];
+        foreach ($group['members'] as $member) {
+            $uid = trim((string)$member['user_id']);
+            $pk = (int)($currentMembers[$uid] ?? 0);
+            if ($uid !== '' && $pk > 0) {
+                $userPks[] = $pk;
+            }
+        }
+        $synced = $this->authentik->syncWorkgroupGroup(
+            $name,
+            (int)$period['id'],
+            (int)$group['id'],
+            $userPks,
+        );
+        $this->storeResource((int)$group['id'], 'authentik_group', $synced['uuid'], $name);
+        return $name;
+    }
+
     private function currentDepartmentMembers(): array {
         $members = [];
         foreach ($this->authentik->getRecipients() as $recipient) {
             $uid = trim((string)($recipient['username'] ?? ''));
             if ($uid !== '') {
-                $members[$uid] = true;
+                $members[$uid] = (int)($recipient['pk'] ?? 0);
             }
         }
         return $members;
@@ -262,8 +722,10 @@ class ResourceProvisioningService {
             'r.group_id',
             'r.resource_id',
             'r.resource_url',
+            'g.slug AS group_slug',
             'g.name AS group_name',
             'p.id AS period_id',
+            'p.period_key',
             'p.title AS period_title'
         )
             ->from('jugend_resources', 'r')
