@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace OCA\Jugend\Controller;
 
 use OCA\Jugend\Service\OrganizationService;
+use OCA\Jugend\Service\ResourceProvisioningService;
 use OCA\Jugend\Service\AuthorizationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -18,6 +19,7 @@ class OrganizationController extends Controller {
         string $appName,
         IRequest $request,
         private OrganizationService $organization,
+        private ResourceProvisioningService $resources,
         private AuthorizationService $authorization,
         private IGroupManager $groups,
         private IUserManager $users,
@@ -255,6 +257,22 @@ class OrganizationController extends Controller {
             return new JSONResponse(['ok' => true, 'assignments' => $this->authorization->listRoleAssignments()]);
         } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_input', 'message' => $e->getMessage()], 400);
+        }
+    }
+
+
+
+    #[NoAdminRequired]
+    public function provisionTalkRooms(int $periodId = 0): JSONResponse {
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
+        $actor = $this->session->getUser()?->getUID();
+        if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
+        try {
+            return new JSONResponse($this->resources->provisionTalkRooms($periodId, $actor));
+        } catch (\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return new JSONResponse(['error' => 'provisioning_failed', 'message' => 'Die Talk-Räume konnten nicht vollständig bereitgestellt werden.'], 500);
         }
     }
 
