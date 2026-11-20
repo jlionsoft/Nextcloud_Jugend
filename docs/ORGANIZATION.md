@@ -67,3 +67,5 @@ Die erste RBAC-Stufe verwendet Capability Keys statt Rollenname-Vergleiche:
 - `group.members.manage`: Gruppenmitgliedschaften der eigenen Arbeitsgruppe ändern; aktuell dynamisch aus einer aktiven Gruppenleiter-Mitgliedschaft abgeleitet.
 
 Die Systemrolle `app_admin` wird idempotent angelegt und global zugewiesen. Globale Nextcloud-Administratoren bleiben als Bootstrap-Principals immer berechtigt. App-Admin-Zuweisungen dürfen in dieser Stufe nur globale Nextcloud-Administratoren vornehmen. Die Organisationsseite ist App-Administratoren vorbehalten; ein Gruppenleiter erhält keinen globalen Zugriff auf Perioden- und Gruppenverwaltung.
+
+Rollenänderungen für die Systemrolle `app_admin` werden als `role.granted` bzw. `role.revoked` im Audit-Log gespeichert. Die Delegationsoberfläche ist nur für globale Nextcloud-Administratoren sichtbar und nutzbar.
