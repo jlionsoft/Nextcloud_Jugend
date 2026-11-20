@@ -49,6 +49,7 @@ class OrganizationPageController extends Controller {
             'provisionCalendars' => $this->urlGenerator->linkToRoute('jugend.organization.provisionCalendars'),
             'talkProvisioningStatus' => $this->urlGenerator->linkToRoute('jugend.organization.talkProvisioningStatus'),
             'resourceProvisioningStatus' => $this->urlGenerator->linkToRoute('jugend.organization.resourceProvisioningStatus'),
+            'resourceSyncStatus' => $this->urlGenerator->linkToRoute('jugend.organization.resourceSyncStatus'),
             'groups' => $this->urlGenerator->linkToRoute('jugend.organization.groups'),
             'createGroup' => $this->urlGenerator->linkToRoute('jugend.organization.createGroup'),
             'users' => $this->urlGenerator->linkToRoute('jugend.organization.users'),
