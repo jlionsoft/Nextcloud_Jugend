@@ -9,7 +9,7 @@ declare(strict_types=1);
                 <h1><?php p($l->t('Meine Arbeitsgruppen')); ?></h1>
                 <p><?php p($l->t('Verwalte die Mitglieder und die beiden Gruppenleitungen deiner aktiven Arbeitsgruppen.')); ?></p>
             </div>
-            <a class="button" href="<?php p(\OC::$server->getURLGenerator()->linkToRoute('jugend.page.index')); ?>"><?php p($l->t('Zurück')); ?></a>
+            <a class="button" href="<?php p($_['homeUrl']); ?>"><?php p($l->t('Zurück')); ?></a>
         </header>
 
         <div id="jugend-groups-feedback" class="jugend-organization-feedback" role="status" aria-live="polite"></div>
