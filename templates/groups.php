@@ -2,14 +2,15 @@
 declare(strict_types=1);
 /** @var \OCP\IL10N\IL10N $l */
 ?>
-<div id="app-navigation">
-    <ul id="usergrouplist">
-        <li><a class="icon-comment" href="<?php p($_['navigation']['home']); ?>"><?php p($l->t('Nachrichten')); ?></a></li>
-        <?php if (!empty($_['navigation']['organization'])) { ?><li><a class="icon-category-monitoring" href="<?php p($_['navigation']['organization']); ?>"><?php p($l->t('Organisation')); ?></a></li><?php } ?>
-        <li class="active"><a class="icon-group" href="<?php p($_['navigation']['groups']); ?>" aria-current="page"><?php p($l->t('Arbeitsgruppen')); ?></a></li>
-        <?php if (!empty($_['navigation']['settings'])) { ?><li><a class="icon-settings" href="<?php p($_['navigation']['settings']); ?>"><?php p($l->t('Einstellungen')); ?></a></li><?php } ?>
-    </ul>
-</div>
+<?php
+$navigation = [
+    ['label' => $l->t('Nachrichten'), 'url' => $_['navigation']['home'], 'icon' => 'icon-comment', 'active' => false],
+];
+if (!empty($_['navigation']['organization'])) $navigation[] = ['label' => $l->t('Organisation'), 'url' => $_['navigation']['organization'], 'icon' => 'icon-category-monitoring', 'active' => false];
+$navigation[] = ['label' => $l->t('Arbeitsgruppen'), 'url' => $_['navigation']['groups'], 'icon' => 'icon-group', 'active' => true];
+if (!empty($_['navigation']['settings'])) $navigation[] = ['label' => $l->t('Einstellungen'), 'url' => $_['navigation']['settings'], 'icon' => 'icon-settings', 'active' => false];
+?>
+<div id="jugend-vue-root" data-navigation="<?php p(json_encode($navigation, JSON_UNESCAPED_SLASHES)); ?>">
 <div id="app-content" class="jugend-app-content">
     <div id="jugend-groups" class="jugend-page jugend-organization">
         <header class="jugend-page__header">
@@ -45,3 +46,4 @@ declare(strict_types=1);
         </main>
     </div>
 </div>
+    </div>
