@@ -97,8 +97,9 @@ class AuthorizationService {
             $scopeIsActive = $targetGroupStatus === 'active';
         }
 
-        // The leader flag is a convenient built-in scoped grant. It is evaluated
-        // against the current membership row and only for active groups.
+        // The leader flag is a built-in scoped grant for the active group.
+        // It also carries to a draft group with the same stable slug so leaders
+        // can prepare the next period without gaining access to unrelated groups.
         if ($permission === 'group.members.manage' && $scopeType === 'group' && $scopeId !== null) {
             if ($scopeIsActive) {
                 $leaderQuery = $this->db->getQueryBuilder();
