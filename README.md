@@ -79,7 +79,7 @@ Die Organisationsverwaltung ist unter `/apps/jugend/organization` für App-Admin
 - Entwürfe können aus bestehenden Perioden kopiert und mit Arbeitsgruppen, Mitgliedern und genau zwei gleichberechtigten Gruppenleitungen vorbereitet werden.
 - Die Aktivierungsvorschau prüft Gruppen, Mitgliedschaften, Leitungen und die Verfügbarkeit der Benutzer.
 - Rollen und Berechtigungen unterstützen globale, Perioden- und Gruppen-Scopes. App-Administratoren benötigen keine globalen Nextcloud-Administratorrechte.
-- Gruppenleitungen sehen ausschließlich ihre aktiven Arbeitsgruppen. Sie können Mitglieder und die zwei Leitungsrollen der eigenen Gruppen verwalten.
+- Gruppenleitungen sehen ihre aktiven Arbeitsgruppen und gleichnamige Gruppen in Entwurfsperioden. Über den stabilen Gruppenslug können sie Mitglieder und die zwei Leitungsrollen für den nächsten Organisationswechsel planen.
 - Mitgliedschaftsänderungen werden historisiert. Neue Mitglieder müssen zur aktuellen Authentik-App-Zugriffsgruppe gehören und als Nextcloud-Benutzer existieren.
 - Die regelmäßige Ressourcen-Synchronisierung übernimmt aktive Gruppenmitgliedschaften in Authentik, Nextcloud-Gruppen, Talk, Groupfolders und Kalendern.
 - Archivierte Dateiordner und Kalender bleiben für die aktuelle Abteilungsgruppe lesend verfügbar. Historische Talk-Räume bleiben getrennt je Organisationsperiode erhalten.
