@@ -17,7 +17,7 @@ declare(strict_types=1);
         <main class="jugend-organization-layout">
             <section class="jugend-panel">
                 <h2><?php p($l->t('Arbeitsgruppen')); ?></h2>
-                <p class="jugend-muted"><?php p($l->t('Es werden nur aktive Arbeitsgruppen angezeigt, in denen du aktuell als Gruppenleitung eingetragen bist.')); ?></p>
+                <p class="jugend-muted"><?php p($l->t('Es werden nur aktive Arbeitsgruppen angezeigt, die du aufgrund deiner Leitungsrolle oder einer Gruppenberechtigung verwalten darfst.')); ?></p>
                 <div id="jugend-leader-group-list" class="jugend-group-list">
                     <p class="jugend-muted"><?php p($l->t('Arbeitsgruppen werden geladen …')); ?></p>
                 </div>
