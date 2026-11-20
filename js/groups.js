@@ -132,12 +132,17 @@
     async function load() {
         groupList.replaceChildren(element('p', 'jugend-muted', 'Arbeitsgruppen werden geladen …'));
         try {
-            const [groupPayload, userPayload] = await Promise.all([
-                request(urls.groups),
-                request(urls.users)
-            ]);
+            const groupPayload = await request(urls.groups);
             groups = groupPayload.groups || [];
-            users = userPayload.users || [];
+            users = [];
+            if (selectedGroup) {
+                const current = groups.find((group) => Number(group.id) === Number(selectedGroup.id));
+                if (current) {
+                    const query = new URLSearchParams({groupId: String(current.id)});
+                    const userPayload = await request(urls.users + '?' + query.toString());
+                    users = userPayload.users || [];
+                }
+            }
             renderGroups();
             if (selectedGroup) {
                 const refreshed = groups.find((group) => Number(group.id) === Number(selectedGroup.id));
