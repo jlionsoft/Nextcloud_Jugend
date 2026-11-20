@@ -25,6 +25,19 @@ Die App legt darunter per WebDAV Unterordner für Organisationsperiode und Arbei
 
 Für das Anlegen und Verwalten der automatisch erzeugten Authentik-Arbeitsgruppen benötigt das Authentik-API-Token mindestens die Berechtigungen `view_group`, `add_group`, `view_user`, `add_user_to_group` und `remove_user_from_group`. Die App markiert selbst angelegte Gruppen mit den Attributen `managed_by=nextcloud-jugend`, `period_id` und `group_id`; fremde Gruppen gleichen Namens werden nicht übernommen.
 
+## Vorbereitungsphase vor der Aktivierung
+
+Eine geplante Organisationsperiode kann ihre externen Ressourcen bereits im Entwurfsstatus vorbereiten. Die Vorbereitung legt die Ressourcen an, gewährt den geplanten Gruppenmitgliedern aber ausdrücklich noch keinen Zugriff:
+
+- Talk: privater Raum, dessen Besitzer das Dienstkonto bleibt; es werden noch keine Gruppenmitglieder eingeladen.
+- Groupfolders: periodischer Gruppenunterordner unter dem vorkonfigurierten Stamm; es werden noch keine Gruppenfreigaben erstellt.
+- Calendar: Kalender im Dienstkonto; es werden noch keine Gruppenfreigaben eingerichtet.
+- Authentik-Arbeitsgruppen werden in dieser Phase noch nicht erstellt oder befüllt.
+
+Der Vorbereitungsstatus wird je Periode, Gruppe und Ressourcentyp separat persistiert. Fehlgeschlagene Schritte können über die Organisationsoberfläche erneut gestartet werden. Die Operationen für Groupfolder-Pfade und Kalender sind auf Wiederverwendung ausgelegt. Bei Talk besteht weiterhin ein Restrisiko für einen verwaisten Raum, falls die Raumerstellung remote erfolgreich ist, die lokale Speicherung des Tokens aber unmittelbar danach scheitert.
+
+Die Aktivierung wird serverseitig abgewiesen, solange nicht für jede Arbeitsgruppe alle drei Ressourcen vorbereitet und lokal registriert sind. Nach der Aktivierung übernimmt der reguläre Abgleich die Authentik-Mitgliedschaften, Talk-Teilnehmer und Freigaben für Groupfolders und Kalender. Die Vorbereitung selbst verändert keine bestehenden aktiven Gruppen oder deren Berechtigungen.
+
 ## Aktueller Umfang
 
 - Verbindungstest gegen `cloud/capabilities` mit den gespeicherten Zugangsdaten.
@@ -42,7 +55,7 @@ Für das Anlegen und Verwalten der automatisch erzeugten Authentik-Arbeitsgruppe
 - Fehlgeschlagene Einladungen/Freigaben und letzte Fehlermeldung bleiben sichtbar. App-Admins können den Abgleich manuell erneut starten.
 - Audit-Ereignisse werden bei erfolgreicher Ressourcenregistrierung geschrieben.
 
-Die Bereitstellung wird bewusst als separater Schritt nach der Aktivierung ausgeführt. Die Periodenaktivierung selbst führt keine externen API-Aufrufe aus und bleibt damit unabhängig von temporären Nextcloud-/Authentik-Ausfällen. Der Hintergrundjob führt denselben Abgleich regelmäßig erneut aus.
+Die Ressourcen werden soweit möglich bereits vor der Aktivierung angelegt. Die Aktivierung selbst führt weiterhin keine externen API-Aufrufe aus: Sie prüft nur den lokal gespeicherten Vorbereitungsstatus und schaltet die Organisationsperiode transaktional um. Die eigentliche Berechtigungs- und Mitgliedschaftssynchronisierung läuft danach als separater, wiederholbarer Schritt.
 
 ## Noch nicht umgesetzt
 

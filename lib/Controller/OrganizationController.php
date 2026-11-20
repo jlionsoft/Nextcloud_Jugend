@@ -79,11 +79,31 @@ class OrganizationController extends Controller {
     public function previewPeriod(int $periodId = 0): JSONResponse {
         if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
         try {
-            return new JSONResponse($this->organization->previewPeriod($periodId));
+            $preview = $this->organization->previewPeriod($periodId);
+            $preview['resourcePreparation'] = $this->resources->getPeriodPreparationStatus($periodId);
+            $preview['activationReady'] = $preview['valid'] && $preview['resourcePreparation']['ready'];
+            return new JSONResponse($preview);
         } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
         } catch (\Throwable $e) {
             return new JSONResponse(['error' => 'preview_failed', 'message' => 'Die Aktivierungsvorschau konnte nicht erstellt werden.'], 500);
+        }
+    }
+
+    #[NoAdminRequired]
+    public function preparePeriodResources(int $periodId = 0): JSONResponse {
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
+        $actor = $this->session->getUser()?->getUID();
+        if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
+        try {
+            return new JSONResponse([
+                'result' => $this->resources->preparePeriodResources($periodId, $actor),
+                'status' => $this->resources->getPeriodPreparationStatus($periodId),
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return new JSONResponse(['error' => 'preparation_failed', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -93,6 +113,7 @@ class OrganizationController extends Controller {
         $actor = $this->session->getUser()?->getUID();
         if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
         try {
+            $this->resources->assertPeriodPrepared($periodId);
             return new JSONResponse(['period' => $this->organization->activatePeriod($periodId, $actor)]);
         } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
