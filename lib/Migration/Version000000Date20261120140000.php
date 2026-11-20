@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace OCA\\Jugend\\Migration;
+namespace OCA\Jugend\Migration;
 
 use Closure;
-use OCP\\DB\\ISchemaWrapper;
-use OCP\\DB\\Types;
-use OCP\\Migration\\IOutput;
-use OCP\\Migration\\SimpleMigrationStep;
+use OCP\DB\ISchemaWrapper;
+use OCP\DB\Types;
+use OCP\Migration\IOutput;
+use OCP\Migration\SimpleMigrationStep;
 
 /**
  * Stores durable per-group provisioning state so failed resources can be retried
