@@ -13,7 +13,8 @@ import NcContent from '@nextcloud/vue/components/NcContent'
 
 const root = document.getElementById('jugend-vue-root')
 if (root) {
-	createApp({
+	try {
+		createApp({
 		components: {
 			NcAppNavigation,
 			NcAppNavigationItem,
@@ -138,5 +139,8 @@ if (root) {
 				</NcAppContent>
 			</NcContent>
 		`,
-	}).mount(root)
+		}).mount(root)
+	} catch (error) {
+		console.error('Jugend: Vue app could not be mounted; keeping the server-rendered fallback.', error)
+	}
 }

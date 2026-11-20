@@ -3,11 +3,15 @@ import AppShell from './AppShell.vue'
 
 const root = document.getElementById('jugend-vue-root')
 if (root) {
-	const app = createApp(AppShell, {
-		items: JSON.parse(root.dataset.navigation || '[]'),
-		content: root.innerHTML,
-		pageHeading: 'Meine Arbeitsgruppen',
-		legacyScript: 'groups',
-	})
-	app.mount(root)
+	try {
+		const app = createApp(AppShell, {
+			items: JSON.parse(root.dataset.navigation || '[]'),
+			content: root.innerHTML,
+			pageHeading: 'Meine Arbeitsgruppen',
+			legacyScript: 'groups',
+		})
+		app.mount(root)
+	} catch (error) {
+		console.error('Jugend: Vue groups app could not be mounted; keeping the server-rendered fallback.', error)
+	}
 }
