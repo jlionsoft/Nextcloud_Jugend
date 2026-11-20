@@ -139,6 +139,31 @@ class ProvisioningService {
         return $id;
     }
 
+    public function getProvisioningGroupId(): string {
+        return trim($this->config->getValueString('jugend', 'provisioning_group_id'));
+    }
+
+    public function getDepartmentGroupId(): string {
+        return trim($this->config->getValueString('jugend', 'department_group_id'));
+    }
+
+    /** Ensures that the service-only group is mapped to the folder with full rights. */
+    public function ensureGroupFolderServiceGroup(array $folder, string $groupId): void {
+        $folderId = (int)($folder['id'] ?? 0);
+        if ($folderId <= 0 || $groupId === '') {
+            throw new \InvalidArgumentException('Groupfolder oder Dienstgruppe ist ungültig.');
+        }
+        $groups = $folder['groups'] ?? [];
+        if (!array_key_exists($groupId, $groups)) {
+            $this->ocsData($this->request('POST', '/ocs/v2.php/apps/groupfolders/folders/' . $folderId . '/groups', [
+                'group' => $groupId,
+            ]));
+        }
+        $this->ocsData($this->request('POST', '/ocs/v2.php/apps/groupfolders/folders/' . $folderId . '/groups/' . rawurlencode($groupId), [
+            'permissions' => 31,
+        ]));
+    }
+
     /** Grants the dedicated provisioning group full access to its managed folder. */
     public function assignGroupFolderServiceGroup(int $folderId, string $groupId): void {
         if ($folderId <= 0 || trim($groupId) === '') {
