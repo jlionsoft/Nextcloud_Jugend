@@ -175,28 +175,42 @@ class AuthorizationService {
         if ($qb->executeQuery()->fetchOne() !== false) {
             return;
         }
-        $qb = $this->db->getQueryBuilder();
-        $qb->insert('jugend_user_roles')
-            ->setValue('user_id', $qb->createNamedParameter($uid))
-            ->setValue('role_id', $qb->createNamedParameter($roleId))
-            ->setValue('scope_type', $qb->createNamedParameter('global'))
-            ->setValue('scope_id', $qb->createNamedParameter(null))
-            ->setValue('granted_by', $qb->createNamedParameter($actor))
-            ->setValue('granted_at', $qb->createNamedParameter(time()));
-        $qb->executeStatement();
-        $this->audit($actor, 'role.granted', $uid, ['role' => self::ROLE_KEY]);
+        $this->db->beginTransaction();
+        try {
+            $qb = $this->db->getQueryBuilder();
+            $qb->insert('jugend_user_roles')
+                ->setValue('user_id', $qb->createNamedParameter($uid))
+                ->setValue('role_id', $qb->createNamedParameter($roleId))
+                ->setValue('scope_type', $qb->createNamedParameter('global'))
+                ->setValue('scope_id', $qb->createNamedParameter(null))
+                ->setValue('granted_by', $qb->createNamedParameter($actor))
+                ->setValue('granted_at', $qb->createNamedParameter(time()));
+            $qb->executeStatement();
+            $this->audit($actor, 'role.granted', $uid, ['role' => self::ROLE_KEY]);
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 
     public function revokeAppAdmin(string $uid, string $actor): void {
         $roleId = $this->ensureDefinitions();
-        $qb = $this->db->getQueryBuilder();
-        $qb->delete('jugend_user_roles')
-            ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($uid)))
-            ->andWhere($qb->expr()->eq('role_id', $qb->createNamedParameter($roleId)))
-            ->andWhere($qb->expr()->eq('scope_type', $qb->createNamedParameter('global')))
-            ->andWhere($qb->expr()->isNull('scope_id'));
-        $qb->executeStatement();
-        $this->audit($actor, 'role.revoked', $uid, ['role' => self::ROLE_KEY]);
+        $this->db->beginTransaction();
+        try {
+            $qb = $this->db->getQueryBuilder();
+            $qb->delete('jugend_user_roles')
+                ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($uid)))
+                ->andWhere($qb->expr()->eq('role_id', $qb->createNamedParameter($roleId)))
+                ->andWhere($qb->expr()->eq('scope_type', $qb->createNamedParameter('global')))
+                ->andWhere($qb->expr()->isNull('scope_id'));
+            $qb->executeStatement();
+            $this->audit($actor, 'role.revoked', $uid, ['role' => self::ROLE_KEY]);
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 
 
@@ -387,16 +401,23 @@ class AuthorizationService {
         if ($qb->executeQuery()->fetchOne() !== false) {
             return;
         }
-        $qb = $this->db->getQueryBuilder();
-        $qb->insert('jugend_user_roles')
-            ->setValue('user_id', $qb->createNamedParameter($uid))
-            ->setValue('role_id', $qb->createNamedParameter($roleId))
-            ->setValue('scope_type', $qb->createNamedParameter($scopeType))
-            ->setValue('scope_id', $qb->createNamedParameter($scopeId))
-            ->setValue('granted_by', $qb->createNamedParameter($actor))
-            ->setValue('granted_at', $qb->createNamedParameter(time()));
-        $qb->executeStatement();
-        $this->audit($actor, 'role.assigned', $uid, ['roleId' => $roleId, 'roleKey' => $role['role_key'], 'scopeType' => $scopeType, 'scopeId' => $scopeId]);
+        $this->db->beginTransaction();
+        try {
+            $qb = $this->db->getQueryBuilder();
+            $qb->insert('jugend_user_roles')
+                ->setValue('user_id', $qb->createNamedParameter($uid))
+                ->setValue('role_id', $qb->createNamedParameter($roleId))
+                ->setValue('scope_type', $qb->createNamedParameter($scopeType))
+                ->setValue('scope_id', $qb->createNamedParameter($scopeId))
+                ->setValue('granted_by', $qb->createNamedParameter($actor))
+                ->setValue('granted_at', $qb->createNamedParameter(time()));
+            $qb->executeStatement();
+            $this->audit($actor, 'role.assigned', $uid, ['roleId' => $roleId, 'roleKey' => $role['role_key'], 'scopeType' => $scopeType, 'scopeId' => $scopeId]);
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 
     public function revokeRoleAssignment(int $assignmentId, string $actor): void {
@@ -412,10 +433,17 @@ class AuthorizationService {
         if ((bool)$assignment['is_system']) {
             throw new \InvalidArgumentException('Systemrollen müssen über die dafür vorgesehene Administration verwaltet werden.');
         }
-        $qb = $this->db->getQueryBuilder();
-        $qb->delete('jugend_user_roles')->where($qb->expr()->eq('id', $qb->createNamedParameter($assignmentId)));
-        $qb->executeStatement();
-        $this->audit($actor, 'role.unassigned', (string)$assignment['user_id'], ['roleId' => (int)$assignment['role_id'], 'roleKey' => $assignment['role_key'], 'scopeType' => $assignment['scope_type'], 'scopeId' => $assignment['scope_id']]);
+        $this->db->beginTransaction();
+        try {
+            $qb = $this->db->getQueryBuilder();
+            $qb->delete('jugend_user_roles')->where($qb->expr()->eq('id', $qb->createNamedParameter($assignmentId)));
+            $qb->executeStatement();
+            $this->audit($actor, 'role.unassigned', (string)$assignment['user_id'], ['roleId' => (int)$assignment['role_id'], 'roleKey' => $assignment['role_key'], 'scopeType' => $assignment['scope_type'], 'scopeId' => $assignment['scope_id']]);
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 
     public function listRoleAssignments(): array {
