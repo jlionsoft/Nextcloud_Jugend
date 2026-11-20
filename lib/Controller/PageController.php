@@ -4,6 +4,7 @@ namespace OCA\Jugend\Controller;
 
 use OCA\Jugend\Settings\AdminSection;
 use OCA\Jugend\Service\AuthorizationService;
+use OCA\Jugend\Service\OrganizationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -23,6 +24,7 @@ class PageController extends Controller {
         private IURLGenerator $urlGenerator,
         private IGroupManager $groupManager,
         private AuthorizationService $authorization,
+        private OrganizationService $organization,
         private IUserSession $userSession,
         private IInitialState $initialState,
         private IL10N $l,
@@ -55,11 +57,25 @@ class PageController extends Controller {
         $userId = $this->userSession->getUser()?->getUID();
         $isAdmin = $userId !== null && $this->groupManager->isAdmin($userId);
         $settingsUrl = $isAdmin ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => AdminSection::SECTION_ID]) : null;
-        $organizationUrl = ($userId !== null && $this->authorization->isAppAdmin($userId)) ? $this->urlGenerator->linkToRoute('jugend.organizationPage.index') : null;
+        $isAppAdmin = $userId !== null && $this->authorization->isAppAdmin($userId);
+        $organizationUrl = $isAppAdmin ? $this->urlGenerator->linkToRoute('jugend.organizationPage.index') : null;
+        $canManageAnyGroup = false;
+        if ($userId !== null) {
+            foreach ($this->organization->listManageableGroups() as $group) {
+                if ($this->authorization->can($userId, 'group.members.manage', 'group', (int)$group['id'])) {
+                    $canManageAnyGroup = true;
+                    break;
+                }
+            }
+        }
+        $groupsUrl = $canManageAnyGroup
+            ? $this->urlGenerator->linkToRoute('jugend.groupPage.index')
+            : null;
 
         return new TemplateResponse($this->appName, 'main', [
             'settingsUrl' => $settingsUrl,
             'organizationUrl' => $organizationUrl,
+            'groupsUrl' => $groupsUrl,
         ]);
     }
 }
