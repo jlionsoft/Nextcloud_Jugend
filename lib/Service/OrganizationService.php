@@ -232,10 +232,14 @@ class OrganizationService {
         $addedGroups = [];
         $removedGroups = [];
         $membershipChanges = [];
+        $renamedGroups = [];
         foreach ($newBySlug as $slug => $group) {
             if (!isset($oldBySlug[$slug])) {
                 $addedGroups[] = ['slug' => $slug, 'name' => $group['name']];
                 continue;
+            }
+            if ($oldBySlug[$slug]['name'] !== $group['name']) {
+                $renamedGroups[] = ['from' => $oldBySlug[$slug]['name'], 'to' => $group['name']];
             }
             $oldMembers = [];
             foreach ($oldBySlug[$slug]['members'] as $member) {
@@ -279,6 +283,7 @@ class OrganizationService {
                 )))),
                 'addedGroups' => $addedGroups,
                 'removedGroups' => $removedGroups,
+                'renamedGroups' => $renamedGroups,
                 'membershipChanges' => $membershipChanges,
             ],
         ];
