@@ -500,3 +500,17 @@
 .jugend-member-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--jugend-space-2); padding:var(--jugend-space-2) 0; border-bottom:1px solid var(--color-border); }
 .jugend-member-label,.jugend-leader-label { display:flex; align-items:center; gap:var(--jugend-space-2); }
 .jugend-leader-label { color:var(--color-text-maxcontrast); font-size:var(--jugend-font-secondary); }
+
+
+/* App-level RBAC */
+.jugend-role-permissions { min-width:0; margin:0; padding:var(--jugend-space-3); border:1px solid var(--color-border); border-radius:var(--border-radius-element,8px); }
+.jugend-role-permissions legend { padding:0 var(--jugend-space-1); font-weight:600; }
+#jugend-role-permission-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--jugend-space-3); }
+.jugend-role-permission { display:flex; align-items:flex-start; gap:var(--jugend-space-2); min-width:0; }
+.jugend-role-permission span,.jugend-role-detail { display:grid; gap:2px; min-width:0; }
+.jugend-role-permission small,.jugend-role-detail small { color:var(--color-text-maxcontrast); overflow-wrap:anywhere; }
+.jugend-role-detail { flex:1 1 240px; }
+.jugend-form-actions { display:flex; flex-wrap:wrap; gap:var(--jugend-space-2); }
+#jugend-role-management { margin-top:var(--jugend-space-5); }
+#jugend-role-management .jugend-field select { width:100%; max-width:calc(var(--jugend-grid) * 150); }
+@media (max-width:650px) { #jugend-role-permission-list { grid-template-columns:minmax(0,1fr); } }

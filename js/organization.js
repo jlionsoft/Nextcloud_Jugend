@@ -123,6 +123,226 @@
         } catch (error) { showFeedback(error.message, true); }
     });
 
+
+    async function loadAppAdmins() {
+        if (!urls.manageAppAdmins) return;
+        const panel = document.getElementById('jugend-app-admin-panel');
+        panel.hidden = false;
+        const [adminPayload, userPayload] = await Promise.all([
+            request(urls.appAdmins),
+            request(urls.users)
+        ]);
+        const list = document.getElementById('jugend-app-admin-list');
+        list.replaceChildren();
+        const select = document.getElementById('jugend-app-admin-user');
+        select.replaceChildren(new Option('Benutzer auswählen …', ''));
+        const assigned = new Set(adminPayload.admins.map((admin) => admin.user_id));
+        userPayload.users.forEach((user) => {
+            if (!assigned.has(user.uid)) {
+                select.add(new Option(user.displayName + ' (' + user.uid + ')', user.uid));
+            }
+        });
+        if (!adminPayload.admins.length) {
+            list.append(element('p', 'jugend-muted', 'Noch keine App-Administratoren zugewiesen.'));
+        }
+        adminPayload.admins.forEach((admin) => {
+            const row = element('div', 'jugend-member-row');
+            const info = element('span', '', admin.user_id + (admin.granted_by ? ' · vergeben durch ' + admin.granted_by : ''));
+            const revoke = element('button', 'secondary', 'Entziehen');
+            revoke.type = 'button';
+            revoke.addEventListener('click', async () => {
+                if (!window.confirm('App-Administratorrechte für „' + admin.user_id + '“ wirklich entziehen?')) return;
+                try {
+                    await request(urls.revokeAppAdmin, 'DELETE', {userId: admin.user_id});
+                    showFeedback('App-Administratorrechte für „' + admin.user_id + '“ wurden entzogen.');
+                    await loadAppAdmins();
+                } catch (error) { showFeedback(error.message, true); }
+            });
+            row.append(info, revoke);
+            list.append(row);
+        });
+    }
+
+    document.getElementById('jugend-app-admin-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const userId = document.getElementById('jugend-app-admin-user').value;
+        if (!userId) return;
+        try {
+            await request(urls.grantAppAdmin, 'POST', {userId});
+            showFeedback('„' + userId + '“ ist jetzt App-Administrator.');
+            await loadAppAdmins();
+        } catch (error) { showFeedback(error.message, true); }
+    });
+
+
+    const rolePanel = document.getElementById('jugend-role-management');
+    const roleList = document.getElementById('jugend-role-list');
+    const assignmentList = document.getElementById('jugend-role-assignment-list');
+    const roleForm = document.getElementById('jugend-role-form');
+    let rolePermissions = [];
+    let managedRoles = [];
+
+    function resetRoleForm() {
+        roleForm.reset();
+        document.getElementById('jugend-role-id').value = '0';
+        document.getElementById('jugend-role-key').disabled = false;
+        document.getElementById('jugend-role-form-title').textContent = 'Neue Rolle erstellen';
+        roleForm.querySelectorAll('input[name="permissionKeys[]"]').forEach((input) => { input.checked = false; });
+    }
+
+    async function loadRoles() {
+        if (!urls.manageRoles) return;
+        rolePanel.hidden = false;
+        const payload = await request(urls.roles);
+        managedRoles = payload.roles;
+        rolePermissions = payload.permissions;
+        const permissionList = document.getElementById('jugend-role-permission-list');
+        permissionList.replaceChildren();
+        rolePermissions.forEach((permission) => {
+            const label = element('label', 'jugend-role-permission');
+            const checkbox = element('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'permissionKeys[]';
+            checkbox.value = permission.permission_key;
+            const description = element('span');
+            description.append(element('strong', '', permission.name), element('small', '', permission.permission_key + ' · ' + (permission.description || '')));
+            label.append(checkbox, description);
+            permissionList.append(label);
+        });
+
+        roleList.replaceChildren();
+        const roleSelect = document.getElementById('jugend-assignment-role');
+        roleSelect.replaceChildren(new Option('Rolle auswählen …', ''));
+        managedRoles.forEach((role) => {
+            roleSelect.add(new Option(role.name + (role.is_system ? ' (System)' : ''), role.id));
+            const row = element('div', 'jugend-member-row');
+            const detail = element('div', 'jugend-role-detail');
+            detail.append(element('strong', '', role.name), element('small', '', role.role_key + ' · ' + role.permissions.join(', ')));
+            row.append(detail);
+            if (!role.is_system) {
+                const edit = element('button', 'secondary', 'Bearbeiten');
+                edit.type = 'button';
+                edit.addEventListener('click', () => {
+                    document.getElementById('jugend-role-id').value = role.id;
+                    document.getElementById('jugend-role-key').value = role.role_key;
+                    document.getElementById('jugend-role-key').disabled = true;
+                    document.getElementById('jugend-role-name').value = role.name;
+                    document.getElementById('jugend-role-description').value = role.description || '';
+                    document.getElementById('jugend-role-form-title').textContent = 'Rolle bearbeiten: ' + role.name;
+                    permissionList.querySelectorAll('input').forEach((input) => { input.checked = role.permissions.includes(input.value); });
+                    roleForm.scrollIntoView({behavior:'smooth', block:'nearest'});
+                });
+                const remove = element('button', 'secondary', 'Löschen');
+                remove.type = 'button';
+                remove.addEventListener('click', async () => {
+                    if (!window.confirm('Rolle „' + role.name + '“ wirklich löschen?')) return;
+                    try {
+                        await request(urls.deleteRole, 'DELETE', {roleId: role.id});
+                        showFeedback('Rolle „' + role.name + '“ wurde gelöscht.');
+                        await loadRoles();
+                    } catch (error) { showFeedback(error.message, true); }
+                });
+                row.append(edit, remove);
+            } else {
+                row.append(element('span', 'jugend-muted', 'Geschützte Systemrolle'));
+            }
+            roleList.append(row);
+        });
+
+        assignmentList.replaceChildren();
+        if (!payload.assignments.length) {
+            assignmentList.append(element('p', 'jugend-muted', 'Noch keine benutzerdefinierten Rollenzuweisungen.'));
+        }
+        payload.assignments.forEach((assignment) => {
+            const row = element('div', 'jugend-member-row');
+            const scope = assignment.scope_type === 'global' ? 'Global' : (assignment.scope_type === 'period' ? 'Periode #' : 'Gruppe #') + assignment.scope_id;
+            row.append(element('span', '', assignment.user_id + ' · ' + assignment.name + ' · ' + scope));
+            if (assignment.role_key !== 'app_admin') {
+                const revoke = element('button', 'secondary', 'Entziehen');
+                revoke.type = 'button';
+                revoke.addEventListener('click', async () => {
+                    try {
+                        await request(urls.revokeRole, 'DELETE', {assignmentId: assignment.id});
+                        showFeedback('Rollenzuweisung wurde entzogen.');
+                        await loadRoles();
+                    } catch (error) { showFeedback(error.message, true); }
+                });
+                row.append(revoke);
+            }
+            assignmentList.append(row);
+        });
+    }
+
+    roleForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const params = new URLSearchParams();
+        params.set('roleId', document.getElementById('jugend-role-id').value);
+        params.set('roleKey', document.getElementById('jugend-role-key').value);
+        params.set('name', document.getElementById('jugend-role-name').value);
+        params.set('description', document.getElementById('jugend-role-description').value);
+        roleForm.querySelectorAll('input[name="permissionKeys[]"]:checked').forEach((input) => params.append('permissionKeys[]', input.value));
+        try {
+            const response = await fetch(urls.saveRole, {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded', requesttoken:token(), Accept:'application/json'}, body:params});
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(payload.message || 'Rolle konnte nicht gespeichert werden.');
+            showFeedback('Rolle „' + payload.role.name + '“ wurde gespeichert.');
+            resetRoleForm();
+            await loadRoles();
+        } catch (error) { showFeedback(error.message, true); }
+    });
+
+    document.getElementById('jugend-role-cancel').addEventListener('click', resetRoleForm);
+    const assignmentScope = document.getElementById('jugend-assignment-scope');
+    const assignmentScopeIdWrap = document.getElementById('jugend-assignment-scope-id-wrap');
+    async function updateAssignmentScopeOptions() {
+        const scopeSelect = document.getElementById('jugend-assignment-scope-id');
+        const scopeType = assignmentScope.value;
+        assignmentScopeIdWrap.hidden = scopeType === 'global';
+        scopeSelect.required = scopeType !== 'global';
+        scopeSelect.disabled = scopeType === 'global';
+        scopeSelect.replaceChildren(new Option(scopeType === 'group' ? 'Arbeitsgruppe auswählen …' : 'Periode auswählen …', ''));
+        if (scopeType === 'global') return;
+        try {
+            const periodPayload = await request(urls.periods);
+            if (scopeType === 'period') {
+                periodPayload.periods.forEach((period) => scopeSelect.add(new Option(period.title + ' (' + period.status + ')', period.id)));
+            } else {
+                for (const period of periodPayload.periods) {
+                    const groupPayload = await request(urls.groups + '?periodId=' + encodeURIComponent(period.id));
+                    groupPayload.groups.forEach((group) => scopeSelect.add(new Option(period.title + ' — ' + group.name, group.id)));
+                }
+            }
+        } catch (error) {
+            showFeedback(error.message, true);
+        }
+    }
+    assignmentScope.addEventListener('change', updateAssignmentScopeOptions);
+    document.getElementById('jugend-role-assignment-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const data = {
+            userId: document.getElementById('jugend-assignment-user').value,
+            roleId: document.getElementById('jugend-assignment-role').value,
+            scopeType: assignmentScope.value
+        };
+        const scopeId = document.getElementById('jugend-assignment-scope-id').value;
+        if (assignmentScope.value !== 'global') data.scopeId = scopeId;
+        try {
+            await request(urls.assignRole, 'POST', data);
+            showFeedback('Rollenzuweisung wurde gespeichert.');
+            event.currentTarget.reset();
+            await updateAssignmentScopeOptions();
+            await loadRoles();
+        } catch (error) { showFeedback(error.message, true); }
+    });
+
+    async function loadRoleUsers() {
+        if (!urls.manageRoles) return;
+        const payload = await request(urls.users);
+        const select = document.getElementById('jugend-assignment-user');
+        select.replaceChildren(new Option('Person auswählen …', ''));
+        payload.users.forEach((user) => select.add(new Option(user.displayName + ' (' + user.uid + ')', user.uid)));
+    }
+
     document.getElementById('jugend-organization-back').href = urls.home;
 
     document.getElementById('jugend-period-form').addEventListener('submit', async (event) => {
@@ -150,5 +370,5 @@
         } catch (error) { showFeedback(error.message, true); }
     });
 
-    Promise.all([request(urls.users).then((payload) => { availableUsers = payload.users; }), loadPeriods()]).catch((error) => showFeedback(error.message, true));
+    Promise.all([request(urls.users).then((payload) => { availableUsers = payload.users; }), loadPeriods(), loadAppAdmins(), loadRoles(), loadRoleUsers()]).catch((error) => showFeedback(error.message, true));
 }());
