@@ -86,3 +86,6 @@ This is intentionally not yet the final authorization model: the current managem
 - Die Systemrolle `app_admin` und ihre Capability-Zuordnungen werden idempotent durch den AuthorizationService angelegt.
 - Die Organisationsseite bleibt App-Administratoren vorbehalten. Gruppenleiter können über die API nur die Mitgliedschaften ihrer eigenen Gruppe ändern, sofern die Periode noch ein Entwurf ist.
 - Dies ist noch keine vollständige Rollenverwaltung: frei definierbare Rollen, Perioden-Scopes, UI für App-Admin-Zuweisungen, Audit-Einträge für Rollenänderungen und weitere gruppenbezogene Fähigkeiten folgen separat. Globale Nextcloud-Administratoren bleiben die Bootstrap- und Notfalladministratoren.
+
+- Zuweisung und Entzug von App-Administratorrechten werden zusätzlich im bestehenden Audit-Log protokolliert.
+- Die Organisationsseite enthält eine Delegationsoberfläche für globale Nextcloud-Administratoren; App-Administratoren ohne globale Rechte sehen diese Sektion nicht.
