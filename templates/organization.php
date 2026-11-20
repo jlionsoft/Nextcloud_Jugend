@@ -53,6 +53,13 @@ declare(strict_types=1);
                             <label for="jugend-period-end"><?php p($l->t('Ende')); ?></label>
                             <input id="jugend-period-end" name="endsOn" type="date">
                         </div>
+                        <div class="jugend-field jugend-field--wide">
+                            <label for="jugend-period-template"><?php p($l->t('Vorlage')); ?></label>
+                            <select id="jugend-period-template" name="sourcePeriodId">
+                                <option value="">Leere Periode erstellen</option>
+                            </select>
+                            <small class="jugend-muted"><?php p($l->t('Optional: Gruppen, Mitglieder und Gruppenleitungen aus einer bestehenden Periode übernehmen.')); ?></small>
+                        </div>
                     </div>
                     <button type="submit" class="primary"><?php p($l->t('Entwurf erstellen')); ?></button>
                 </form>
