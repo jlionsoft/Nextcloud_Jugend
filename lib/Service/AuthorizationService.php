@@ -40,7 +40,7 @@ class AuthorizationService {
                         $this->appAccessUsers[$allowedUid] = true;
                     }
                 }
-            } catch (\\Throwable $e) {
+            } catch (\Throwable $e) {
                 $this->logger->error('Jugend-App-Zugriffsgruppe konnte nicht geprüft werden; Zugriff wird verweigert.', [
                     'app' => 'jugend',
                     'exception' => $e,
