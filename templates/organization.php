@@ -212,4 +212,5 @@ declare(strict_types=1);
             </div>
         </section>
     </div>
+    </div>
 </div>
