@@ -18,6 +18,10 @@ class ProvisioningService {
     ) {
     }
 
+    public function getBaseUrl(): string {
+        return $this->baseUrl();
+    }
+
     public function isConfigured(): bool {
         return $this->baseUrl() !== ''
             && $this->config->getValueString('jugend', self::USER_KEY) !== ''
