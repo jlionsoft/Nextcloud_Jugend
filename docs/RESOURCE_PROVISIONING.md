@@ -46,9 +46,8 @@ Die Bereitstellung wird bewusst als separater Schritt nach der Aktivierung ausge
 
 ## Noch nicht umgesetzt
 
-- Groupfolders und Berechtigungen für aktive sowie archivierte Gruppen.
-- Kalenderanlage und Kalenderberechtigungen.
-- Automatische Hintergrundverarbeitung mit Retry/Backoff; der aktuelle Stand bietet persistente Status und manuell auslösbare Wiederholungen.
-- Vollständige Exactly-once-Absicherung und Kompensation verwaister Räume, falls Talk einen Raum erstellt, aber die lokale Datenbankregistrierung fehlschlägt.
+- Automatische Kompensation verwaister Remote-Ressourcen, falls ein externer Dienst eine Ressource erstellt, aber die lokale Datenbankregistrierung fehlschlägt.
+- Vollständige Laufzeit-Integrationstests gegen die konkret installierten Nextcloud-, Groupfolders-, Calendar- und Talk-Versionen.
+- Überwachung und sichtbarer Gesamtstatus des Hintergrundjobs einschließlich des letzten erfolgreichen Laufs.
 
-Vor einem produktiven Einsatz müssen Groupfolders und Kalender ergänzt und die Talk-API gegen die konkrete Nextcloud-/Talk-Version getestet werden. Insbesondere ist die tatsächliche Berechtigungsanforderung des Dienstkontos installationsabhängig.
+Vor einem produktiven Einsatz müssen die einmalige Groupfolder-Einrichtung, Authentik-Gruppensynchronisierung und die CalDAV-/Files-Sharing-API gegen die konkrete Nextcloud-Installation getestet werden. Für zuverlässige 15-Minuten-Synchronisierung muss Nextcloud auf dem Cron-Modus laufen.
