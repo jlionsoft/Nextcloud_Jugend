@@ -68,6 +68,13 @@ class OrganizationPageController extends Controller {
             'manageAppAdmins' => $this->groupManager->isAdmin($uid),
             'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
         ]);
-        return new TemplateResponse(Application::APP_ID, 'organization');
+        $navigation = [
+            'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
+            'organization' => $this->urlGenerator->linkToRoute('jugend.organizationPage.index'),
+            'settings' => $this->groupManager->isAdmin($uid)
+                ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => 'jugend'])
+                : null,
+        ];
+        return new TemplateResponse(Application::APP_ID, 'organization', ['navigation' => $navigation]);
     }
 }
