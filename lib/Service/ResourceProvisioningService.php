@@ -172,13 +172,10 @@ class ResourceProvisioningService {
                 $this->client->ensureGroupFolderPath($relativePath);
                 $this->storeResource($groupId, 'groupfolder', $relativePath, $this->groupFolderUrl($relativePath));
 
-                $expected = [];
-                foreach ($group['members'] as $member) {
-                    $uid = trim((string)$member['user_id']);
-                    if ($uid !== '' && isset($currentMembers[$uid])) {
-                        $expected['0:' . $uid] = ['type' => 0, 'with' => $uid, 'permissions' => 31];
-                    }
-                }
+                $nextcloudGroup = $this->ensureAuthentikWorkgroupGroup($period, $group, $currentMembers);
+                $expected = [
+                    '1:' . $nextcloudGroup => ['type' => 1, 'with' => $nextcloudGroup, 'permissions' => 31],
+                ];
                 $changes = $this->reconcileGroupFolderShares('/' . $relativePath, $expected);
                 if ($changes['errors'] !== []) {
                     $this->finishJob($periodId, $groupId, 'groupfolder', 'failed', 'Mindestens eine Groupfolder-Freigabe konnte nicht abgeglichen werden.');
@@ -364,13 +361,8 @@ class ResourceProvisioningService {
                     $this->audit($actor, 'resource.calendar.created', (string)$groupId, ['periodId' => $periodId, 'calendarUri' => $uri]);
                 }
 
-                $expected = [];
-                foreach ($group['members'] as $member) {
-                    $uid = trim((string)$member['user_id']);
-                    if ($uid !== '' && isset($currentMembers[$uid])) {
-                        $expected[] = 'principal:principals/users/' . rawurlencode($uid);
-                    }
-                }
+                $nextcloudGroup = $this->ensureAuthentikWorkgroupGroup($period, $group, $currentMembers);
+                $expected = ['principal:principals/groups/' . rawurlencode($nextcloudGroup)];
                 $changes = $this->reconcileCalendarShares($uri, $expected, false);
                 if ($changes['errors'] !== []) {
                     $this->finishJob($periodId, $groupId, 'calendar', 'failed', 'Mindestens eine Kalenderfreigabe konnte nicht abgeglichen werden.');
@@ -527,12 +519,37 @@ class ResourceProvisioningService {
         return ['period' => $period, 'groups' => $groups, 'archivedGroups' => $archived];
     }
 
+    /**
+     * Mirrors the app's current membership snapshot into a dedicated
+     * Authentik group. The configured Authentik-to-Nextcloud group sync then
+     * becomes the authoritative ACL for active group resources.
+     */
+    private function ensureAuthentikWorkgroupGroup(array $period, array $group, array $currentMembers): string {
+        $name = 'jugend-' . $period['period_key'] . '-' . $group['slug'];
+        $userPks = [];
+        foreach ($group['members'] as $member) {
+            $uid = trim((string)$member['user_id']);
+            $pk = (int)($currentMembers[$uid] ?? 0);
+            if ($uid !== '' && $pk > 0) {
+                $userPks[] = $pk;
+            }
+        }
+        $synced = $this->authentik->syncWorkgroupGroup(
+            $name,
+            (int)$period['id'],
+            (int)$group['id'],
+            $userPks,
+        );
+        $this->storeResource((int)$group['id'], 'authentik_group', $synced['uuid'], $name);
+        return $name;
+    }
+
     private function currentDepartmentMembers(): array {
         $members = [];
         foreach ($this->authentik->getRecipients() as $recipient) {
             $uid = trim((string)($recipient['username'] ?? ''));
             if ($uid !== '') {
-                $members[$uid] = true;
+                $members[$uid] = (int)($recipient['pk'] ?? 0);
             }
         }
         return $members;
