@@ -479,3 +479,19 @@
         flex: 1 1 auto;
     }
 }
+
+/* Organisation planning */
+.jugend-organization-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); align-items:start; gap:var(--jugend-space-5); }
+.jugend-organization-form { display:grid; gap:var(--jugend-space-4); margin-top:var(--jugend-space-6); padding-top:var(--jugend-space-5); border-top:1px solid var(--color-border); }
+.jugend-organization-form h3,.jugend-group-card h3 { margin:0; font-size:16px; }
+.jugend-organization-form button { justify-self:start; }
+.jugend-period-list,.jugend-group-list { display:grid; gap:var(--jugend-space-2); margin-top:var(--jugend-space-4); }
+.jugend-period-item { display:block; width:100%; padding:var(--jugend-space-3) var(--jugend-space-4); border:1px solid var(--color-border); border-radius:var(--border-radius-element,8px); background:var(--color-background-hover); color:var(--color-main-text); text-align:start; cursor:pointer; }
+.jugend-period-item:hover,.jugend-period-item:focus-visible { border-color:var(--color-primary-element); }
+.jugend-group-card { padding:var(--jugend-space-4); border:1px solid var(--color-border); border-radius:var(--border-radius-element,8px); }
+.jugend-group-card p { margin:var(--jugend-space-1) 0 0; }
+.jugend-organization-feedback { margin:0 0 var(--jugend-space-4); white-space:pre-line; }
+.jugend-organization-feedback:empty { display:none; }
+.jugend-organization-feedback.error { color:var(--color-text-error); }
+.jugend-organization-feedback.success { color:var(--color-text-success); }
+@media (max-width:900px) { .jugend-organization-layout { grid-template-columns:minmax(0,1fr); } }
