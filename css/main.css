@@ -36,19 +36,31 @@
     box-sizing: border-box;
     width: 100%;
     max-width: none;
-    padding: clamp(var(--jugend-space-4), 2.4vw, var(--jugend-space-8));
     color: var(--color-main-text);
 }
 
-.jugend-page--embedded {
-    padding: 0;
-    max-width: none;
+/* Standalone app page: the app provides its own page padding. */
+.jugend-page:not(.jugend-page--embedded) {
+    padding: clamp(var(--jugend-space-4), 2.4vw, var(--jugend-space-8));
 }
+
+/*
+ * Admin settings are embedded in Nextcloud's settings layout (div.section). Nextcloud's own
+ * ".section" rule provides the padding and the bottom margin, so they must not be overridden here.
+ */
 
 .jugend-page *,
 .jugend-page *::before,
 .jugend-page *::after {
     box-sizing: border-box;
+}
+
+/*
+ * Nextcloud's core CSS sets "display: block" on section/aside/dialog elements, which overrides the
+ * browser default for the hidden attribute (e.g. the empty result panel before the first send).
+ */
+.jugend-page [hidden] {
+    display: none !important;
 }
 
 /* ---------------------------------------------------------------------------
@@ -237,6 +249,24 @@
 /* ---------------------------------------------------------------------------
  * Confirmation dialog (native <dialog>)
  * ------------------------------------------------------------------------- */
+/*
+ * Nextcloud's core CSS resets all <dialog> elements to "display: block; margin: 0". That makes a
+ * closed dialog visible in the page flow and stops an open modal from being centered, so both
+ * browser defaults are restored explicitly here.
+ */
+.jugend-dialog:not([open]) {
+    display: none;
+}
+
+.jugend-dialog[open] {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    height: fit-content;
+    max-height: calc(100% - var(--jugend-space-8));
+    overflow: auto;
+}
+
 /* The dialog sits inside .jugend-page, so it inherits the --jugend-* tokens. */
 .jugend-dialog {
     width: min(calc(var(--jugend-grid) * 120), calc(100vw - var(--jugend-space-8)));
