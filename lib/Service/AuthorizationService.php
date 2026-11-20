@@ -91,8 +91,8 @@ class AuthorizationService {
                 ->innerJoin('g', 'jugend_periods', 'p', $groupQuery->expr()->eq('g.period_id', 'p.id'))
                 ->where($groupQuery->expr()->eq('g.id', $groupQuery->createNamedParameter($scopeId)));
             $groupRow = $groupQuery->executeQuery()->fetch();
-            $targetGroupStatus = $groupRow['status'] ?? null;
-            $targetGroupSlug = $groupRow['slug'] ?? null;
+            $targetGroupStatus = $groupRow === false ? null : (string)$groupRow['status'];
+            $targetGroupSlug = $groupRow === false ? null : (string)$groupRow['slug'];
             $targetPeriodId = $groupRow !== false ? (int)$groupRow['period_id'] : null;
             $scopeIsActive = $targetGroupStatus === 'active';
         }
