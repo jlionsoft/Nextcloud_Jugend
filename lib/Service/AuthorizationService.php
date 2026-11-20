@@ -24,12 +24,17 @@ class AuthorizationService {
     ) {}
 
     /**
-     * Checks the configured Authentik department group as the authoritative
-     * app-access allow-list. A failed lookup is deliberately fail-closed.
+     * Checks whether a user may enter the app. The configured Authentik
+     * department group is authoritative for regular users; global Nextcloud
+     * administrators retain bootstrap access even when they are not members
+     * of that group, so they can configure and recover the app.
      */
     public function isAppUser(string $uid): bool {
         if ($uid === '') {
             return false;
+        }
+        if ($this->groups->isAdmin($uid)) {
+            return true;
         }
         if ($this->appAccessUsers === null) {
             $this->appAccessUsers = [];
@@ -99,7 +104,7 @@ class AuthorizationService {
         if ($uid === '' || !isset(self::PERMISSIONS[$permission]) || !$this->isAppUser($uid)) {
             return false;
         }
-        // Global Nextcloud administrators are trusted bootstrap principals inside the app access group.
+        // Global Nextcloud administrators retain full app permissions independently of the department group.
         if ($this->groups->isAdmin($uid)) {
             return true;
         }
