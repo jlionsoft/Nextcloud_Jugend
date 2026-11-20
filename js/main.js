@@ -13,7 +13,7 @@
     const urls = loadState('urls');
     const strings = loadState('strings');
     const format = (text, values = {}) => text.replace(/\{(\w+)\}/g, (match, name) => (name in values ? String(values[name]) : match));
-    const requestToken = () => document.head.dataset.requesttoken || '';
+    const requestToken = () => OC.requestToken || '';
 
     const message = document.getElementById('jugend-message');
     const count = document.getElementById('jugend-character-count');

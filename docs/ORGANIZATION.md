@@ -14,7 +14,7 @@
 
 ## Identitäts- und Zugriffsmodell
 
-Authentik steuert den Eintritt in die App. Die App darf keine eigenen Benutzerkonten oder Passwörter anlegen. Benutzerreferenzen werden als Nextcloud-UID gespeichert. Die Jugend-App prüft bei jedem geschützten Request die aktuelle App-Zugriffsberechtigung; historische Mitgliedschaften verleihen keinen eigenständigen Login- oder Zugriffsanspruch.
+Authentik steuert den regulären Eintritt in die App. Globale Nextcloud-Administratoren behalten unabhängig von der Abteilungsgruppe administrativen Bootstrap- und Wiederherstellungszugriff. Die App darf keine eigenen Benutzerkonten oder Passwörter anlegen. Benutzerreferenzen werden als Nextcloud-UID gespeichert. Die Jugend-App prüft bei jedem geschützten Request die aktuelle App-Zugriffsberechtigung; historische Mitgliedschaften verleihen keinen eigenständigen Login- oder Zugriffsanspruch.
 
 Die Organisationsmitgliedschaft ist periodengebunden. Ein Benutzer kann mehreren Arbeitsgruppen angehören. Pro Arbeitsgruppe müssen genau zwei aktive Gruppenleiter festgelegt sein, bevor eine Periode aktiviert werden kann. Beide Leitungen sind gleichberechtigt. Ihre App-Rechte sind auf die jeweilige Arbeitsgruppe begrenzt.
 
