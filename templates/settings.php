@@ -85,6 +85,16 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
                     <label for="provisioning_user"><?php p($l->t('Dienstkonto-Benutzername')); ?></label>
                     <input class="input-field" id="provisioning_user" name="provisioning_user" value="<?php p($values['provisioning_user']); ?>" autocomplete="username">
                 </div>
+                <div class="jugend-field">
+                    <label for="provisioning_group_id"><?php p($l->t('Dienstgruppe für Groupfolders')); ?></label>
+                    <input class="input-field" id="provisioning_group_id" name="provisioning_group_id" value="<?php p($values['provisioning_group_id']); ?>" placeholder="jugend-provisioner">
+                    <p class="settings-hint"><?php p($l->t('Nextcloud-Gruppe, in der ausschließlich das Dienstkonto Mitglied ist und die einmalig als Groupfolders-Administratorgruppe freigeschaltet wird.')); ?></p>
+                </div>
+                <div class="jugend-field">
+                    <label for="department_group_id"><?php p($l->t('Nextcloud-Zugriffsgruppe der Abteilung')); ?></label>
+                    <input class="input-field" id="department_group_id" name="department_group_id" value="<?php p($values['department_group_id']); ?>" placeholder="jugend">
+                    <p class="settings-hint"><?php p($l->t('Authentik-synchronisierte Nextcloud-Gruppe. Sie erhält Zugriff auf archivierte Groupfolders und Kalender.')); ?></p>
+                </div>
                 <div class="jugend-field jugend-field--wide">
                     <label for="provisioning_app_password"><?php p($l->t('App-Passwort')); ?></label>
                     <input class="input-field" id="provisioning_app_password" name="provisioning_app_password" type="password" autocomplete="new-password" placeholder="<?php p($configured['provisioning_app_password'] ? $l->t('Neues App-Passwort eingeben, um es zu ersetzen') : $l->t('Noch kein App-Passwort hinterlegt')); ?>">
