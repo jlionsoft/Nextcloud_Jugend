@@ -51,6 +51,85 @@ class OrganizationService {
         return $this->getPeriod($id);
     }
 
+
+    /**
+     * Creates a draft period by copying the group and active membership snapshot
+     * from an existing period. Historical rows are not copied.
+     */
+    public function clonePeriod(int $sourcePeriodId, string $key, string $title, ?string $startsOn, ?string $endsOn, string $actor): array {
+        $source = $this->getPeriod($sourcePeriodId);
+        $key = strtolower(trim($key));
+        $title = trim($title);
+        if (!preg_match('/^[a-z0-9][a-z0-9_-]{0,31}$/', $key)) {
+            throw new \InvalidArgumentException('Der Periodenschlüssel darf nur Kleinbuchstaben, Zahlen, Bindestriche und Unterstriche enthalten.');
+        }
+        if ($title === '' || mb_strlen($title) > 128) {
+            throw new \InvalidArgumentException('Bitte gib einen gültigen Namen für die Organisationsperiode an.');
+        }
+        $startsOn = $startsOn !== null && trim($startsOn) !== '' ? trim($startsOn) : null;
+        $endsOn = $endsOn !== null && trim($endsOn) !== '' ? trim($endsOn) : null;
+        $this->validateDateRange($startsOn, $endsOn);
+        $sourceGroups = $this->listGroups($sourcePeriodId);
+        $now = time();
+
+        $this->db->beginTransaction();
+        try {
+            $qb = $this->db->getQueryBuilder();
+            $qb->insert('jugend_periods')
+                ->setValue('period_key', $qb->createNamedParameter($key))
+                ->setValue('title', $qb->createNamedParameter($title))
+                ->setValue('status', $qb->createNamedParameter('draft'))
+                ->setValue('starts_on', $qb->createNamedParameter($startsOn))
+                ->setValue('ends_on', $qb->createNamedParameter($endsOn))
+                ->setValue('created_by', $qb->createNamedParameter($actor))
+                ->setValue('created_at', $qb->createNamedParameter($now))
+                ->setValue('updated_at', $qb->createNamedParameter($now));
+            $qb->executeStatement();
+            $newPeriodId = (int)$this->db->lastInsertId('*PREFIX*jugend_periods');
+
+            foreach ($sourceGroups as $sourceGroup) {
+                $qb = $this->db->getQueryBuilder();
+                $qb->insert('jugend_groups')
+                    ->setValue('period_id', $qb->createNamedParameter($newPeriodId))
+                    ->setValue('slug', $qb->createNamedParameter($sourceGroup['slug']))
+                    ->setValue('name', $qb->createNamedParameter($sourceGroup['name']))
+                    ->setValue('description', $qb->createNamedParameter($sourceGroup['description']))
+                    ->setValue('sort_order', $qb->createNamedParameter((int)$sourceGroup['sort_order']))
+                    ->setValue('created_at', $qb->createNamedParameter($now))
+                    ->setValue('updated_at', $qb->createNamedParameter($now));
+                $qb->executeStatement();
+                $newGroupId = (int)$this->db->lastInsertId('*PREFIX*jugend_groups');
+
+                foreach ($sourceGroup['members'] as $member) {
+                    $qb = $this->db->getQueryBuilder();
+                    $qb->insert('jugend_members')
+                        ->setValue('group_id', $qb->createNamedParameter($newGroupId))
+                        ->setValue('user_id', $qb->createNamedParameter($member['user_id']))
+                        ->setValue('is_leader', $qb->createNamedParameter((bool)$member['is_leader']))
+                        ->setValue('joined_at', $qb->createNamedParameter($now))
+                        ->setValue('left_at', $qb->createNamedParameter(null));
+                    $qb->executeStatement();
+                }
+            }
+
+            $this->audit($actor, 'period.cloned', 'period', (string)$newPeriodId, [
+                'sourcePeriodId' => $sourcePeriodId,
+                'sourcePeriodKey' => $source['period_key'],
+                'groupCount' => count($sourceGroups),
+                'memberCount' => count(array_unique(array_merge(...array_map(
+                    static fn(array $group): array => array_column($group['members'], 'user_id'),
+                    $sourceGroups ?: [[]]
+                )))),
+            ]);
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+
+        return $this->getPeriod($newPeriodId);
+    }
+
     public function getPeriod(int $id): array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')->from('jugend_periods')->where($qb->expr()->eq('id', $qb->createNamedParameter($id)));
