@@ -1,5 +1,5 @@
 <template>
-	<NcContent>
+	<NcContent app-name="jugend">
 		<NcAppNavigation :aria-label="tr('App-Navigation')">
 			<template #list>
 				<NcAppNavigationItem v-for="item in navigation" :key="item.url" :name="item.label" :href="item.url" :active="item.active" @click.prevent="navigate(item.url)">

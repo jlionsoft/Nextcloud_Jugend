@@ -1,5 +1,5 @@
 <template>
-	<NcContent>
+	<NcContent app-name="jugend">
 		<NcAppNavigation :aria-label="tr('App-Navigation')">
 			<template #list>
 				<NcAppNavigationItem
