@@ -26,6 +26,7 @@ declare(strict_types=1);
             <section class="jugend-panel">
                 <h2><?php p($l->t('Mitglieder verwalten')); ?></h2>
                 <p id="jugend-leader-selected-group" class="jugend-muted"><?php p($l->t('Wähle links eine Arbeitsgruppe aus.')); ?></p>
+                <div id="jugend-leader-resource-links" class="jugend-form-actions"></div>
                 <div id="jugend-leader-out-of-scope" class="jugend-muted" role="status"></div>
                 <form id="jugend-leader-membership-form" class="jugend-organization-form" hidden>
                     <p class="jugend-muted"><?php p($l->t('Wähle die Mitglieder und markiere genau zwei Personen als gleichberechtigte Gruppenleitung. Änderungen an Talk, Dateiordner und Kalender werden innerhalb des nächsten Synchronisationslaufs übernommen.')); ?></p>
