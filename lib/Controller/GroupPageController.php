@@ -28,10 +28,19 @@ class GroupPageController extends Controller {
         parent::__construct($appName, $request);
     }
 
+    private function hasManagedGroups(string $uid): bool {
+        foreach ($this->organization->listActiveGroups() as $group) {
+            if ($this->authorization->can($uid, 'group.members.manage', 'group', (int)$group['id'])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     #[NoAdminRequired]
     public function index(): TemplateResponse {
         $uid = $this->session->getUser()?->getUID();
-        if ($uid === null || (!$this->authorization->isAppAdmin($uid) && $this->organization->listGroupsForLeader($uid) === [])) {
+        if ($uid === null || !$this->hasManagedGroups($uid)) {
             return new TemplateResponse(Application::APP_ID, 'forbidden', [], 'error');
         }
 
