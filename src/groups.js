@@ -1,17 +1,9 @@
 import { createApp } from 'vue'
-import AppShell from './AppShell.vue'
+import GroupsApp from './components/GroupsApp.vue'
 
 const root = document.getElementById('jugend-vue-root')
 if (root) {
-	try {
-		const app = createApp(AppShell, {
-			items: JSON.parse(root.dataset.navigation || '[]'),
-			content: root.innerHTML,
-			pageHeading: 'Meine Arbeitsgruppen',
-			legacyScript: 'groups',
-		})
-		app.mount(root)
-	} catch (error) {
-		console.error('Jugend: Vue groups app could not be mounted; keeping the server-rendered fallback.', error)
-	}
+	createApp(GroupsApp, {
+		navigation: JSON.parse(root.dataset.navigation || '[]'),
+	}).mount(root)
 }
