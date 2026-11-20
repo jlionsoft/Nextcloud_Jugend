@@ -47,7 +47,9 @@ class GroupController extends Controller {
         $groups = [];
         foreach ($this->organization->listActiveGroups() as $group) {
             if ($this->authorization->can($uid, 'group.members.manage', 'group', (int)$group['id'])) {
-                $group['resources'] = $this->resources->getGroupResourceLinks((int)$group['id']);
+                $group['resources'] = $group['period_status'] === 'active'
+                    ? $this->resources->getGroupResourceLinks((int)$group['id'])
+                    : [];
                 $groups[] = $group;
             }
         }
