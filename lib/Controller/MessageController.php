@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+
 namespace OCA\Jugend\Controller;
 
 use OCA\Jugend\AppInfo\Application;
@@ -12,10 +13,22 @@ use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
 class MessageController extends Controller {
-    public function __construct(string $appName, IRequest $request, private MessageService $messages, private LoggerInterface $logger, private IL10N $l) {
+    public function __construct(
+        string $appName,
+        IRequest $request,
+        private MessageService $messages,
+        private LoggerInterface $logger,
+        private IL10N $l,
+    ) {
         parent::__construct($appName, $request);
     }
 
+    /**
+     * Sends a message through the configured communication channels.
+     *
+     * @param string $message Message text to send
+     * @return JSONResponse Delivery result or a structured error response
+     */
     #[NoAdminRequired]
     public function send(string $message = ''): JSONResponse {
         $message = trim($message);
