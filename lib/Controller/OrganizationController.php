@@ -27,6 +27,7 @@ class OrganizationController extends Controller {
         private IUserManager $users,
         private IUserSession $session,
         private IAppConfig $appConfig,
+        private LoggerInterface $logger,
     ) {
         parent::__construct($appName, $request);
     }
