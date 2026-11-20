@@ -43,6 +43,7 @@ class OrganizationPageController extends Controller {
             'clonePeriod' => $this->urlGenerator->linkToRoute('jugend.organization.clonePeriod'),
             'previewPeriod' => $this->urlGenerator->linkToRoute('jugend.organization.previewPeriod'),
             'activatePeriod' => $this->urlGenerator->linkToRoute('jugend.organization.activatePeriod'),
+            'preparePeriodResources' => $this->urlGenerator->linkToRoute('jugend.organization.preparePeriodResources'),
             'provisionTalkRooms' => $this->urlGenerator->linkToRoute('jugend.organization.provisionTalkRooms'),
             'provisionGroupFolders' => $this->urlGenerator->linkToRoute('jugend.organization.provisionGroupFolders'),
             'provisionCalendars' => $this->urlGenerator->linkToRoute('jugend.organization.provisionCalendars'),
