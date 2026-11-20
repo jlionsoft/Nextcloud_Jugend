@@ -43,11 +43,110 @@ class AuthentikService {
             $smsEnabled = filter_var($smsValue, FILTER_VALIDATE_BOOLEAN);
             $recipients[] = [
                 'username' => trim((string)($user['username'] ?? '')),
+                'pk' => (int)($user['pk'] ?? 0),
                 'phone' => $phone,
                 'sms_enabled' => $smsEnabled,
             ];
         }
         return $recipients;
+    }
+
+    /**
+     * Creates or reconciles a dedicated Authentik group for one app work group.
+     * The group is marked with app-owned attributes so unrelated groups are
+     * never adopted or modified accidentally.
+     *
+     * @param list<int> $expectedUserPks
+     */
+    public function syncWorkgroupGroup(string $name, int $periodId, int $groupId, array $expectedUserPks): array {
+        $name = trim($name);
+        if ($name === '' || mb_strlen($name) > 150 || $periodId <= 0 || $groupId <= 0) {
+            throw new \InvalidArgumentException('Authentik-Gruppenname oder Organisationsreferenz ist ungültig.');
+        }
+        $expected = array_values(array_unique(array_filter(array_map('intval', $expectedUserPks), static fn(int $pk): bool => $pk > 0)));
+        $group = $this->findGroupByName($name);
+        $created = false;
+        if ($group === null) {
+            $group = $this->requestJson('POST', '/api/v3/core/groups/', [
+                'name' => $name,
+                'is_superuser' => false,
+                'users' => $expected,
+                'attributes' => [
+                    'managed_by' => 'nextcloud-jugend',
+                    'period_id' => $periodId,
+                    'group_id' => $groupId,
+                ],
+            ]);
+            $created = true;
+        } else {
+            $attributes = is_array($group['attributes'] ?? null) ? $group['attributes'] : [];
+            if (($attributes['managed_by'] ?? '') !== 'nextcloud-jugend'
+                || (int)($attributes['period_id'] ?? 0) !== $periodId
+                || (int)($attributes['group_id'] ?? 0) !== $groupId) {
+                throw new RuntimeException('Eine Authentik-Gruppe mit dem Namen „' . $name . '“ existiert bereits, gehört aber nicht dieser App.');
+            }
+        }
+
+        $uuid = (string)($group['pk'] ?? '');
+        if ($uuid === '') {
+            throw new RuntimeException('Authentik hat keine Gruppen-UUID zurückgegeben.');
+        }
+        $current = array_values(array_unique(array_filter(array_map('intval', $group['users'] ?? []), static fn(int $pk): bool => $pk > 0)));
+        $added = [];
+        $removed = [];
+        foreach (array_diff($expected, $current) as $pk) {
+            $this->requestJson('POST', '/api/v3/core/groups/' . rawurlencode($uuid) . '/add_user/', ['pk' => (int)$pk], [200, 204]);
+            $added[] = (int)$pk;
+        }
+        foreach (array_diff($current, $expected) as $pk) {
+            $this->requestJson('POST', '/api/v3/core/groups/' . rawurlencode($uuid) . '/remove_user/', ['pk' => (int)$pk], [200, 204]);
+            $removed[] = (int)$pk;
+        }
+        return [
+            'uuid' => $uuid,
+            'name' => $name,
+            'created' => $created,
+            'added' => $added,
+            'removed' => $removed,
+        ];
+    }
+
+    private function findGroupByName(string $name): ?array {
+        $path = '/api/v3/core/groups/?search=' . rawurlencode($name) . '&include_users=true';
+        $data = $this->requestJson('GET', $path);
+        $results = $data['results'] ?? [];
+        if (!is_array($results)) {
+            throw new RuntimeException('Authentik lieferte keine gültige Gruppenliste.');
+        }
+        $matches = array_values(array_filter($results, static fn(array $group): bool => (string)($group['name'] ?? '') === $name));
+        if (count($matches) > 1) {
+            throw new RuntimeException('Authentik lieferte mehrere Gruppen mit demselben Namen.');
+        }
+        return $matches[0] ?? null;
+    }
+
+    private function requestJson(string $method, string $path, ?array $body = null, array $acceptedStatusCodes = [200, 201]): array {
+        $base = rtrim($this->required('authentik_url'), '/');
+        $options = [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->required('authentik_token'),
+                'Accept' => 'application/json',
+            ],
+            'timeout' => 20,
+        ];
+        if ($body !== null) {
+            $options['json'] = $body;
+        }
+        $response = $this->http->newClient()->request($method, $base . $path, $options);
+        if (!in_array($response->getStatusCode(), $acceptedStatusCodes, true)) {
+            throw new RuntimeException('Authentik-API antwortet mit HTTP ' . $response->getStatusCode() . '.');
+        }
+        $raw = $this->body($response->getBody());
+        if ($raw === '') {
+            return [];
+        }
+        $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        return is_array($decoded) ? $decoded : [];
     }
 
     private function required(string $key): string {
