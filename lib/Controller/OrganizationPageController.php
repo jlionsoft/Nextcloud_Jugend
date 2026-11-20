@@ -20,6 +20,7 @@ class OrganizationPageController extends Controller {
         string $appName,
         IRequest $request,
         private AuthorizationService $authorization,
+        private IGroupManager $groupManager,
         private IUserSession $userSession,
         private IInitialState $initialState,
         private IURLGenerator $urlGenerator,
@@ -43,6 +44,10 @@ class OrganizationPageController extends Controller {
             'createGroup' => $this->urlGenerator->linkToRoute('jugend.organization.createGroup'),
             'users' => $this->urlGenerator->linkToRoute('jugend.organization.users'),
             'setMembers' => $this->urlGenerator->linkToRoute('jugend.organization.setMembers'),
+            'appAdmins' => $this->urlGenerator->linkToRoute('jugend.organization.appAdmins'),
+            'grantAppAdmin' => $this->urlGenerator->linkToRoute('jugend.organization.grantAppAdmin'),
+            'revokeAppAdmin' => $this->urlGenerator->linkToRoute('jugend.organization.revokeAppAdmin'),
+            'manageAppAdmins' => $this->groupManager->isAdmin($uid),
             'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
         ]);
         return new TemplateResponse(Application::APP_ID, 'organization');
