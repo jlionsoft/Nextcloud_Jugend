@@ -13,7 +13,7 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
     <form id="jugend-settings-form" class="jugend-settings-form" novalidate>
         <section class="jugend-settings-group">
             <h3>Authentik</h3>
-            <p class="settings-hint"><?php p($l->t('Empfängergruppe und SMS-Freigaben')); ?></p>
+            <p class="settings-hint"><?php p($l->t('Diese Gruppe bestimmt die zugelassenen Benutzer der Jugend-App und die Empfänger der Nachrichten. Wer aus der Gruppe entfernt wird, verliert den App-Zugriff. SMS werden nur bei aktivierter SMS-Freigabe versendet.')); ?></p>
             <div class="jugend-fields">
                 <div class="jugend-field">
                     <label for="authentik_url"><?php p($l->t('Authentik-URL')); ?></label>
