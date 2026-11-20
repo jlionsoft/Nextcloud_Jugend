@@ -27,20 +27,22 @@ Für das Anlegen und Verwalten der automatisch erzeugten Authentik-Arbeitsgruppe
 
 ## Aktueller Umfang
 
-- Verbindungstest gegen cloud/capabilities mit den gespeicherten Zugangsdaten.
+- Verbindungstest gegen `cloud/capabilities` mit den gespeicherten Zugangsdaten.
 - Erstellung privater Talk-Gruppenräume über die Talk OCS API v4.
 - Bereitstellung eines Talk-Raums je Gruppe der aktiven Organisationsperiode.
-- Speicherung des Raum-Tokens und der Raum-URL in jugend_resources.
 - Aktive Talk-Räume werden mit den aktuellen Mitgliedern der jeweiligen Arbeitsgruppe abgeglichen.
-- Mitglieder, die nicht mehr zur aktiven Abteilungsgruppe in Authentik gehören, werden aus aktiven Gruppenräumen entfernt.
-- In archivierten Organisationsperioden werden alle vorhandenen Talk-Räume mit der aktuellen Abteilungsmitgliedschaft abgeglichen: aktuelle Mitglieder erhalten Zugriff, ausgeschiedene Mitglieder werden entfernt.
-- Dieser Abgleich läuft aktuell bei manueller Ausführung durch einen App-Admin. Änderungen an der Authentik-Gruppe werden daher nicht sofort oder automatisch in Talk gespiegelt.
-- Raum-Tokens werden bei Wiederholungen wiederverwendet; fehlende Teilnehmer werden ergänzt und nicht mehr berechtigte Teilnehmer entfernt.
+- In archivierten Talk-Räumen erhalten alle aktuellen Abteilungsmitglieder Zugriff; nicht mehr aktuelle Teilnehmer werden entfernt.
+- Je Arbeitsgruppe wird eine dedizierte Authentik-Gruppe `jugend-{period_key}-{group_slug}` angelegt und mit der geplanten Mitgliedschaft synchronisiert. Diese Gruppe ist die Zugriffsgruppe für die aktiven Dateiordner und Kalender.
+- Die Authentik-Mitgliedschaften werden durch einen Nextcloud-Hintergrundjob alle 15 Minuten abgeglichen. Damit werden ausgeschiedene Mitglieder aus den aktiven Arbeitsgruppen-Gruppen entfernt; die tatsächliche Übernahme in Nextcloud hängt zusätzlich vom konfigurierten Authentik-Gruppensync ab.
+- Groupfolder-Unterordner werden unter dem vorkonfigurierten Groupfolder-Stamm per WebDAV angelegt. Aktive Gruppen erhalten Lese-/Schreibzugriff über ihre Authentik-synchronisierte Nextcloud-Gruppe.
+- Archivierte Dateiordner werden mit der aktuellen Abteilungsgruppe geteilt und sind schreibgeschützt.
+- Pro Arbeitsgruppe wird ein CalDAV-Kalender im Dienstkonto angelegt. Aktive Kalender werden mit der Arbeitsgruppen-Gruppe geteilt; archivierte Kalender werden schreibgeschützt mit der aktuellen Abteilungsgruppe geteilt.
+- Bei Archivierung werden die früheren Authentik-Arbeitsgruppen geleert; historische Inhalte werden stattdessen für alle aktuellen Abteilungsmitglieder freigegeben.
 - Der Provisionierungsstatus wird je Periode und Arbeitsgruppe dauerhaft gespeichert (nicht begonnen, läuft, erfolgreich, fehlgeschlagen).
-- Fehlgeschlagene Einladungen/Entfernungen und letzte Fehlermeldung bleiben sichtbar. App-Admins können den Abgleich manuell erneut starten.
-- Audit-Ereignis bei erfolgreicher Raumregistrierung.
+- Fehlgeschlagene Einladungen/Freigaben und letzte Fehlermeldung bleiben sichtbar. App-Admins können den Abgleich manuell erneut starten.
+- Audit-Ereignisse werden bei erfolgreicher Ressourcenregistrierung geschrieben.
 
-Die Bereitstellung wird bewusst als separater, autorisierter Schritt nach der Aktivierung ausgeführt. Die Periodenaktivierung selbst führt keine externen API-Aufrufe aus und bleibt damit unabhängig von temporären Nextcloud-/Talk-Ausfällen.
+Die Bereitstellung wird bewusst als separater Schritt nach der Aktivierung ausgeführt. Die Periodenaktivierung selbst führt keine externen API-Aufrufe aus und bleibt damit unabhängig von temporären Nextcloud-/Authentik-Ausfällen. Der Hintergrundjob führt denselben Abgleich regelmäßig erneut aus.
 
 ## Noch nicht umgesetzt
 
