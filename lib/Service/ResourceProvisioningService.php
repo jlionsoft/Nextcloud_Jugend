@@ -197,6 +197,7 @@ class ResourceProvisioningService {
         if ($this->client->getProvisioningGroupId() === '' || $this->client->getDepartmentGroupId() === '') {
             throw new \RuntimeException('Bitte Dienstgruppe und Abteilungs-Zugriffsgruppe in den Jugendeinstellungen konfigurieren.');
         }
+        $this->client->assertGroupFolderRoot();
         $currentMembers = $this->currentDepartmentMembers();
         $result = ['created' => [], 'existing' => [], 'archivedSynced' => [], 'failed' => [], 'inProgress' => []];
 
