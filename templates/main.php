@@ -10,6 +10,9 @@ declare(strict_types=1);
             <h1><?php p($l->t('Jugend-Nachricht versenden')); ?></h1>
             <p><?php p($l->t('Erstelle eine Nachricht und versende sie über Matrix, Nextcloud Talk und SMS.')); ?></p>
         </div>
+        <?php if (!empty($_['organizationUrl'])) { ?>
+            <a class="button" href="<?php p($_['organizationUrl']); ?>"><?php p($l->t('Organisation')); ?></a>
+        <?php } ?>
         <?php if (!empty($_['settingsUrl'])) { ?>
             <a class="button" href="<?php p($_['settingsUrl']); ?>"><?php p($l->t('Einstellungen')); ?></a>
         <?php } ?>
