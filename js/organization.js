@@ -87,7 +87,7 @@
     async function selectGroup(group) {
         selectedGroup = group;
         const editor = document.getElementById('jugend-membership-editor');
-        editor.hidden = false;
+        editor.hidden = selectedPeriod.status !== 'draft';
         document.getElementById('jugend-selected-group').textContent = group.name;
         const memberIds = new Set(group.members.map((member) => member.user_id));
         const leaderIds = new Set(group.members.filter((member) => member.is_leader === true || member.is_leader === 1 || member.is_leader === '1').map((member) => member.user_id));
