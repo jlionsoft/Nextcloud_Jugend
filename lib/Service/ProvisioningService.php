@@ -172,10 +172,19 @@ class ProvisioningService {
             $response = $this->requestRaw('MKCOL', $davPath, '', [], [201, 405]);
             if ($response->getStatusCode() === 405) {
                 $probe = '<?xml version="1.0"?><d:propfind xmlns:d="DAV:"><d:prop><d:resourcetype/></d:prop></d:propfind>';
-                $this->requestRaw('PROPFIND', $davPath, $probe, [
+                $probeResponse = $this->requestRaw('PROPFIND', $davPath, $probe, [
                     'Depth' => '0',
                     'Content-Type' => 'application/xml; charset=utf-8',
                 ], [207]);
+                $document = new \DOMDocument();
+                if (!$document->loadXML((string)$probeResponse->getBody())) {
+                    throw new RuntimeException('Der bestehende Groupfolder-Pfad konnte nicht geprüft werden.');
+                }
+                $xpath = new \DOMXPath($document);
+                $xpath->registerNamespace('d', 'DAV:');
+                if ($xpath->query('//d:resourcetype/d:collection')->length === 0) {
+                    throw new RuntimeException('Der vorhandene Pfadabschnitt ist kein Verzeichnis: ' . $part);
+                }
             }
         }
     }
