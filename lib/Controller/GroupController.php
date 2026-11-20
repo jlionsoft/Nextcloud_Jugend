@@ -74,7 +74,7 @@ class GroupController extends Controller {
             return new JSONResponse([
                 'users' => $this->organization->listNextcloudUsers('', $currentMemberUids),
             ]);
-        } catch (\\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_group'], 404);
         }
     }
