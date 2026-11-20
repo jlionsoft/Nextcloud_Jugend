@@ -10,7 +10,7 @@
         return JSON.parse(new TextDecoder().decode(bytes));
     }
     const urls = loadState('organizationUrls');
-    const token = () => document.head.dataset.requesttoken || '';
+    const token = () => OC.requestToken || '';
     const feedback = document.getElementById('jugend-organization-feedback');
     const periodList = document.getElementById('jugend-period-list');
     const groupList = document.getElementById('jugend-group-list');
