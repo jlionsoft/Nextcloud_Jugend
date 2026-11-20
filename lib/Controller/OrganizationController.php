@@ -141,7 +141,7 @@ class OrganizationController extends Controller {
         if ($userId === '') {
             return new JSONResponse(['error' => 'invalid_user'], 400);
         }
-        $this->authorization->revokeAppAdmin($userId);
+        $this->authorization->revokeAppAdmin($userId, $actor);
         return new JSONResponse(['ok' => true, 'admins' => $this->authorization->listAppAdmins()]);
     }
 
