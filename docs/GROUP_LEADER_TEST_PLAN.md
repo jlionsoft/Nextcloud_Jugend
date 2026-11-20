@@ -83,6 +83,24 @@ Dieser Test prüft insbesondere, dass globale App-Admin-Berechtigungen nicht dur
 5. Die Periode archivieren.
 6. Erwartung: Perioden- und Gruppen-Scope gewähren keine Schreibrechte mehr.
 
+### 11. App-Zugriffsgruppe entzieht den Zugriff
+
+1. Als aktiver Benutzer der konfigurierten Authentik-App-Zugriffsgruppe anmelden.
+2. Die Hauptseite öffnen und den Nachrichtenversand mit einer harmlosen Testnachricht prüfen.
+3. Den Benutzer aus der Authentik-App-Zugriffsgruppe entfernen.
+4. Die Hauptseite erneut aufrufen und den Nachrichten-Endpunkt direkt ansprechen.
+5. Erwartung: Die Hauptseite wird verweigert; der Nachrichten-Endpunkt und alle RBAC-geschützten Organisations-/Gruppenendpunkte liefern HTTP 403. Eine vorhandene App-Admin- oder Gruppenrolle darf den entfernten Zugriff nicht wiederherstellen.
+6. Die Nextcloud-Administrationsseite der App muss für globale Nextcloud-Administratoren weiterhin erreichbar bleiben, damit die Authentik-Konfiguration repariert werden kann.
+
+### 12. Mitgliedschaftshistorie bleibt bei unveränderten Personen erhalten
+
+1. In einer Testgruppe mindestens drei Mitglieder und genau zwei Gruppenleitungen eintragen.
+2. Die joined_at-Werte der bestehenden Mitgliedschaften notieren.
+3. Eine Person hinzufügen oder entfernen und speichern, ohne die übrigen Personen zu verändern.
+4. Erwartung: Nur die ausgeschiedene Person erhält left_at; nur neue Personen erhalten ein neues Mitgliedschaftsintervall. Unveränderte Mitglieder behalten ihre ursprünglichen joined_at-Werte.
+5. Eine Leitungsrolle wechseln, ohne die Mitgliedschaft zu ändern.
+6. Erwartung: Nur is_leader wird angepasst; es wird kein neues Mitgliedschaftsintervall angelegt.
+
 ## Integrations- und Regressionstests
 
 - Authentik-Gruppen-Synchronisierung in Nextcloud.
