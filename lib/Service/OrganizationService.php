@@ -140,9 +140,6 @@ class OrganizationService {
         return $row;
     }
 
-    /**
-     * Returns only active work groups for which the given user is a current leader.
-     */
     /** Returns all groups in the current active period, including their period label. */
     public function listActiveGroups(): array {
         $groups = [];
@@ -158,6 +155,7 @@ class OrganizationService {
         return $groups;
     }
 
+    /** Returns active work groups where the user is a current leader. */
     public function listGroupsForLeader(string $userId): array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('g.id', 'p.title AS period_title')
