@@ -39,6 +39,23 @@
         feedback.classList.toggle('success', !isError && !!message);
     }
 
+    function formatPeriodDate(date) {
+        if (!date) return '';
+        const parsed = new Date(date + 'T00:00:00');
+        return Number.isNaN(parsed.getTime())
+            ? date
+            : new Intl.DateTimeFormat('de-DE', {day: '2-digit', month: '2-digit', year: 'numeric'}).format(parsed);
+    }
+
+    function periodDateLabel(period) {
+        const start = formatPeriodDate(period.starts_on);
+        const end = formatPeriodDate(period.ends_on);
+        if (start && end) return start + ' bis ' + end;
+        if (start) return 'ab ' + start;
+        if (end) return 'bis ' + end;
+        return 'ohne festgelegten Zeitraum';
+    }
+
     function element(tag, className, text) {
         const node = document.createElement(tag);
         if (className) node.className = className;
@@ -52,14 +69,14 @@
         const templateSelect = document.getElementById('jugend-period-template');
         templateSelect.replaceChildren(new Option('Leere Periode erstellen', ''));
         payload.periods.forEach((period) => {
-            templateSelect.add(new Option(period.title + ' (' + period.status + ')', period.id));
+            templateSelect.add(new Option(period.title + ' · ' + period.status + ' · ' + periodDateLabel(period), period.id));
         });
         if (!payload.periods.length) {
             periodList.append(element('p', 'jugend-muted', 'Noch keine Organisationsperioden vorhanden.'));
             return [];
         }
         payload.periods.forEach((period) => {
-            const button = element('button', 'jugend-period-item', period.title + ' · ' + period.status);
+            const button = element('button', 'jugend-period-item', period.title + ' · ' + period.status + ' · ' + periodDateLabel(period));
             button.type = 'button';
             button.addEventListener('click', () => selectPeriod(period));
             periodList.append(button);
@@ -69,7 +86,7 @@
 
     async function selectPeriod(period) {
         selectedPeriod = period;
-        selectedLabel.textContent = period.title + ' (' + period.status + ')';
+        selectedLabel.textContent = period.title + ' (' + period.status + ') · ' + periodDateLabel(period);
         groupForm.hidden = period.status !== 'draft';
         document.getElementById('jugend-rollover-preview').hidden = period.status !== 'draft';
         document.getElementById('jugend-resource-provisioning').hidden = period.status !== 'active';
@@ -134,6 +151,7 @@
             const preview = await request(urls.previewPeriod + '?periodId=' + encodeURIComponent(selectedPeriod.id));
             const summary = preview.summary;
             rolloverStatus.textContent = (preview.valid ? 'Die Periode ist aktivierbar.' : 'Die Periode enthält noch Fehler.')
+                + ' Zeitraum: ' + periodDateLabel(preview.period) + '.'
                 + ' ' + summary.groupCount + ' Arbeitsgruppen, ' + summary.memberCount + ' unterschiedliche Mitglieder.'
                 + (preview.previousActivePeriod ? ' Bisher aktiv: ' + preview.previousActivePeriod.title + '.' : ' Es gibt bisher keine aktive Periode.');
             preview.errors.forEach((message) => rolloverErrors.append(element('p', 'error', message)));
@@ -314,7 +332,7 @@
     activateButton.addEventListener('click', async () => {
         if (!selectedPeriod || activateButton.disabled) return;
         const previous = document.querySelector('#jugend-rollover-status').textContent;
-        if (!window.confirm('Organisationsperiode „' + selectedPeriod.title + '“ jetzt aktivieren? Die bisher aktive Periode wird archiviert.')) return;
+        if (!window.confirm('Organisationsperiode „' + selectedPeriod.title + '“ jetzt sofort aktivieren? Zeitraum: ' + periodDateLabel(selectedPeriod) + '. Die bisher aktive Periode wird archiviert.')) return;
         activateButton.disabled = true;
         try {
             const result = await request(urls.activatePeriod, 'POST', {periodId: selectedPeriod.id});
