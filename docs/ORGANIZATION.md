@@ -59,18 +59,31 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 7. Archivierung, Audit und Fehler-/Wiederholungsbehandlung.
 
 
-## RBAC-Implementierungsstand
+## Implementierungsstand
 
-Die erste RBAC-Stufe verwendet Capability Keys statt Rollenname-Vergleiche:
-- `organization.manage`: globale Verwaltung von Perioden, Gruppen und Kandidatenlisten.
-- `roles.manage`: reserviert für die spätere vollständige Rollenverwaltung.
-- `group.members.manage`: Gruppenmitgliedschaften der eigenen Arbeitsgruppe ändern; aktuell dynamisch aus einer aktiven Gruppenleiter-Mitgliedschaft abgeleitet.
+### Organisationsverwaltung und Rollen
 
-Die Systemrolle `app_admin` wird idempotent angelegt und global zugewiesen. Globale Nextcloud-Administratoren bleiben als Bootstrap-Principals immer berechtigt. App-Admin-Zuweisungen dürfen in dieser Stufe nur globale Nextcloud-Administratoren vornehmen. Die Organisationsseite ist App-Administratoren vorbehalten; ein Gruppenleiter erhält keinen globalen Zugriff auf Perioden- und Gruppenverwaltung.
+- Organisationsperioden, Arbeitsgruppen und historische Mitgliedschaftsintervalle sind persistiert.
+- Pro Arbeitsgruppe werden vor der Aktivierung genau zwei aktive Gruppenleitungen verlangt.
+- Die App verwendet serverseitige Capability-Prüfungen mit globalen, Perioden- und Gruppen-Scopes. Perioden-/Gruppenrechte sind nur wirksam, solange die zugehörige Periode aktiv ist; beim Archivieren enden damit insbesondere dynamische Gruppenleitungsrechte.
+- App-Administratoren und frei definierbare Rollen werden unterstützt. Die Systemrolle `app_admin` bleibt geschützt.
+- Rollenänderungen und Organisationsaktionen werden im Audit-Log erfasst.
 
-Rollenänderungen werden im Audit-Log gespeichert (`role.created`, `role.updated`, `role.deleted`, `role.assigned`, `role.unassigned`, `role.granted`, `role.revoked`). Die Systemrolle `app_admin` ist geschützt und kann nicht über die frei definierbare Rollenverwaltung bearbeitet oder gelöscht werden. Eigene Rollen können mit den registrierten Capability Keys erstellt, bearbeitet und gelöscht werden, solange sie nicht mehr zugewiesen sind. Rollenzuweisungen unterstützen `global`, `period` und `group`; die Scope-ID wird serverseitig gegen die jeweilige Tabelle validiert. Die Berechtigung `roles.manage` selbst darf nur ein globaler Nextcloud-Administrator in eine Rolle aufnehmen oder an Personen vergeben. Die App-Admin-Delegationsoberfläche bleibt globalen Nextcloud-Administratoren vorbehalten.
+### Jahreswechsel
 
+- Neue Perioden und Arbeitsgruppen können als Entwürfe unabhängig von der aktiven Periode vorbereitet werden. Beim Anlegen lässt sich optional eine bestehende Periode als Vorlage kopieren; Gruppen, aktuelle Mitglieder und Gruppenleitungen werden in einem Datenbankvorgang in den neuen Entwurf übernommen.
+- Die Aktivierungsvorschau vergleicht Gruppen anhand ihres technischen Slugs und zeigt neue/entfallende Gruppen sowie Mitgliedschafts- und Leitungsänderungen.
+- Vor der Aktivierung werden alle Gruppen auf genau zwei aktive Leitungen und alle Mitglieder auf vorhandene Nextcloud-Konten innerhalb der aktuellen Authentik-Empfängermenge geprüft.
+- Die Aktivierung archiviert die bisher aktive Periode und aktiviert die ausgewählte Entwurfsperiode in einer Datenbanktransaktion. Schlägt der Statuswechsel fehl, wird die Transaktion zurückgerollt.
+- **Wichtige Grenze:** Die aktuelle Aktivierung schaltet nur den Organisationsstatus in der App um. Sie provisioniert noch keine Nextcloud-Gruppen, Talk-Räume, Gruppenordner oder Kalender. Bis die Ressourcenorchestrierung umgesetzt und getestet ist, darf die Aktivierung nicht als vollständiger produktiver Jahreswechsel verstanden werden.
 
-## RBAC-Stufe 2: eigene Rollen
+### Noch ausstehende Schritte
 
-Die Organisationsseite bietet jetzt eine Rollenverwaltung für Personen mit globaler `roles.manage`-Berechtigung (aktuell: App-Administratoren und globale Nextcloud-Administratoren). Rollen haben einen unveränderlichen technischen Schlüssel, einen Namen, eine Beschreibung und eine Menge registrierter Berechtigungen. Zuweisungen werden mit Benutzer, Rolle, Geltungsbereich, vergebender Person und Zeitstempel gespeichert. Systemrollen können nicht bearbeitet, gelöscht oder über die allgemeine Zuweisungsoberfläche entzogen werden. Rollen mit `roles.manage` können nur globale Nextcloud-Administratoren vergeben. Die Prüfung erfolgt vollständig serverseitig; UI-Sichtbarkeit ist keine Sicherheitsgrenze.
+1. Wiederholbare Provisionierungsjobs mit Status-/Fehlerprotokoll für Nextcloud-Gruppen.
+2. Ressourcenadapter für Talk-Räume, Gruppenordner und Kalender.
+3. Vorbereitung und Prüfung aller Ressourcen vor dem finalen Periodenwechsel.
+4. Archivfreigaben für alle aktuellen Mitglieder der App-Zugriffsgruppe.
+5. Eigener Gruppenleitungs-Arbeitsbereich mit ausschließlich gruppenbezogenen Verwaltungsaktionen.
+6. Laufzeit- und Integrationstests auf der Zielinstanz mit Nextcloud Hub 26 / Server 35.
+
+Die App verändert weder die Authentik-Zugriffsgruppe noch historische Mitgliedschafts- oder Ressourceninhalte automatisch beim Austritt einer Person.

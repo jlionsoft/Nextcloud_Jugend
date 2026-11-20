@@ -514,3 +514,13 @@
 #jugend-role-management { margin-top:var(--jugend-space-5); }
 #jugend-role-management .jugend-field select { width:100%; max-width:calc(var(--jugend-grid) * 150); }
 @media (max-width:650px) { #jugend-role-permission-list { grid-template-columns:minmax(0,1fr); } }
+
+
+/* Annual rollover preview */
+.jugend-rollover-preview { margin-top:var(--jugend-space-4); padding:var(--jugend-space-3); border:1px solid var(--color-border); border-radius:var(--border-radius-element,8px); }
+.jugend-rollover-preview h3 { margin-top:0; }
+#jugend-rollover-errors:empty { display:none; }
+#jugend-rollover-errors .error { color:var(--color-error); }
+#jugend-rollover-summary { margin:var(--jugend-space-3) 0; }
+#jugend-rollover-summary strong { display:block; margin-top:var(--jugend-space-2); }
+#jugend-rollover-summary p { margin:var(--jugend-space-1) 0; overflow-wrap:anywhere; }

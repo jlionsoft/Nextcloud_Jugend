@@ -49,9 +49,14 @@
     async function loadPeriods() {
         const payload = await request(urls.periods);
         periodList.replaceChildren();
+        const templateSelect = document.getElementById('jugend-period-template');
+        templateSelect.replaceChildren(new Option('Leere Periode erstellen', ''));
+        payload.periods.forEach((period) => {
+            templateSelect.add(new Option(period.title + ' (' + period.status + ')', period.id));
+        });
         if (!payload.periods.length) {
             periodList.append(element('p', 'jugend-muted', 'Noch keine Organisationsperioden vorhanden.'));
-            return;
+            return [];
         }
         payload.periods.forEach((period) => {
             const button = element('button', 'jugend-period-item', period.title + ' · ' + period.status);
@@ -59,13 +64,17 @@
             button.addEventListener('click', () => selectPeriod(period));
             periodList.append(button);
         });
+        return payload.periods;
     }
 
     async function selectPeriod(period) {
         selectedPeriod = period;
         selectedLabel.textContent = period.title + ' (' + period.status + ')';
         groupForm.hidden = period.status !== 'draft';
+        document.getElementById('jugend-rollover-preview').hidden = period.status !== 'draft';
+        document.getElementById('jugend-rollover-activate').disabled = true;
         await loadGroups();
+        if (period.status === 'draft') await loadRolloverPreview();
     }
 
     async function loadGroups() {
@@ -105,6 +114,70 @@
             row.append(memberLabel, leaderLabel); list.append(row);
         });
     }
+
+
+    const rolloverPanel = document.getElementById('jugend-rollover-preview');
+    const rolloverErrors = document.getElementById('jugend-rollover-errors');
+    const rolloverSummary = document.getElementById('jugend-rollover-summary');
+    const rolloverStatus = document.getElementById('jugend-rollover-status');
+    const activateButton = document.getElementById('jugend-rollover-activate');
+
+    async function loadRolloverPreview() {
+        if (!selectedPeriod || selectedPeriod.status !== 'draft') return;
+        activateButton.disabled = true;
+        rolloverStatus.textContent = 'Prüfe Organisationsperiode …';
+        rolloverErrors.replaceChildren();
+        rolloverSummary.replaceChildren();
+        try {
+            const preview = await request(urls.previewPeriod + '?periodId=' + encodeURIComponent(selectedPeriod.id));
+            const summary = preview.summary;
+            rolloverStatus.textContent = (preview.valid ? 'Die Periode ist aktivierbar.' : 'Die Periode enthält noch Fehler.')
+                + ' ' + summary.groupCount + ' Arbeitsgruppen, ' + summary.memberCount + ' unterschiedliche Mitglieder.'
+                + (preview.previousActivePeriod ? ' Bisher aktiv: ' + preview.previousActivePeriod.title + '.' : ' Es gibt bisher keine aktive Periode.');
+            preview.errors.forEach((message) => rolloverErrors.append(element('p', 'error', message)));
+            const addList = (heading, entries, render) => {
+                if (!entries.length) return;
+                rolloverSummary.append(element('strong', '', heading));
+                entries.forEach((entry) => rolloverSummary.append(element('p', 'jugend-muted', render(entry))));
+            };
+            addList('Neue Arbeitsgruppen', summary.addedGroups, (entry) => '+ ' + entry.name);
+            addList('Wegfallende Arbeitsgruppen', summary.removedGroups, (entry) => '− ' + entry.name);
+            addList('Umbenannte Arbeitsgruppen', summary.renamedGroups, (entry) => entry.from + ' → ' + entry.to);
+            addList('Mitgliedschaftsänderungen', summary.membershipChanges, (entry) => {
+                const changes = [];
+                if (entry.added.length) changes.push('neu: ' + entry.added.join(', '));
+                if (entry.removed.length) changes.push('entfernt: ' + entry.removed.join(', '));
+                if (entry.leadershipChanged.length) changes.push('Leitungswechsel: ' + entry.leadershipChanged.join(', '));
+                return entry.group + ' — ' + changes.join('; ');
+            });
+            if (!summary.addedGroups.length && !summary.removedGroups.length && !summary.renamedGroups.length && !summary.membershipChanges.length) {
+                rolloverSummary.append(element('p', 'jugend-muted', 'Keine Gruppen- oder Mitgliedschaftsänderungen gegenüber der aktiven Periode.'));
+            }
+            activateButton.disabled = !preview.valid;
+        } catch (error) {
+            rolloverStatus.textContent = 'Die Vorschau konnte nicht geladen werden.';
+            rolloverErrors.append(element('p', 'error', error.message));
+        }
+    }
+
+    document.getElementById('jugend-rollover-refresh').addEventListener('click', loadRolloverPreview);
+    activateButton.addEventListener('click', async () => {
+        if (!selectedPeriod || activateButton.disabled) return;
+        const previous = document.querySelector('#jugend-rollover-status').textContent;
+        if (!window.confirm('Organisationsperiode „' + selectedPeriod.title + '“ jetzt aktivieren? Die bisher aktive Periode wird archiviert.')) return;
+        activateButton.disabled = true;
+        try {
+            const result = await request(urls.activatePeriod, 'POST', {periodId: selectedPeriod.id});
+            showFeedback('„' + result.period.title + '“ ist jetzt die aktive Organisationsperiode.');
+            const periods = await loadPeriods();
+            const updated = periods.find((period) => Number(period.id) === Number(result.period.id));
+            if (updated) await selectPeriod(updated);
+        } catch (error) {
+            rolloverStatus.textContent = previous;
+            showFeedback(error.message, true);
+            await loadRolloverPreview();
+        }
+    });
 
     document.getElementById('jugend-membership-form').addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -349,9 +422,16 @@
         event.preventDefault();
         const data = Object.fromEntries(new FormData(event.currentTarget).entries());
         try {
-            const payload = await request(urls.createPeriod, 'POST', data);
+            const sourcePeriodId = data.sourcePeriodId;
+            delete data.sourcePeriodId;
+            if (sourcePeriodId) {
+                data.sourcePeriodId = sourcePeriodId;
+            }
+            const payload = await request(sourcePeriodId ? urls.clonePeriod : urls.createPeriod, 'POST', data);
             event.currentTarget.reset();
-            showFeedback('Organisationsperiode „' + payload.period.title + '“ wurde als Entwurf erstellt.');
+            showFeedback(sourcePeriodId
+                ? 'Organisationsperiode „' + payload.period.title + '“ wurde aus der Vorlage übernommen.'
+                : 'Organisationsperiode „' + payload.period.title + '“ wurde als Entwurf erstellt.');
             await loadPeriods();
             await selectPeriod(payload.period);
         } catch (error) { showFeedback(error.message, true); }

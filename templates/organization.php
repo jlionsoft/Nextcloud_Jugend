@@ -21,6 +21,19 @@ declare(strict_types=1);
                 <div id="jugend-period-list" class="jugend-period-list">
                     <p class="jugend-muted"><?php p($l->t('Perioden werden geladen …')); ?></p>
                 </div>
+
+                <section id="jugend-rollover-preview" class="jugend-rollover-preview" hidden>
+                    <h3>Jahreswechsel prüfen</h3>
+                    <p id="jugend-rollover-status" class="jugend-muted">Die Vorschau prüft Gruppen, Mitgliedschaften und Gruppenleitungen.</p>
+                    <div id="jugend-rollover-errors" role="alert"></div>
+                    <div id="jugend-rollover-summary" class="jugend-period-list"></div>
+                    <div class="jugend-form-actions">
+                        <button type="button" id="jugend-rollover-refresh" class="secondary">Vorschau aktualisieren</button>
+                        <button type="button" id="jugend-rollover-activate" class="primary" disabled>Periode aktivieren</button>
+                    </div>
+                    <p class="jugend-muted">Die Aktivierung archiviert die bisher aktive Periode. Externe Talk-, Datei- und Kalenderressourcen werden in dieser Entwicklungsstufe noch nicht provisioniert.</p>
+                </section>
+
                 <form id="jugend-period-form" class="jugend-organization-form">
                     <h3><?php p($l->t('Neue Periode planen')); ?></h3>
                     <div class="jugend-fields">
@@ -39,6 +52,13 @@ declare(strict_types=1);
                         <div class="jugend-field">
                             <label for="jugend-period-end"><?php p($l->t('Ende')); ?></label>
                             <input id="jugend-period-end" name="endsOn" type="date">
+                        </div>
+                        <div class="jugend-field jugend-field--wide">
+                            <label for="jugend-period-template"><?php p($l->t('Vorlage')); ?></label>
+                            <select id="jugend-period-template" name="sourcePeriodId">
+                                <option value="">Leere Periode erstellen</option>
+                            </select>
+                            <small class="jugend-muted"><?php p($l->t('Optional: Gruppen, Mitglieder und Gruppenleitungen aus einer bestehenden Periode übernehmen.')); ?></small>
                         </div>
                     </div>
                     <button type="submit" class="primary"><?php p($l->t('Entwurf erstellen')); ?></button>
