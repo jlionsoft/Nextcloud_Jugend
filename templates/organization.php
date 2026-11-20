@@ -21,6 +21,19 @@ declare(strict_types=1);
                 <div id="jugend-period-list" class="jugend-period-list">
                     <p class="jugend-muted"><?php p($l->t('Perioden werden geladen …')); ?></p>
                 </div>
+
+                <section id="jugend-rollover-preview" class="jugend-rollover-preview" hidden>
+                    <h3>Jahreswechsel prüfen</h3>
+                    <p id="jugend-rollover-status" class="jugend-muted">Die Vorschau prüft Gruppen, Mitgliedschaften und Gruppenleitungen.</p>
+                    <div id="jugend-rollover-errors" role="alert"></div>
+                    <div id="jugend-rollover-summary" class="jugend-period-list"></div>
+                    <div class="jugend-form-actions">
+                        <button type="button" id="jugend-rollover-refresh" class="secondary">Vorschau aktualisieren</button>
+                        <button type="button" id="jugend-rollover-activate" class="primary" disabled>Periode aktivieren</button>
+                    </div>
+                    <p class="jugend-muted">Die Aktivierung archiviert die bisher aktive Periode. Externe Talk-, Datei- und Kalenderressourcen werden in dieser Entwicklungsstufe noch nicht provisioniert.</p>
+                </section>
+
                 <form id="jugend-period-form" class="jugend-organization-form">
                     <h3><?php p($l->t('Neue Periode planen')); ?></h3>
                     <div class="jugend-fields">
