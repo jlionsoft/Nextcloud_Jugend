@@ -5,7 +5,7 @@ Native Nextcloud app replacing the existing JugendSendClient.
 ## Implemented in this branch
 
 - Native Nextcloud PHP AppFramework UI and API.
-- Nextcloud session authentication. The configured Authentik group is the server-side allow-list for app pages, RBAC-protected APIs and message sending; membership lookup fails closed. Every active member of this group can use the app and send messages.
+- Nextcloud session authentication. The configured Authentik group is the server-side allow-list for regular users on app pages, RBAC-protected APIs and message sending; membership lookup fails closed. Global Nextcloud administrators retain bootstrap access independently of that group so they can configure and recover the app. Every active member of the configured group can use the app and send messages.
 - Technical settings and connection tests are restricted to Nextcloud administrators.
 - Authentik group lookup using a bearer token. All active group members are Matrix recipients; only users with `sms=true` and a non-empty `phone_number` attribute are SMS recipients.
 - Matrix Client-Server API integration: verify bot identity, detect existing accounts, reuse joined direct rooms from `m.direct`, create and invite to trusted private rooms when needed, update `m.direct`, and send `m.room.message` events. Rate-limit responses are retried with backoff.
@@ -59,7 +59,7 @@ The app must be installed and tested on a staging instance first. The CI workflo
 
 ## Organisationsverwaltung und Ressourcen
 
-Die Organisationsverwaltung ist unter `/apps/jugend/organization` verfügbar und App-Administratoren vorbehalten. Die App verwendet Organisationsperioden, Arbeitsgruppen, historische Mitgliedschaftsintervalle und genau zwei Gruppenleitungen je Arbeitsgruppe. Gruppenleitungen nutzen `/apps/jugend/groups` für ihre aktiven Arbeitsgruppen und passende Entwürfe.
+Die Organisationsverwaltung ist unter `/apps/jugend/organization` verfügbar und App-Administratoren vorbehalten. Globale Nextcloud-Administratoren erhalten unabhängig von der Authentik-Abteilungsgruppe administrativen Wiederherstellungszugriff. Die App verwendet Organisationsperioden, Arbeitsgruppen, historische Mitgliedschaftsintervalle und genau zwei Gruppenleitungen je Arbeitsgruppe. Gruppenleitungen nutzen `/apps/jugend/groups` für ihre aktiven Arbeitsgruppen und passende Entwürfe.
 
 ### Implementierter Funktionsumfang
 
