@@ -79,7 +79,10 @@ class OrganizationController extends Controller {
     public function previewPeriod(int $periodId = 0): JSONResponse {
         if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
         try {
-            return new JSONResponse($this->organization->previewPeriod($periodId));
+            $preview = $this->organization->previewPeriod($periodId);
+            $preview['resourcePreparation'] = $this->resources->getPeriodPreparationStatus($periodId);
+            $preview['activationReady'] = $preview['valid'] && $preview['resourcePreparation']['ready'];
+            return new JSONResponse($preview);
         } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
         } catch (\Throwable $e) {
@@ -97,9 +100,9 @@ class OrganizationController extends Controller {
                 'result' => $this->resources->preparePeriodResources($periodId, $actor),
                 'status' => $this->resources->getPeriodPreparationStatus($periodId),
             ]);
-        } catch (\\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             return new JSONResponse(['error' => 'preparation_failed', 'message' => $e->getMessage()], 500);
         }
     }
