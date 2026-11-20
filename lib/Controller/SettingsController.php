@@ -12,6 +12,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
+use Psr\Log\LoggerInterface;
 
 class SettingsController extends Controller {
     public const SECRET_KEYS = ['authentik_token', 'talk_bot_secret', 'sms_password', 'matrix_bot_token', 'provisioning_app_password'];
@@ -26,6 +27,7 @@ class SettingsController extends Controller {
         private SmsService $sms,
         private ProvisioningService $provisioning,
         private IL10N $l,
+        private LoggerInterface $logger,
     ) {
         parent::__construct($appName, $request);
     }
@@ -115,7 +117,8 @@ class SettingsController extends Controller {
             };
             return new JSONResponse($result);
         } catch (\Throwable $e) {
-            return new JSONResponse(['ok' => false, 'message' => $e->getMessage()], 400);
+            $this->logger->warning('Jugend settings connection test failed for channel "' . $channel . '".', ['exception' => $e]);
+            return new JSONResponse(['ok' => false, 'message' => $this->l->t('Verbindungstest fehlgeschlagen. Bitte prüfe die Einstellungen und das Serverprotokoll.')], 400);
         }
     }
 }
