@@ -15,6 +15,7 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\IUserManager;
+use Psr\Log\LoggerInterface;
 
 class OrganizationController extends Controller {
     public function __construct(
@@ -27,6 +28,7 @@ class OrganizationController extends Controller {
         private IUserManager $users,
         private IUserSession $session,
         private IAppConfig $appConfig,
+        private LoggerInterface $logger,
         private LoggerInterface $logger,
     ) {
         parent::__construct($appName, $request);
@@ -121,7 +123,12 @@ class OrganizationController extends Controller {
         } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_period', 'message' => $e->getMessage()], 400);
         } catch (\Throwable $e) {
-            return new JSONResponse(['error' => 'preparation_failed', 'message' => $e->getMessage()], 500);
+            $this->logger->error('Jugend period resource preparation failed.', [
+                'periodId' => $periodId,
+                'actor' => $actor,
+                'exception' => $e,
+            ]);
+            return new JSONResponse(['error' => 'preparation_failed', 'message' => 'Die Ressourcen konnten nicht vorbereitet werden. Details stehen im Nextcloud-Log.'], 500);
         }
     }
 
