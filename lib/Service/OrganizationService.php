@@ -180,6 +180,156 @@ class OrganizationService {
         return $this->getGroup($groupId);
     }
 
+
+    /**
+     * Returns a non-mutating activation preview, including validation and membership deltas.
+     */
+    public function previewPeriod(int $periodId): array {
+        $period = $this->getPeriod($periodId);
+        if ($period['status'] !== 'draft') {
+            throw new \\InvalidArgumentException('Nur geplante Perioden können aktiviert werden.');
+        }
+
+        $groups = $this->listGroups($periodId);
+        $errors = [];
+        if ($groups === []) {
+            $errors[] = 'Die Periode benötigt mindestens eine Arbeitsgruppe.';
+        }
+
+        $allowedUsers = [];
+        foreach ($this->authentik->getRecipients() as $recipient) {
+            $uid = trim((string)($recipient['username'] ?? ''));
+            if ($uid !== '') { $allowedUsers[$uid] = true; }
+        }
+
+        foreach ($groups as $group) {
+            $leaders = array_values(array_filter($group['members'], static fn(array $member): bool =>
+                $member['is_leader'] === true || $member['is_leader'] === 1 || $member['is_leader'] === '1'
+            ));
+            if (count($leaders) !== 2) {
+                $errors[] = $group['name'] . ': Es müssen genau zwei aktive Gruppenleitungen festgelegt sein.';
+            }
+            foreach ($group['members'] as $member) {
+                $uid = (string)$member['user_id'];
+                if (!isset($allowedUsers[$uid]) || $this->users->get($uid) === null) {
+                    $errors[] = $group['name'] . ': Mitglied „' . $uid . '“ ist nicht mehr als App-Benutzer verfügbar.';
+                }
+            }
+        }
+
+        $active = null;
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('*')->from('jugend_periods')
+            ->where($qb->expr()->eq('status', $qb->createNamedParameter('active')))
+            ->setMaxResults(1);
+        $active = $qb->executeQuery()->fetch();
+        $activeGroups = $active ? $this->listGroups((int)$active['id']) : [];
+        $oldBySlug = [];
+        foreach ($activeGroups as $group) { $oldBySlug[$group['slug']] = $group; }
+        $newBySlug = [];
+        foreach ($groups as $group) { $newBySlug[$group['slug']] = $group; }
+
+        $addedGroups = [];
+        $removedGroups = [];
+        $membershipChanges = [];
+        foreach ($newBySlug as $slug => $group) {
+            if (!isset($oldBySlug[$slug])) {
+                $addedGroups[] = ['slug' => $slug, 'name' => $group['name']];
+                continue;
+            }
+            $oldMembers = [];
+            foreach ($oldBySlug[$slug]['members'] as $member) {
+                $oldMembers[$member['user_id']] = (bool)$member['is_leader'];
+            }
+            $newMembers = [];
+            foreach ($group['members'] as $member) {
+                $newMembers[$member['user_id']] = (bool)$member['is_leader'];
+            }
+            $added = array_values(array_diff(array_keys($newMembers), array_keys($oldMembers)));
+            $removed = array_values(array_diff(array_keys($oldMembers), array_keys($newMembers)));
+            $leadershipChanged = [];
+            foreach (array_intersect(array_keys($oldMembers), array_keys($newMembers)) as $uid) {
+                if ($oldMembers[$uid] !== $newMembers[$uid]) { $leadershipChanged[] = $uid; }
+            }
+            if ($added !== [] || $removed !== [] || $leadershipChanged !== []) {
+                $membershipChanges[] = [
+                    'group' => $group['name'],
+                    'added' => $added,
+                    'removed' => $removed,
+                    'leadershipChanged' => $leadershipChanged,
+                ];
+            }
+        }
+        foreach ($oldBySlug as $slug => $group) {
+            if (!isset($newBySlug[$slug])) {
+                $removedGroups[] = ['slug' => $slug, 'name' => $group['name']];
+            }
+        }
+
+        return [
+            'period' => $period,
+            'previousActivePeriod' => $active ?: null,
+            'valid' => $errors === [],
+            'errors' => $errors,
+            'summary' => [
+                'groupCount' => count($groups),
+                'memberCount' => count(array_unique(array_merge(...array_map(
+                    static fn(array $group): array => array_column($group['members'], 'user_id'),
+                    $groups ?: [[]]
+                )))),
+                'addedGroups' => $addedGroups,
+                'removedGroups' => $removedGroups,
+                'membershipChanges' => $membershipChanges,
+            ],
+        ];
+    }
+
+    /**
+     * Atomically switches the active period after a fresh server-side validation.
+     */
+    public function activatePeriod(int $periodId, string $actor): array {
+        $preview = $this->previewPeriod($periodId);
+        if (!$preview['valid']) {
+            throw new \\InvalidArgumentException('Die Periode kann nicht aktiviert werden: ' . implode(' ', $preview['errors']));
+        }
+
+        $now = time();
+        $this->db->beginTransaction();
+        try {
+            $qb = $this->db->getQueryBuilder();
+            $qb->update('jugend_periods')
+                ->set('status', $qb->createNamedParameter('archived'))
+                ->set('archived_at', $qb->createNamedParameter($now))
+                ->set('updated_at', $qb->createNamedParameter($now))
+                ->where($qb->expr()->eq('status', $qb->createNamedParameter('active')));
+            $qb->executeStatement();
+
+            $qb = $this->db->getQueryBuilder();
+            $qb->update('jugend_periods')
+                ->set('status', $qb->createNamedParameter('active'))
+                ->set('activated_at', $qb->createNamedParameter($now))
+                ->set('archived_at', $qb->createNamedParameter(null))
+                ->set('updated_at', $qb->createNamedParameter($now))
+                ->where($qb->expr()->eq('id', $qb->createNamedParameter($periodId)))
+                ->andWhere($qb->expr()->eq('status', $qb->createNamedParameter('draft')));
+            if ($qb->executeStatement() !== 1) {
+                throw new \\RuntimeException('Der Periodenstatus hat sich während der Aktivierung geändert. Bitte lade die Vorschau erneut.');
+            }
+
+            $this->audit($actor, 'period.activated', 'period', (string)$periodId, [
+                'previousPeriodId' => $preview['previousActivePeriod']['id'] ?? null,
+                'groupCount' => $preview['summary']['groupCount'],
+                'memberCount' => $preview['summary']['memberCount'],
+            ]);
+            $this->db->commit();
+        } catch (\\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+
+        return $this->getPeriod($periodId);
+    }
+
     public function listNextcloudUsers(string $search = ''): array {
         $allowed = [];
         foreach ($this->authentik->getRecipients() as $recipient) {
