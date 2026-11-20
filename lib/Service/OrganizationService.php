@@ -290,27 +290,59 @@ class OrganizationService {
         }
 
         $now = time();
+        $currentMemberships = [];
+        foreach ($group['members'] as $member) {
+            $currentMemberships[(string)$member['user_id']] = (bool)$member['is_leader'];
+        }
+        $nextLeaders = array_fill_keys($leaders, true);
+        $added = array_values(array_diff($members, array_keys($currentMemberships)));
+        $removed = array_values(array_diff(array_keys($currentMemberships), $members));
+        $leadershipChanged = [];
+
         $this->db->beginTransaction();
         try {
-            $qb = $this->db->getQueryBuilder();
-            $qb->update('jugend_members')->set('left_at', $qb->createNamedParameter($now))
-                ->where($qb->expr()->eq('group_id', $qb->createNamedParameter($groupId)))
-                ->andWhere($qb->expr()->isNull('left_at'));
-            $qb->executeStatement();
+            foreach ($removed as $uid) {
+                $qb = $this->db->getQueryBuilder();
+                $qb->update('jugend_members')
+                    ->set('left_at', $qb->createNamedParameter($now))
+                    ->where($qb->expr()->eq('group_id', $qb->createNamedParameter($groupId)))
+                    ->andWhere($qb->expr()->eq('user_id', $qb->createNamedParameter($uid)))
+                    ->andWhere($qb->expr()->isNull('left_at'));
+                $qb->executeStatement();
+            }
 
             foreach ($members as $uid) {
+                $isLeader = isset($nextLeaders[$uid]);
+                if (array_key_exists($uid, $currentMemberships)) {
+                    if ($currentMemberships[$uid] !== $isLeader) {
+                        $leadershipChanged[] = $uid;
+                        $qb = $this->db->getQueryBuilder();
+                        $qb->update('jugend_members')
+                            ->set('is_leader', $qb->createNamedParameter($isLeader))
+                            ->where($qb->expr()->eq('group_id', $qb->createNamedParameter($groupId)))
+                            ->andWhere($qb->expr()->eq('user_id', $qb->createNamedParameter($uid)))
+                            ->andWhere($qb->expr()->isNull('left_at'));
+                        $qb->executeStatement();
+                    }
+                    continue;
+                }
+
                 $qb = $this->db->getQueryBuilder();
                 $qb->insert('jugend_members')
                     ->setValue('group_id', $qb->createNamedParameter($groupId))
                     ->setValue('user_id', $qb->createNamedParameter($uid))
-                    ->setValue('is_leader', $qb->createNamedParameter(in_array($uid, $leaders, true)))
+                    ->setValue('is_leader', $qb->createNamedParameter($isLeader))
                     ->setValue('joined_at', $qb->createNamedParameter($now))
                     ->setValue('left_at', $qb->createNamedParameter(null));
                 $qb->executeStatement();
             }
+
             $this->audit($actor, 'group.members_replaced', 'group', (string)$groupId, [
                 'members' => $members,
                 'leaders' => $leaders,
+                'added' => $added,
+                'removed' => $removed,
+                'leadershipChanged' => $leadershipChanged,
             ]);
             $this->db->commit();
         } catch (\Throwable $e) {
