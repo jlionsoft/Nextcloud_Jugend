@@ -79,6 +79,7 @@ declare(strict_types=1);
                 </section>
             </section>
         </main>
+
         <section id="jugend-app-admin-panel" class="jugend-panel" hidden>
             <h2><?php p($l->t('App-Administratoren')); ?></h2>
             <p class="jugend-muted"><?php p($l->t('App-Administratoren dürfen die Organisationsstruktur verwalten, benötigen dafür aber keine globalen Nextcloud-Administratorrechte. Zuweisungen können nur globale Nextcloud-Administratoren ändern.')); ?></p>
