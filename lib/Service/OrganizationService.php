@@ -187,7 +187,7 @@ class OrganizationService {
     public function previewPeriod(int $periodId): array {
         $period = $this->getPeriod($periodId);
         if ($period['status'] !== 'draft') {
-            throw new \\InvalidArgumentException('Nur geplante Perioden können aktiviert werden.');
+            throw new \InvalidArgumentException('Nur geplante Perioden können aktiviert werden.');
         }
 
         $groups = $this->listGroups($periodId);
@@ -290,7 +290,7 @@ class OrganizationService {
     public function activatePeriod(int $periodId, string $actor): array {
         $preview = $this->previewPeriod($periodId);
         if (!$preview['valid']) {
-            throw new \\InvalidArgumentException('Die Periode kann nicht aktiviert werden: ' . implode(' ', $preview['errors']));
+            throw new \InvalidArgumentException('Die Periode kann nicht aktiviert werden: ' . implode(' ', $preview['errors']));
         }
 
         $now = time();
@@ -313,7 +313,7 @@ class OrganizationService {
                 ->where($qb->expr()->eq('id', $qb->createNamedParameter($periodId)))
                 ->andWhere($qb->expr()->eq('status', $qb->createNamedParameter('draft')));
             if ($qb->executeStatement() !== 1) {
-                throw new \\RuntimeException('Der Periodenstatus hat sich während der Aktivierung geändert. Bitte lade die Vorschau erneut.');
+                throw new \RuntimeException('Der Periodenstatus hat sich während der Aktivierung geändert. Bitte lade die Vorschau erneut.');
             }
 
             $this->audit($actor, 'period.activated', 'period', (string)$periodId, [
@@ -322,7 +322,7 @@ class OrganizationService {
                 'memberCount' => $preview['summary']['memberCount'],
             ]);
             $this->db->commit();
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             $this->db->rollBack();
             throw $e;
         }
