@@ -475,18 +475,38 @@ class OrganizationService {
         return $this->getPeriod($periodId);
     }
 
-    public function listNextcloudUsers(string $search = ''): array {
+    public function listNextcloudUsers(string $search = '', array $includeUids = []): array {
         $allowed = [];
         foreach ($this->authentik->getRecipients() as $recipient) {
             $uid = trim((string)($recipient['username'] ?? ''));
             if ($uid !== '') { $allowed[$uid] = true; }
         }
+
         $result = [];
+        $seen = [];
         foreach ($this->users->search(trim($search), 200) as $user) {
             $uid = $user->getUID();
-            if (!isset($allowed[$uid])) { continue; }
+            if (!isset($allowed[$uid])) {
+                continue;
+            }
             $result[] = ['uid' => $uid, 'displayName' => $user->getDisplayName()];
+            $seen[$uid] = true;
         }
+
+        // Always include the selected group's current members, even when they
+        // fall outside IUserManager::search()'s result limit. This prevents a
+        // routine membership edit from silently dropping valid members.
+        foreach (array_unique(array_map('strval', $includeUids)) as $uid) {
+            if ($uid === '' || isset($seen[$uid]) || !isset($allowed[$uid])) {
+                continue;
+            }
+            $user = $this->users->get($uid);
+            if ($user !== null) {
+                $result[] = ['uid' => $uid, 'displayName' => $user->getDisplayName()];
+                $seen[$uid] = true;
+            }
+        }
+
         return $result;
     }
 

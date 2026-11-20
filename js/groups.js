@@ -66,8 +66,16 @@
         });
     }
 
-    function selectGroup(group) {
+    async function selectGroup(group) {
         selectedGroup = group;
+        try {
+            const query = new URLSearchParams({groupId: String(group.id)});
+            const userPayload = await request(urls.users + '?' + query.toString());
+            users = userPayload.users || [];
+        } catch (error) {
+            showFeedback(error.message, true);
+            return;
+        }
         selectedLabel.textContent = (group.period_title ? group.period_title + ' · ' : '') + group.name;
         editor.hidden = false;
         memberList.replaceChildren();
@@ -132,12 +140,8 @@
     async function load() {
         groupList.replaceChildren(element('p', 'jugend-muted', 'Arbeitsgruppen werden geladen …'));
         try {
-            const [groupPayload, userPayload] = await Promise.all([
-                request(urls.groups),
-                request(urls.users)
-            ]);
+            const groupPayload = await request(urls.groups);
             groups = groupPayload.groups || [];
-            users = userPayload.users || [];
             renderGroups();
             if (selectedGroup) {
                 const refreshed = groups.find((group) => Number(group.id) === Number(selectedGroup.id));
