@@ -132,9 +132,10 @@ class AuthorizationService {
             ->setValue('granted_by', $qb->createNamedParameter($actor))
             ->setValue('granted_at', $qb->createNamedParameter(time()));
         $qb->executeStatement();
+        $this->audit($actor, 'role.granted', $uid, ['role' => self::ROLE_KEY]);
     }
 
-    public function revokeAppAdmin(string $uid): void {
+    public function revokeAppAdmin(string $uid, string $actor): void {
         $roleId = $this->ensureDefinitions();
         $qb = $this->db->getQueryBuilder();
         $qb->delete('jugend_user_roles')
@@ -142,6 +143,19 @@ class AuthorizationService {
             ->andWhere($qb->expr()->eq('role_id', $qb->createNamedParameter($roleId)))
             ->andWhere($qb->expr()->eq('scope_type', $qb->createNamedParameter('global')))
             ->andWhere($qb->expr()->isNull('scope_id'));
+        $qb->executeStatement();
+        $this->audit($actor, 'role.revoked', $uid, ['role' => self::ROLE_KEY]);
+    }
+
+    private function audit(string $actor, string $action, string $subjectUid, array $details): void {
+        $qb = $this->db->getQueryBuilder();
+        $qb->insert('jugend_audit')
+            ->setValue('actor_uid', $qb->createNamedParameter($actor))
+            ->setValue('action', $qb->createNamedParameter($action))
+            ->setValue('subject_type', $qb->createNamedParameter('user'))
+            ->setValue('subject_id', $qb->createNamedParameter($subjectUid))
+            ->setValue('details', $qb->createNamedParameter(json_encode($details, JSON_THROW_ON_ERROR)))
+            ->setValue('created_at', $qb->createNamedParameter(time()));
         $qb->executeStatement();
     }
 
