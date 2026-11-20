@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace OCA\\Jugend\\Service;
+namespace OCA\Jugend\Service;
 
-use OCP\\IDBConnection;
-use OCP\\IGroupManager;
+use OCP\IDBConnection;
+use OCP\IGroupManager;
 
 class AuthorizationService {
     private const ROLE_KEY = 'app_admin';
