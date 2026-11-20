@@ -4,27 +4,31 @@ declare(strict_types=1);
 namespace OCA\Jugend\Controller;
 
 use OCA\Jugend\Service\OrganizationService;
+use OCA\Jugend\Service\AuthorizationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
+use OCP\IUserManager;
 
 class OrganizationController extends Controller {
     public function __construct(
         string $appName,
         IRequest $request,
         private OrganizationService $organization,
+        private AuthorizationService $authorization,
         private IGroupManager $groups,
+        private IUserManager $users,
         private IUserSession $session,
     ) {
         parent::__construct($appName, $request);
     }
 
-    private function requireAdmin(): ?JSONResponse {
+    private function requirePermission(string $permission, ?string $scopeType = null, ?int $scopeId = null): ?JSONResponse {
         $uid = $this->session->getUser()?->getUID();
-        if ($uid === null || !$this->groups->isAdmin($uid)) {
+        if ($uid === null || !$this->authorization->can($uid, $permission, $scopeType, $scopeId)) {
             return new JSONResponse(['error' => 'forbidden', 'message' => 'Keine Berechtigung für die Organisationsverwaltung.'], 403);
         }
         return null;
@@ -32,7 +36,7 @@ class OrganizationController extends Controller {
 
     #[NoAdminRequired]
     public function periods(): JSONResponse {
-        if ($denied = $this->requireAdmin()) { return $denied; }
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
         return new JSONResponse(['periods' => $this->organization->listPeriods()]);
     }
 
@@ -43,7 +47,7 @@ class OrganizationController extends Controller {
         ?string $startsOn = null,
         ?string $endsOn = null,
     ): JSONResponse {
-        if ($denied = $this->requireAdmin()) { return $denied; }
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
         try {
             $actor = $this->session->getUser()?->getUID();
             if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
@@ -57,7 +61,7 @@ class OrganizationController extends Controller {
 
     #[NoAdminRequired]
     public function groups(int $periodId): JSONResponse {
-        if ($denied = $this->requireAdmin()) { return $denied; }
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
         try {
             return new JSONResponse(['groups' => $this->organization->listGroups($periodId)]);
         } catch (\InvalidArgumentException $e) {
@@ -72,7 +76,7 @@ class OrganizationController extends Controller {
         string $name = '',
         string $description = '',
     ): JSONResponse {
-        if ($denied = $this->requireAdmin()) { return $denied; }
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
         try {
             $actor = $this->session->getUser()?->getUID();
             if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
@@ -86,13 +90,13 @@ class OrganizationController extends Controller {
 
     #[NoAdminRequired]
     public function users(string $search = ''): JSONResponse {
-        if ($denied = $this->requireAdmin()) { return $denied; }
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
         return new JSONResponse(['users' => $this->organization->listNextcloudUsers($search)]);
     }
 
     #[NoAdminRequired]
     public function setMembers(int $groupId = 0, array $members = [], array $leaders = []): JSONResponse {
-        if ($denied = $this->requireAdmin()) { return $denied; }
+        if ($denied = $this->requirePermission('group.members.manage', 'group', $groupId)) { return $denied; }
         try {
             $actor = $this->session->getUser()?->getUID();
             if ($actor === null) { return new JSONResponse(['error' => 'unauthenticated'], 401); }
@@ -103,4 +107,42 @@ class OrganizationController extends Controller {
             return new JSONResponse(['error' => 'update_failed', 'message' => 'Die Gruppenmitgliedschaften konnten nicht gespeichert werden.'], 500);
         }
     }
+
+    #[NoAdminRequired]
+    public function appAdmins(): JSONResponse {
+        $uid = $this->session->getUser()?->getUID();
+        if ($uid === null || !$this->groups->isAdmin($uid)) {
+            return new JSONResponse(['error' => 'forbidden'], 403);
+        }
+        return new JSONResponse(['admins' => $this->authorization->listAppAdmins()]);
+    }
+
+    #[NoAdminRequired]
+    public function grantAppAdmin(string $userId = ''): JSONResponse {
+        $actor = $this->session->getUser()?->getUID();
+        if ($actor === null || !$this->groups->isAdmin($actor)) {
+            return new JSONResponse(['error' => 'forbidden'], 403);
+        }
+        $userId = trim($userId);
+        if ($userId === '' || $this->users->get($userId) === null) {
+            return new JSONResponse(['error' => 'invalid_user', 'message' => 'Der Nextcloud-Benutzer wurde nicht gefunden.'], 400);
+        }
+        $this->authorization->grantAppAdmin($userId, $actor);
+        return new JSONResponse(['ok' => true, 'admins' => $this->authorization->listAppAdmins()]);
+    }
+
+    #[NoAdminRequired]
+    public function revokeAppAdmin(string $userId = ''): JSONResponse {
+        $actor = $this->session->getUser()?->getUID();
+        if ($actor === null || !$this->groups->isAdmin($actor)) {
+            return new JSONResponse(['error' => 'forbidden'], 403);
+        }
+        $userId = trim($userId);
+        if ($userId === '') {
+            return new JSONResponse(['error' => 'invalid_user'], 400);
+        }
+        $this->authorization->revokeAppAdmin($userId);
+        return new JSONResponse(['ok' => true, 'admins' => $this->authorization->listAppAdmins()]);
+    }
+
 }
