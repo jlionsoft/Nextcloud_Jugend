@@ -49,9 +49,14 @@
     async function loadPeriods() {
         const payload = await request(urls.periods);
         periodList.replaceChildren();
+        const templateSelect = document.getElementById('jugend-period-template');
+        templateSelect.replaceChildren(new Option('Leere Periode erstellen', ''));
+        payload.periods.forEach((period) => {
+            templateSelect.add(new Option(period.title + ' (' + period.status + ')', period.id));
+        });
         if (!payload.periods.length) {
             periodList.append(element('p', 'jugend-muted', 'Noch keine Organisationsperioden vorhanden.'));
-            return;
+            return [];
         }
         payload.periods.forEach((period) => {
             const button = element('button', 'jugend-period-item', period.title + ' · ' + period.status);
@@ -417,9 +422,16 @@
         event.preventDefault();
         const data = Object.fromEntries(new FormData(event.currentTarget).entries());
         try {
-            const payload = await request(urls.createPeriod, 'POST', data);
+            const sourcePeriodId = data.sourcePeriodId;
+            delete data.sourcePeriodId;
+            if (sourcePeriodId) {
+                data.sourcePeriodId = sourcePeriodId;
+            }
+            const payload = await request(sourcePeriodId ? urls.clonePeriod : urls.createPeriod, 'POST', data);
             event.currentTarget.reset();
-            showFeedback('Organisationsperiode „' + payload.period.title + '“ wurde als Entwurf erstellt.');
+            showFeedback(sourcePeriodId
+                ? 'Organisationsperiode „' + payload.period.title + '“ wurde aus der Vorlage übernommen.'
+                : 'Organisationsperiode „' + payload.period.title + '“ wurde als Entwurf erstellt.');
             await loadPeriods();
             await selectPeriod(payload.period);
         } catch (error) { showFeedback(error.message, true); }
