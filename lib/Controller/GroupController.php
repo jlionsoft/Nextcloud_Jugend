@@ -60,15 +60,23 @@ class GroupController extends Controller {
     }
 
     #[NoAdminRequired]
-    public function users(): JSONResponse {
+    public function users(int $groupId = 0): JSONResponse {
         $uid = $this->currentUid();
         if ($uid === null) {
             return new JSONResponse(['error' => 'unauthenticated'], 401);
         }
-        if (!$this->hasManagedGroups($uid)) {
+        if ($groupId < 1 || !$this->authorization->can($uid, 'group.members.manage', 'group', $groupId)) {
             return new JSONResponse(['error' => 'forbidden'], 403);
         }
-        return new JSONResponse(['users' => $this->organization->listNextcloudUsers()]);
+        try {
+            $group = $this->organization->getGroup($groupId);
+            $currentMemberUids = array_column($group['members'], 'user_id');
+            return new JSONResponse([
+                'users' => $this->organization->listNextcloudUsers('', $currentMemberUids),
+            ]);
+        } catch (\\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => 'invalid_group'], 404);
+        }
     }
 
     #[NoAdminRequired]
