@@ -6,6 +6,7 @@ return [
         ['name' => 'organizationpage#index', 'url' => '/organization', 'verb' => 'GET'],
         ['name' => 'organization#periods', 'url' => '/api/v1/organization/periods', 'verb' => 'GET'],
         ['name' => 'organization#createPeriod', 'url' => '/api/v1/organization/periods', 'verb' => 'POST'],
+        ['name' => 'organization#clonePeriod', 'url' => '/api/v1/organization/periods/clone', 'verb' => 'POST'],
         ['name' => 'organization#previewPeriod', 'url' => '/api/v1/organization/periods/preview', 'verb' => 'GET'],
         ['name' => 'organization#activatePeriod', 'url' => '/api/v1/organization/periods/activate', 'verb' => 'POST'],
         ['name' => 'organization#groups', 'url' => '/api/v1/organization/groups', 'verb' => 'GET'],
