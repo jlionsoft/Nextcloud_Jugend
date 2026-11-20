@@ -71,6 +71,29 @@ class AuthorizationService {
         }
         $this->ensureDefinitions();
 
+        // Period/group-scoped capabilities are effective only while their
+        // owning period is active. Assignments can be prepared in drafts and
+        // will become effective on activation, but archived leadership never
+        // keeps write access to the former organization.
+        if ($scopeType === 'period' && $scopeId !== null) {
+            $periodQuery = $this->db->getQueryBuilder();
+            $periodQuery->select('id')->from('jugend_periods')
+                ->where($periodQuery->expr()->eq('id', $periodQuery->createNamedParameter($scopeId)))
+                ->andWhere($periodQuery->expr()->eq('status', $periodQuery->createNamedParameter('active')));
+            if ($periodQuery->executeQuery()->fetchOne() === false) {
+                return false;
+            }
+        } elseif ($scopeType === 'group' && $scopeId !== null) {
+            $groupQuery = $this->db->getQueryBuilder();
+            $groupQuery->select('g.id')->from('jugend_groups', 'g')
+                ->innerJoin('g', 'jugend_periods', 'p', $groupQuery->expr()->eq('g.period_id', 'p.id'))
+                ->where($groupQuery->expr()->eq('g.id', $groupQuery->createNamedParameter($scopeId)))
+                ->andWhere($groupQuery->expr()->eq('p.status', $groupQuery->createNamedParameter('active')));
+            if ($groupQuery->executeQuery()->fetchOne() === false) {
+                return false;
+            }
+        }
+
         // The leader flag is a convenient built-in scoped grant. It is evaluated
         // against the current membership row, so removing leadership revokes access.
         if ($permission === 'group.members.manage' && $scopeType === 'group' && $scopeId !== null) {
