@@ -149,6 +149,146 @@ class ResourceProvisioningService {
         return $result;
     }
 
+    /**
+     * Pre-creates remote resources for a draft period without granting access.
+     * The provisioning account remains the only principal with access until
+     * activation triggers the normal membership/share reconciliation.
+     */
+    public function preparePeriodResources(int $periodId, string $actor): array {
+        $period = $this->organization->getPeriod($periodId);
+        if ($period['status'] !== 'draft') {
+            throw new \\InvalidArgumentException('Nur geplante Organisationsperioden können vorbereitet werden.');
+        }
+        $preview = $this->organization->previewPeriod($periodId);
+        if (!$preview['valid']) {
+            throw new \\InvalidArgumentException('Die Periode enthält noch Organisationsfehler: ' . implode(' ', $preview['errors']));
+        }
+
+        $this->client->assertGroupFolderRoot();
+        $result = ['prepared' => [], 'existing' => [], 'failed' => [], 'inProgress' => []];
+        foreach ($this->organization->listGroups($periodId) as $group) {
+            $groupId = (int)$group['id'];
+            $resources = [
+                'talk' => 'prep_talk',
+                'groupfolder' => 'prep_folder',
+                'calendar' => 'prep_cal',
+            ];
+            foreach ($resources as $type => $jobType) {
+                $leaseToken = $this->claimJob($periodId, $groupId, $jobType);
+                if ($leaseToken === null) {
+                    $result['inProgress'][] = ['groupId' => $groupId, 'groupName' => $group['name'], 'resource' => $type];
+                    continue;
+                }
+
+                try {
+                    $existing = $this->findResource($groupId, $type);
+                    if ($existing !== null) {
+                        $entry = [
+                            'groupId' => $groupId,
+                            'groupName' => $group['name'],
+                            'resource' => $type,
+                            'url' => $existing['resource_url'],
+                        ];
+                        $result['existing'][] = $entry;
+                    } else {
+                        if ($type === 'talk') {
+                            $roomName = mb_substr('Jugend ' . $period['title'] . ' – ' . $group['name'], 0, 255);
+                            $room = $this->client->createTalkRoom($roomName);
+                            $resourceId = (string)$room['token'];
+                            $url = $this->client->getBaseUrl() . '/call/' . rawurlencode($resourceId);
+                        } elseif ($type === 'groupfolder') {
+                            $resourceId = $this->groupFolderPath((string)$period['period_key'], (string)$group['slug']);
+                            $this->client->ensureGroupFolderPath($resourceId);
+                            $url = $this->groupFolderUrl($resourceId);
+                        } else {
+                            $resourceId = $this->calendarUri($periodId, $groupId);
+                            $url = $this->client->ensureCalendar(
+                                $resourceId,
+                                'Jugend ' . $period['title'] . ' – ' . $group['name'],
+                            );
+                        }
+
+                        $this->storeResource($groupId, $type, $resourceId, $url);
+                        $entry = [
+                            'groupId' => $groupId,
+                            'groupName' => $group['name'],
+                            'resource' => $type,
+                            'url' => $url,
+                        ];
+                        $result['prepared'][] = $entry;
+                        $this->audit($actor, 'resource.' . $type . '.prepared', (string)$groupId, [
+                            'periodId' => $periodId,
+                            'resourceId' => $resourceId,
+                        ]);
+                    }
+                    $this->finishJob($periodId, $groupId, $jobType, 'succeeded', null, $leaseToken);
+                } catch (\\Throwable $e) {
+                    $this->finishJob($periodId, $groupId, $jobType, 'failed', $e->getMessage(), $leaseToken);
+                    $result['failed'][] = [
+                        'groupId' => $groupId,
+                        'groupName' => $group['name'],
+                        'resource' => $type,
+                        'message' => $e->getMessage(),
+                    ];
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /** Returns preparation progress for a draft period. No access is granted here. */
+    public function getPeriodPreparationStatus(int $periodId): array {
+        $period = $this->organization->getPeriod($periodId);
+        $groups = [];
+        $missing = [];
+        foreach ($this->organization->listGroups($periodId) as $group) {
+            $groupId = (int)$group['id'];
+            $resources = [];
+            foreach ([
+                'talk' => ['job' => 'prep_talk', 'resource' => 'talk'],
+                'groupfolder' => ['job' => 'prep_folder', 'resource' => 'groupfolder'],
+                'calendar' => ['job' => 'prep_cal', 'resource' => 'calendar'],
+            ] as $key => $mapping) {
+                $job = $this->findJob($periodId, $groupId, $mapping['job']);
+                $resource = $this->findResource($groupId, $mapping['resource']);
+                $prepared = ($job['status'] ?? '') === 'succeeded' && $resource !== null;
+                $resources[$key] = [
+                    'status' => $job['status'] ?? 'not_started',
+                    'attempts' => (int)($job['attempts'] ?? 0),
+                    'prepared' => $prepared,
+                    'lastError' => $job['last_error'] ?? null,
+                    'url' => $resource['resource_url'] ?? null,
+                ];
+                if (!$prepared) {
+                    $missing[] = $group['name'] . ' (' . $key . ')';
+                }
+            }
+            $groups[] = [
+                'groupId' => $groupId,
+                'groupName' => $group['name'],
+                'resources' => $resources,
+            ];
+        }
+
+        return [
+            'period' => $period,
+            'ready' => $groups !== [] && $missing === [],
+            'groups' => $groups,
+            'missing' => $missing,
+        ];
+    }
+
+    /** Prevents a period switch until every group's three resources exist. */
+    public function assertPeriodPrepared(int $periodId): void {
+        $status = $this->getPeriodPreparationStatus($periodId);
+        if (!$status['ready']) {
+            $missing = $status['missing'];
+            $detail = $missing === [] ? 'Es sind keine Arbeitsgruppen vorhanden.' : implode(', ', array_slice($missing, 0, 8));
+            throw new \\RuntimeException('Die Organisationsperiode ist noch nicht vollständig vorbereitet: ' . $detail);
+        }
+    }
+
     /** Reconcile all external resources for the active period. */
     public function reconcileAllResources(): void {
         if (!$this->client->isConfigured()) {
@@ -792,7 +932,7 @@ class ResourceProvisioningService {
 
     private function findJob(int $periodId, int $groupId, string $type): ?array {
         $qb = $this->db->getQueryBuilder();
-        $qb->select('id', 'status', 'attempts')
+        $qb->select('id', 'status', 'attempts', 'last_error')
             ->from('jugend_provisioning')
             ->where($qb->expr()->eq('period_id', $qb->createNamedParameter($periodId)))
             ->andWhere($qb->expr()->eq('group_id', $qb->createNamedParameter($groupId)))
