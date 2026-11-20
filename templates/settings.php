@@ -10,9 +10,17 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
     <h2><?php p($l->t('Jugend')); ?></h2>
     <p class="settings-hint"><?php p($l->t('Verwalte die Verbindungen und Zugangsdaten für den Nachrichtenversand.')); ?></p>
 
+    <nav class="jugend-settings-nav" aria-label="<?php p($l->t('Einstellungsbereiche')); ?>">
+        <a class="button" href="#jugend-settings-authentik"><?php p($l->t('Zugriff und Empfänger')); ?></a>
+        <a class="button" href="#jugend-settings-talk"><?php p($l->t('Talk')); ?></a>
+        <a class="button" href="#jugend-settings-resources"><?php p($l->t('Ressourcen')); ?></a>
+        <a class="button" href="#jugend-settings-matrix"><?php p($l->t('Matrix')); ?></a>
+        <a class="button" href="#jugend-settings-sms"><?php p($l->t('SMS')); ?></a>
+    </nav>
+
     <form id="jugend-settings-form" class="jugend-settings-form" novalidate>
-        <section class="jugend-settings-group">
-            <h3>Authentik</h3>
+        <section id="jugend-settings-authentik" class="jugend-settings-group">
+            <h3>Authentik – Zugriff und Empfänger</h3>
             <p class="settings-hint"><?php p($l->t('Diese Gruppe bestimmt die zugelassenen Benutzer der Jugend-App und die Empfänger der Nachrichten. Wer aus der Gruppe entfernt wird, verliert den App-Zugriff. SMS werden nur bei aktivierter SMS-Freigabe versendet.')); ?></p>
             <div class="jugend-fields">
                 <div class="jugend-field">
@@ -40,7 +48,7 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             </div>
         </section>
 
-        <section class="jugend-settings-group">
+        <section id="jugend-settings-talk" class="jugend-settings-group">
             <h3>Nextcloud Talk</h3>
             <p class="settings-hint"><?php p($l->t('Gruppenraum und Bot-Anbindung')); ?></p>
             <div class="jugend-fields">
@@ -73,8 +81,8 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             </div>
         </section>
 
-        <section class="jugend-settings-group">
-            <h3>Nextcloud-Dienstkonto für Ressourcen</h3>
+        <section id="jugend-settings-resources" class="jugend-settings-group">
+            <h3>Ressourcenverwaltung</h3>
             <p class="settings-hint"><?php p($l->t('Separates Dienstkonto zur automatischen Anlage von Talk-Räumen und weiteren Organisationsressourcen. Verwende ein dediziertes Konto mit App-Passwort und nur den benötigten Berechtigungen.')); ?></p>
             <div class="jugend-fields">
                 <div class="jugend-field">
@@ -117,7 +125,7 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             </div>
         </section>
 
-        <section class="jugend-settings-group">
+        <section id="jugend-settings-matrix" class="jugend-settings-group">
             <h3>Matrix</h3>
             <p class="settings-hint"><?php p($l->t('Persönliche Direktnachrichten an alle Mitglieder der Jugendgruppe')); ?></p>
             <div class="jugend-fields">
@@ -151,7 +159,7 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             </div>
         </section>
 
-        <section class="jugend-settings-group">
+        <section id="jugend-settings-sms" class="jugend-settings-group">
             <h3>MikroTik SMS-Gateway</h3>
             <p class="settings-hint"><?php p($l->t('RouterOS REST API und LTE-Schnittstelle')); ?></p>
             <div class="jugend-fields">
