@@ -1,16 +1,29 @@
 # Ressourcenbereitstellung
 
-## Dienstkonto
+## Dienstkonto und einmalige Groupfolder-Einrichtung
 
 Die App verwendet für Provisioning-Aufgaben ein separates Nextcloud-Dienstkonto. Das Konto sollte nicht für interaktive Anmeldung verwendet werden. In den persönlichen Sicherheitseinstellungen des Kontos wird ein eigenes App-Passwort erstellt und ausschließlich in den Jugendeinstellungen hinterlegt.
 
 - Basis-URL: kanonische HTTPS-URL der Nextcloud-Instanz
 - Benutzername: UID des Dienstkontos
 - App-Passwort: dediziertes Nextcloud-App-Passwort
+- Dienstgruppe: lokale Nextcloud-Gruppe, in der ausschließlich das Dienstkonto Mitglied ist
+- Groupfolder-Stamm: Name eines bereits angelegten Groupfolders, standardmäßig `Jugend`
+- Abteilungsgruppe: Authentik-synchronisierte Nextcloud-Gruppe, die den App-Zugriff begrenzt
 
-Das App-Passwort wird über den verschlüsselten Nextcloud-App-Config-Speicher (IAppConfig, verschlüsselter Wert) gespeichert. Es wird nicht an den Browser zurückgegeben. Die Verbindung verwendet HTTP Basic Authentication über TLS und den OCS-Header OCS-APIRequest: true.
+Das App-Passwort wird über den verschlüsselten Nextcloud-App-Config-Speicher (IAppConfig, verschlüsselter Wert) gespeichert. Es wird nicht an den Browser zurückgegeben. Die Verbindung verwendet HTTP Basic Authentication über TLS und den OCS-Header `OCS-APIRequest: true`.
 
-Das Dienstkonto benötigt für die Talk-Raumerstellung die Berechtigung, Gruppenräume anzulegen. Es sollten keine globalen Administratorrechte vergeben werden, sofern die eingesetzte Talk-Version die benötigten Aktionen ohne diese Rechte zulässt.
+**Einmalige Einrichtung durch einen Nextcloud-Administrator:**
+
+1. Nextcloud-Gruppe `jugend-provisioner` anlegen und ausschließlich das Dienstkonto aufnehmen.
+2. In der Groupfolders-App einen Groupfolder mit dem in den Jugendeinstellungen eingetragenen Namen (standardmäßig `Jugend`) anlegen.
+3. Dem Stamm-Groupfolder ausschließlich die Gruppe `jugend-provisioner` mit Lese-, Schreib-, Erstell-, Lösch- und Freigaberechten zuweisen.
+4. Die Authentik-synchronisierte Abteilungsgruppe in den Jugendeinstellungen eintragen.
+5. Sicherstellen, dass Authentik-Gruppen in Nextcloud synchronisiert werden und Gruppen-IDs/Namen unverändert übernommen werden.
+
+Die App legt darunter per WebDAV Unterordner für Organisationsperiode und Arbeitsgruppe an. Sie ruft absichtlich nicht die Groupfolders-Schreib-OCS-Endpunkte auf: Diese sind mit `PasswordConfirmationRequired` geschützt und erfordern eine interaktive Passwortbestätigung, die ein App-Passwort nicht bereitstellen kann. Der Dienstaccount benötigt daher keine Groupfolders-Administratorrechte.
+
+Für das Anlegen und Verwalten der automatisch erzeugten Authentik-Arbeitsgruppen benötigt das Authentik-API-Token mindestens die Berechtigungen `view_group`, `add_group`, `view_user`, `add_user_to_group` und `remove_user_from_group`. Die App markiert selbst angelegte Gruppen mit den Attributen `managed_by=nextcloud-jugend`, `period_id` und `group_id`; fremde Gruppen gleichen Namens werden nicht übernommen.
 
 ## Aktueller Umfang
 
