@@ -9,6 +9,7 @@ import NcButton from '@nextcloud/vue/components/NcButton'
 import NcTextArea from '@nextcloud/vue/components/NcTextArea'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
 import NcModal from '@nextcloud/vue/components/NcModal'
+import NcContent from '@nextcloud/vue/components/NcContent'
 
 const root = document.getElementById('jugend-vue-root')
 if (root) {
@@ -21,9 +22,29 @@ if (root) {
 			NcTextArea,
 			NcNoteCard,
 			NcModal,
+			NcContent,
 		},
 		data() {
-			const navigation = JSON.parse(root.dataset.navigation || '[]')
+			let navigation = []
+			try {
+				navigation = JSON.parse(root.dataset.navigation || '[]')
+			} catch (_) {}
+			let urls = {}
+			let strings = {}
+			try { urls = loadState('jugend', 'urls') } catch (_) {}
+			try { strings = loadState('jugend', 'strings') } catch (_) {}
+			strings = {
+				smsEstimate: 'SMS: ca. {count} Segmente',
+				confirmSend: 'Nachricht jetzt senden?',
+				sending: 'Nachricht wird versendet …',
+				unknownError: 'Unbekannter Fehler beim Versand.',
+				unknown: 'unbekannt',
+				talkOk: 'Talk: erfolgreich',
+				talkFailed: 'Talk: fehlgeschlagen ({error})',
+				matrixSummary: 'Matrix: {sent}/{total} erfolgreich',
+				smsSummary: 'SMS: {sent}/{total} erfolgreich',
+				...strings,
+			}
 			return {
 				navigation,
 				message: '',
@@ -31,8 +52,8 @@ if (root) {
 				confirming: false,
 				feedback: '',
 				feedbackType: '',
-				urls: loadState('jugend', 'urls'),
-				strings: loadState('jugend', 'strings'),
+				urls,
+				strings,
 			}
 		},
 		computed: {
@@ -84,14 +105,15 @@ if (root) {
 			},
 		},
 		template: `
-			<NcAppNavigation :aria-label="tr('App-Navigation')">
+			<NcContent>
+				<NcAppNavigation :aria-label="tr('App-Navigation')">
 				<template #list>
 					<NcAppNavigationItem v-for="item in navigation" :key="item.url" :name="item.label" :href="item.url" :active="item.active" @click.prevent="navigate(item.url)">
 						<template #icon><span :class="[item.icon]" aria-hidden="true" /></template>
 					</NcAppNavigationItem>
 				</template>
-			</NcAppNavigation>
-			<NcAppContent :page-heading="tr('Jugend-Nachricht versenden')">
+				</NcAppNavigation>
+				<NcAppContent :page-heading="tr('Jugend-Nachricht versenden')">
 				<div class="jugend-page">
 					<header class="jugend-page__header">
 						<div><h1>{{ tr('Jugend-Nachricht versenden') }}</h1><p>{{ tr('Erstelle eine Nachricht und versende sie über Matrix, Nextcloud Talk und SMS.') }}</p></div>
@@ -113,7 +135,8 @@ if (root) {
 						<div class="jugend-dialog__form"><h2>{{ tr('Nachricht senden?') }}</h2><p>{{ strings.confirmSend }}</p><div class="jugend-dialog__actions"><NcButton @click="confirming = false">{{ tr('Abbrechen') }}</NcButton><NcButton variant="primary" :disabled="sending" @click="confirming = false; send()">{{ tr('Jetzt senden') }}</NcButton></div></div>
 					</NcModal>
 				</div>
-			</NcAppContent>
+				</NcAppContent>
+			</NcContent>
 		`,
 	}).mount(root)
 }
