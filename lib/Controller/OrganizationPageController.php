@@ -7,6 +7,7 @@ use OCA\Jugend\AppInfo\Application;
 use OCA\Jugend\Service\AuthorizationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\IGroupManager;
@@ -29,6 +30,7 @@ class OrganizationPageController extends Controller {
     }
 
     #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function index(): TemplateResponse {
         $uid = $this->userSession->getUser()?->getUID();
         if ($uid === null || !$this->authorization->isAppAdmin($uid)) {
