@@ -65,7 +65,7 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 
 - Organisationsperioden, Arbeitsgruppen und historische Mitgliedschaftsintervalle sind persistiert.
 - Pro Arbeitsgruppe werden vor der Aktivierung genau zwei aktive Gruppenleitungen verlangt.
-- Die App verwendet serverseitige Capability-Prüfungen mit globalen, Perioden- und Gruppen-Scopes.
+- Die App verwendet serverseitige Capability-Prüfungen mit globalen, Perioden- und Gruppen-Scopes. Perioden-/Gruppenrechte sind nur wirksam, solange die zugehörige Periode aktiv ist; beim Archivieren enden damit insbesondere dynamische Gruppenleitungsrechte.
 - App-Administratoren und frei definierbare Rollen werden unterstützt. Die Systemrolle `app_admin` bleibt geschützt.
 - Rollenänderungen und Organisationsaktionen werden im Audit-Log erfasst.
 
