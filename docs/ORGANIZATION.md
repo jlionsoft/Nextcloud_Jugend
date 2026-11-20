@@ -18,7 +18,7 @@ Authentik steuert den Eintritt in die App. Die App darf keine eigenen Benutzerko
 
 Die Organisationsmitgliedschaft ist periodengebunden. Ein Benutzer kann mehreren Arbeitsgruppen angehören. Pro Arbeitsgruppe müssen genau zwei aktive Gruppenleiter festgelegt sein, bevor eine Periode aktiviert werden kann. Beide Leitungen sind gleichberechtigt. Ihre App-Rechte sind auf die jeweilige Arbeitsgruppe begrenzt.
 
-Rollen bestehen aus Berechtigungen (Capability Keys). Zuweisungen besitzen einen Geltungsbereich: global, period oder group. Die Autorisierung prüft sowohl die Berechtigung als auch den Scope des angefragten Objekts. Rollenbezeichnungen allein dürfen niemals eine Autorisierungsentscheidung auslösen.
+Rollen bestehen aus Berechtigungen (Capability Keys). Zuweisungen besitzen einen Geltungsbereich: global, period oder group. Die Autorisierung prüft sowohl die Berechtigung als auch den Scope des angefragten Objekts. Rollenbezeichnungen allein dürfen niemals eine Autorisierungsentscheidung auslösen. Eine periodengebundene Berechtigung gilt für alle Arbeitsgruppen dieser aktiven Periode; eine gruppengebundene Berechtigung gilt nur für die konkrete aktive Arbeitsgruppe. Globale App-Admin-Berechtigungen gelten auch beim Planen von Entwurfsperioden.
 
 ## Zeitliche Semantik der Organisationsperioden
 
