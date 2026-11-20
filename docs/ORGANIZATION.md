@@ -34,9 +34,9 @@ Rollen bestehen aus Berechtigungen (Capability Keys). Zuweisungen besitzen einen
 1. Eine Leitung oder ein App-Admin erstellt eine neue Organisationsperiode als Entwurf, trägt bei Bedarf den frei wählbaren Beginn und das Ende ein und kann optional eine frühere Periode kopieren.
 2. Gruppen, Mitglieder und jeweils zwei Gruppenleiter werden bearbeitet.
 3. Eine Vorschau zeigt neue, entfernte und wechselnde Mitglieder sowie Validierungsfehler.
-4. Ressourcen werden vorbereitet. Externe Nextcloud-Aufrufe werden als wiederholbare Schritte mit Status protokolliert; ein Fehler darf nicht zu einem halb aktivierten Zustand führen.
+4. Die Vorschau und die Organisationsdaten werden geprüft. Die Ressourcenbereitstellung ist ein separater, wiederholbarer Vorgang; sie läuft nach der Aktivierung für die aktive Periode und wird über Status und Fehlerprotokoll überwacht.
 5. Am gewünschten Wechseltermin wird die Aktivierung explizit bestätigt. Die bisher aktive Periode wird archiviert und die neue Periode sofort aktiv – unabhängig davon, ob der Termin auf einen Jahresanfang fällt.
-6. Die App synchronisiert die aktive Gruppenmitgliedschaft zu Nextcloud. Die Zugriffsgruppe der Abteilung bleibt davon getrennt.
+6. Die App provisioniert bzw. synchronisiert die Ressourcen der aktiven Periode. Archivierte Ressourcen werden auf den Zugriff der aktuellen Abteilungsmitglieder umgestellt. Die Zugriffsgruppe der Abteilung bleibt davon getrennt.
 
 Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Ressourcenorchestrierung wird danach als eigener Service/Background-Job implementiert. Talk, Files und Calendar sind optionale Integrationen und müssen über öffentliche Nextcloud-APIs angesprochen werden.
 
@@ -84,7 +84,7 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 - Die Aktivierungsvorschau vergleicht Gruppen anhand ihres technischen Slugs und zeigt neue/entfallende Gruppen sowie Mitgliedschafts- und Leitungsänderungen.
 - Vor der Aktivierung werden alle Gruppen auf genau zwei aktive Leitungen und alle Mitglieder auf vorhandene Nextcloud-Konten innerhalb der aktuellen Authentik-Empfängermenge geprüft.
 - Die Aktivierung archiviert die bisher aktive Periode und aktiviert die ausgewählte Entwurfsperiode in einer Datenbanktransaktion. Schlägt der Statuswechsel fehl, wird die Transaktion zurückgerollt.
-- **Wichtige Grenze:** Die aktuelle Aktivierung schaltet nur den Organisationsstatus in der App um. Sie provisioniert noch keine Nextcloud-Gruppen, Talk-Räume, Gruppenordner oder Kalender. Die Ressourcenorchestrierung ist implementiert, muss aber vor dem Produktiveinsatz gegen die konkrete Nextcloud-/Authentik-Installation als Laufzeittest geprüft werden.
+- **Wichtige Grenze:** Die Aktivierung schaltet zunächst den Organisationsstatus in der App um. Die Ressourcenorchestrierung läuft anschließend und muss vor dem Produktiveinsatz gegen die konkrete Nextcloud-/Authentik-Installation als Laufzeittest geprüft werden. Ein vollständiges Rollback bereits ausgeführter externer Provisionierungsschritte ist nicht garantiert.
 
 ### Noch ausstehende Schritte
 
