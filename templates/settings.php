@@ -36,7 +36,7 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             </div>
             <div class="jugend-section-actions">
                 <button type="button" class="button test-connection" data-channel="authentik"><?php p($l->t('Authentik-Verbindung testen')); ?></button>
-                <span class="jugend-test-result" data-test-result="authentik"></span>
+                <span class="jugend-test-result" role="status" aria-live="polite" data-test-result="authentik"></span>
             </div>
         </section>
 
@@ -69,7 +69,7 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             </div>
             <div class="jugend-section-actions">
                 <button type="button" class="button test-connection" data-channel="talk"><?php p($l->t('Talk-Testnachricht senden')); ?></button>
-                <span class="jugend-test-result" data-test-result="talk"></span>
+                <span class="jugend-test-result" role="status" aria-live="polite" data-test-result="talk"></span>
             </div>
         </section>
 
@@ -103,7 +103,7 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             </div>
             <div class="jugend-section-actions">
                 <button type="button" class="button test-connection" data-channel="matrix"><?php p($l->t('Matrix-Verbindung testen')); ?></button>
-                <span class="jugend-test-result" data-test-result="matrix"></span>
+                <span class="jugend-test-result" role="status" aria-live="polite" data-test-result="matrix"></span>
             </div>
         </section>
 
@@ -135,7 +135,7 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
             </div>
             <div class="jugend-section-actions">
                 <button type="button" class="button test-connection" data-channel="sms"><?php p($l->t('SMS-Gateway-Verbindung testen')); ?></button>
-                <span class="jugend-test-result" data-test-result="sms"></span>
+                <span class="jugend-test-result" role="status" aria-live="polite" data-test-result="sms"></span>
             </div>
         </section>
 

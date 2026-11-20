@@ -32,6 +32,7 @@
         if (!status || !clearButton || !clearInput) return;
 
         status.dataset.configured = configured ? '1' : '0';
+        status.dataset.removing = removing ? '1' : '0';
         status.textContent = removing
             ? strings.secretRemovePending
             : (configured ? strings.secretStored : strings.secretNone);
@@ -91,7 +92,7 @@
             if (showMessage) setFeedback(strings.saved, 'success');
             return true;
         } catch (error) {
-            if (showMessage) setFeedback(error.message || strings.saveFailed, 'warning');
+            if (showMessage) setFeedback(error.message || strings.saveFailed, 'error');
             throw error;
         } finally {
             saveButton.disabled = false;
@@ -120,7 +121,7 @@
             } catch (error) {
                 resultLabel.textContent = error.message || strings.testFailed;
                 resultLabel.classList.add('error');
-                setFeedback(resultLabel.textContent, 'warning');
+                setFeedback(resultLabel.textContent, 'error');
             } finally {
                 button.disabled = false;
             }
