@@ -1,89 +1,149 @@
-/* Native Nextcloud app layout: use the complete app-content area and theme variables. */
+/*
+ * Jugend app styles, aligned with the Nextcloud design guidelines.
+ *
+ * Rules followed here (Nextcloud developer manual, "CSS variables" and "Foundations"):
+ *  - Only theme variables for colors, radii and sizes, so light/dark/high-contrast themes work.
+ *  - Spacing is a multiple of --default-grid-baseline (4px).
+ *  - State colors: --color-success/-error/-warning/-info are BACKGROUNDS and are paired with
+ *    their *-text variable; for plain text on the main background use --color-text-success/-error.
+ *  - Primary color is reserved for actions and active states, not for decoration.
+ *  - Logical properties (inline-start/end) so right-to-left languages work.
+ *  - Type scale: 15px body (--default-font-size), 13px secondary, 20px headings, 24px titles.
+ */
+
 /* Nextcloud's #content is a fixed-height, non-scrolling container; #app-content is the scroll area. */
 #app-content.jugend-app-content {
     overflow-y: auto;
     overflow-x: hidden;
 }
 
+/* ---------------------------------------------------------------------------
+ * Tokens (derived from the Nextcloud variables)
+ * ------------------------------------------------------------------------- */
 .jugend-page {
+    --jugend-grid: var(--default-grid-baseline, 4px);
+    --jugend-space-1: var(--jugend-grid);
+    --jugend-space-2: calc(var(--jugend-grid) * 2);
+    --jugend-space-3: calc(var(--jugend-grid) * 3);
+    --jugend-space-4: calc(var(--jugend-grid) * 4);
+    --jugend-space-5: calc(var(--jugend-grid) * 5);
+    --jugend-space-6: calc(var(--jugend-grid) * 6);
+    --jugend-space-8: calc(var(--jugend-grid) * 8);
+    --jugend-font-secondary: 13px;
+    --jugend-font-heading: 20px;
+    --jugend-font-title: 24px;
+
     box-sizing: border-box;
     width: 100%;
     max-width: none;
-    padding: clamp(16px, 2.4vw, 36px);
+    padding: clamp(var(--jugend-space-4), 2.4vw, var(--jugend-space-8));
     color: var(--color-main-text);
 }
 
-.jugend-page--embedded { padding: 0; max-width: none; }
+.jugend-page--embedded {
+    padding: 0;
+    max-width: none;
+}
 
 .jugend-page *,
 .jugend-page *::before,
-.jugend-page *::after { box-sizing: border-box; }
+.jugend-page *::after {
+    box-sizing: border-box;
+}
 
+/* ---------------------------------------------------------------------------
+ * Page header
+ * ------------------------------------------------------------------------- */
 .jugend-page__header {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 20px;
-    margin: 0 0 20px;
-    padding: clamp(18px, 2vw, 28px);
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-large);
-    background: var(--color-main-background);
-    box-shadow: 0 1px 2px var(--color-box-shadow);
+    gap: var(--jugend-space-4) var(--jugend-space-5);
+    margin: 0 0 var(--jugend-space-6);
 }
-.jugend-page__header h1 { margin: 0 0 6px; }
+
+.jugend-page__header h1 {
+    margin: 0 0 var(--jugend-space-1);
+    font-size: var(--jugend-font-title);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
 .jugend-page__header p,
 .jugend-panel__heading p {
     margin: 0;
     color: var(--color-text-maxcontrast);
 }
 
+/* ---------------------------------------------------------------------------
+ * Main layout and panels
+ * ------------------------------------------------------------------------- */
 .jugend-main-layout {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(260px, 0.8fr);
+    grid-template-columns: minmax(0, 2fr) minmax(calc(var(--jugend-grid) * 70), 0.8fr);
     align-items: start;
-    gap: 20px;
+    gap: var(--jugend-space-5);
 }
+
 .jugend-panel {
     min-width: 0;
-    padding: clamp(18px, 2vw, 28px);
+    padding: clamp(var(--jugend-space-4), 2vw, var(--jugend-space-6));
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-large);
+    border-radius: var(--border-radius-container, 12px);
     background: var(--color-main-background);
-    box-shadow: 0 1px 2px var(--color-box-shadow);
 }
-.jugend-panel h2 { margin: 0 0 8px; font-size: 1.25rem; }
+
+.jugend-panel h2 {
+    margin: 0 0 var(--jugend-space-2);
+    font-size: var(--jugend-font-heading);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
 .jugend-panel__heading {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: var(--jugend-space-4);
+    margin-bottom: var(--jugend-space-5);
 }
+
+.jugend-muted,
+.jugend-field-hint {
+    color: var(--color-text-maxcontrast);
+    font-size: var(--jugend-font-secondary);
+}
+
+/* ---------------------------------------------------------------------------
+ * Composer
+ * ------------------------------------------------------------------------- */
 .jugend-label {
     display: block;
-    margin: 0 0 8px;
+    margin: 0 0 var(--jugend-space-2);
     color: var(--color-main-text);
     font-weight: 600;
 }
+
 .jugend-composer textarea {
     display: block;
     width: 100%;
-    min-height: clamp(220px, 34vh, 420px);
-    padding: 14px 16px;
+    min-height: clamp(calc(var(--jugend-grid) * 50), 34vh, calc(var(--jugend-grid) * 105));
+    margin: 0;
+    padding: var(--jugend-space-3) var(--jugend-space-4);
     resize: vertical;
-    border: 2px solid var(--color-border-dark);
-    border-radius: var(--border-radius);
+    border: var(--border-width-input, 1px) solid var(--color-border-maxcontrast);
+    border-radius: var(--border-radius-element, 8px);
     background: var(--color-main-background);
     color: var(--color-main-text);
     font: inherit;
-    line-height: 1.55;
+    line-height: var(--default-line-height, 1.5);
 }
-.jugend-composer textarea:focus {
-    outline: 2px solid var(--color-main-background);
-    outline-offset: 1px;
-    border-color: var(--color-primary-element);
+
+.jugend-composer textarea::placeholder {
+    color: var(--color-text-maxcontrast);
 }
+
 .jugend-editor-footer,
 .jugend-form-actions,
 .jugend-section-actions,
@@ -93,37 +153,143 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: var(--jugend-space-3);
 }
-.jugend-editor-footer { justify-content: space-between; margin-top: 10px; }
-.jugend-muted,
-.jugend-field-hint { color: var(--color-text-maxcontrast); font-size: 0.9rem; }
-.jugend-form-actions { justify-content: flex-end; margin-top: 22px; }
-.jugend-form-actions button,
-.jugend-settings-footer > button { min-height: 44px; padding-inline: 22px; }
-.jugend-channel-list { list-style: none; padding: 0; margin: 22px 0; }
-.jugend-channel-list li { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 18px; }
-.jugend-channel-list small { display: block; margin-top: 4px; color: var(--color-text-maxcontrast); }
-.jugend-channel-dot {
-    flex: 0 0 10px; width: 10px; height: 10px; margin-top: 5px;
-    border-radius: 50%; background: var(--color-primary-element);
-}
-.jugend-result { margin-top: 20px; }
-.jugend-feedback { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
-.jugend-feedback.success { color: var(--color-success); }
-.jugend-feedback.warning { color: var(--color-error); }
 
-/* Settings follow the native Nextcloud admin-settings layout. */
+.jugend-editor-footer {
+    justify-content: space-between;
+    margin-top: var(--jugend-space-2);
+}
+
+.jugend-form-actions {
+    justify-content: flex-end;
+    margin-top: var(--jugend-space-5);
+}
+
+/* ---------------------------------------------------------------------------
+ * Delivery channel list (side panel)
+ * ------------------------------------------------------------------------- */
+.jugend-channel-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--jugend-space-4);
+    margin: var(--jugend-space-4) 0;
+    padding: 0;
+    list-style: none;
+}
+
+.jugend-channel-list strong,
+.jugend-channel-list small {
+    display: block;
+}
+
+.jugend-channel-list small {
+    margin-top: var(--jugend-space-1);
+    color: var(--color-text-maxcontrast);
+    font-size: var(--jugend-font-secondary);
+}
+
+.jugend-result {
+    margin-top: var(--jugend-space-5);
+}
+
+/* ---------------------------------------------------------------------------
+ * Feedback ("note card" look: state background + matching text color)
+ * ------------------------------------------------------------------------- */
+.jugend-feedback {
+    margin: 0;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.jugend-feedback:empty {
+    display: none;
+}
+
+.jugend-feedback.success,
+.jugend-feedback.warning,
+.jugend-feedback.error {
+    padding: var(--jugend-space-3) var(--jugend-space-4);
+    border-inline-start: var(--jugend-space-1) solid var(--jugend-note-accent);
+    border-radius: var(--border-radius-element, 8px);
+    background: var(--jugend-note-background);
+    color: var(--jugend-note-text);
+}
+
+.jugend-feedback.success {
+    --jugend-note-accent: var(--color-element-success);
+    --jugend-note-background: var(--color-success);
+    --jugend-note-text: var(--color-success-text);
+}
+
+.jugend-feedback.warning {
+    --jugend-note-accent: var(--color-element-warning);
+    --jugend-note-background: var(--color-warning);
+    --jugend-note-text: var(--color-warning-text);
+}
+
+.jugend-feedback.error {
+    --jugend-note-accent: var(--color-element-error);
+    --jugend-note-background: var(--color-error);
+    --jugend-note-text: var(--color-error-text);
+}
+
+/* ---------------------------------------------------------------------------
+ * Confirmation dialog (native <dialog>)
+ * ------------------------------------------------------------------------- */
+/* The dialog sits inside .jugend-page, so it inherits the --jugend-* tokens. */
+.jugend-dialog {
+    width: min(calc(var(--jugend-grid) * 120), calc(100vw - var(--jugend-space-8)));
+    max-width: none;
+    padding: 0;
+    border: 0;
+    border-radius: var(--border-radius-container-large, 16px);
+    background: var(--color-main-background);
+    color: var(--color-main-text);
+    box-shadow: 0 0 calc(var(--jugend-grid) * 5) var(--color-box-shadow);
+}
+
+.jugend-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.jugend-dialog__form {
+    padding: var(--jugend-space-6);
+}
+
+.jugend-dialog__form h2 {
+    margin: 0 0 var(--jugend-space-3);
+    font-size: var(--jugend-font-heading);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.jugend-dialog__text {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.jugend-dialog__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--jugend-space-2);
+    margin-top: var(--jugend-space-6);
+}
+
+/* ---------------------------------------------------------------------------
+ * Admin settings (native Nextcloud settings section: div.section > h2 > h3)
+ * ------------------------------------------------------------------------- */
 #jugend-settings {
-    max-width: 900px;
+    max-width: calc(var(--jugend-grid) * 225);
 }
 
 #jugend-settings > h2 {
-    margin: 0 0 8px;
+    margin: 0 0 var(--jugend-space-2);
 }
 
 #jugend-settings > .settings-hint {
-    margin: 0 0 28px;
+    margin: 0 0 var(--jugend-space-6);
 }
 
 .jugend-settings-form {
@@ -132,26 +298,26 @@
 
 .jugend-settings-group {
     min-width: 0;
-    margin: 0 0 28px;
-    padding: 0 0 24px;
+    margin: 0 0 var(--jugend-space-6);
+    padding: 0 0 var(--jugend-space-6);
     border: 0;
     border-bottom: 1px solid var(--color-border);
 }
 
 .jugend-settings-group h3 {
-    margin: 0 0 6px;
-    font-size: 1.1rem;
+    margin: 0 0 var(--jugend-space-1);
+    font-size: 16px;
     font-weight: 600;
 }
 
 .jugend-settings-group > .settings-hint {
-    margin: 0 0 20px;
+    margin: 0 0 var(--jugend-space-5);
 }
 
 .jugend-fields {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px 24px;
+    gap: var(--jugend-space-4) var(--jugend-space-6);
 }
 
 .jugend-field {
@@ -164,116 +330,114 @@
 
 .jugend-field label {
     display: block;
-    margin: 0 0 6px;
+    margin: 0 0 var(--jugend-space-1);
     font-weight: 600;
 }
 
-.jugend-field input.input-field {
+.jugend-field input:not([type='hidden']) {
     display: block;
     width: 100%;
-    max-width: 600px;
+    max-width: calc(var(--jugend-grid) * 150);
     margin: 0;
 }
 
+.jugend-field .settings-hint {
+    margin: var(--jugend-space-1) 0 0;
+}
+
 .jugend-secret-controls {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px 12px;
-    margin-top: 8px;
+    gap: var(--jugend-space-2) var(--jugend-space-3);
+    margin-top: var(--jugend-space-2);
 }
 
 .jugend-secret-status {
     color: var(--color-text-maxcontrast);
-    font-size: .9rem;
+    font-size: var(--jugend-font-secondary);
 }
 
-.jugend-secret-status[data-configured="1"] {
-    color: var(--color-success);
+.jugend-secret-status[data-configured='1'] {
+    color: var(--color-text-success);
 }
 
-.jugend-field .settings-hint {
-    margin: 6px 0 0;
+/* Removal is pending until the form is saved: destructive action, shown in the error text color. */
+.jugend-secret-status[data-removing='1'] {
+    color: var(--color-text-error);
 }
 
 .jugend-webhook {
-    margin-top: 20px;
+    margin-top: var(--jugend-space-5);
 }
 
 .jugend-webhook-label {
-    margin: 0 0 6px;
+    margin: 0 0 var(--jugend-space-1);
 }
 
 .jugend-copy-row {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--jugend-space-2);
 }
 
 .jugend-copy-row code {
-    flex: 1 1 320px;
+    flex: 1 1 calc(var(--jugend-grid) * 80);
     min-width: 0;
+    padding: var(--jugend-space-2) var(--jugend-space-3);
+    border-radius: var(--border-radius-element, 8px);
+    background: var(--color-background-dark);
+    color: var(--color-main-text);
+    font-size: var(--jugend-font-secondary);
     overflow-wrap: anywhere;
     white-space: normal;
 }
 
 .jugend-section-actions {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 18px;
+    margin-top: var(--jugend-space-4);
 }
 
 .jugend-test-result {
     color: var(--color-text-maxcontrast);
-    font-size: .9rem;
+    font-size: var(--jugend-font-secondary);
 }
 
 .jugend-test-result.success {
-    color: var(--color-success);
+    color: var(--color-text-success);
 }
 
 .jugend-test-result.error {
-    color: var(--color-error);
+    color: var(--color-text-error);
 }
 
 .jugend-settings-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 8px;
+    justify-content: flex-end;
+    margin-top: var(--jugend-space-2);
 }
 
 .jugend-settings-footer .jugend-feedback {
-    flex: 1 1 260px;
+    flex: 1 1 calc(var(--jugend-grid) * 65);
 }
 
-.jugend-feedback {
-    margin: 0;
-    white-space: pre-line;
-    overflow-wrap: anywhere;
-}
+/* ---------------------------------------------------------------------------
+ * Responsive behavior
+ * ------------------------------------------------------------------------- */
 
-.jugend-feedback.success {
-    color: var(--color-success);
-}
-
-.jugend-feedback.warning {
-    color: var(--color-error);
+/* Same threshold as --breakpoint-mobile (1024px); CSS variables cannot be used in media queries. */
+@media (max-width: 1024px) {
+    .jugend-main-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 @media (max-width: 650px) {
     .jugend-fields {
         grid-template-columns: minmax(0, 1fr);
-        gap: 16px;
+        gap: var(--jugend-space-4);
     }
 
     .jugend-field--wide {
         grid-column: auto;
+    }
+
+    .jugend-form-actions button,
+    .jugend-settings-footer > button {
+        width: 100%;
     }
 
     .jugend-settings-footer {
@@ -281,7 +445,7 @@
         flex-direction: column-reverse;
     }
 
-    .jugend-settings-footer > button {
-        width: 100%;
+    .jugend-dialog__actions button {
+        flex: 1 1 auto;
     }
 }

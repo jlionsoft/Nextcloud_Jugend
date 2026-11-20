@@ -39,12 +39,12 @@ declare(strict_types=1);
             </form>
         </section>
 
-        <aside class="jugend-panel jugend-help-panel">
-            <h2><?php p($l->t('Versand')); ?></h2>
+        <aside class="jugend-panel jugend-help-panel" aria-labelledby="jugend-channels-title">
+            <h2 id="jugend-channels-title"><?php p($l->t('Versand')); ?></h2>
             <ul class="jugend-channel-list">
-                <li><span class="jugend-channel-dot" aria-hidden="true"></span><span><strong>Matrix</strong><small><?php p($l->t("Persönliche Direktnachricht an jedes Gruppenmitglied mit Matrix-Konto")); ?></small></span></li>
-                <li><span class="jugend-channel-dot" aria-hidden="true"></span><span><strong>Nextcloud Talk</strong><small><?php p($l->t('Nachricht im konfigurierten Gruppenraum')); ?></small></span></li>
-                <li><span class="jugend-channel-dot" aria-hidden="true"></span><span><strong>SMS</strong><small><?php p($l->t('Nur Empfänger mit aktivierter SMS-Option')); ?></small></span></li>
+                <li><strong>Matrix</strong><small><?php p($l->t('Persönliche Direktnachricht an jedes Gruppenmitglied mit Matrix-Konto')); ?></small></li>
+                <li><strong>Nextcloud Talk</strong><small><?php p($l->t('Nachricht im konfigurierten Gruppenraum')); ?></small></li>
+                <li><strong>SMS</strong><small><?php p($l->t('Nur Empfänger mit aktivierter SMS-Option')); ?></small></li>
             </ul>
             <p class="jugend-muted"><?php p($l->t('Vor dem Versand wirst du um eine Bestätigung gebeten.')); ?></p>
         </aside>
@@ -54,5 +54,16 @@ declare(strict_types=1);
         <h2><?php p($l->t('Versandergebnis')); ?></h2>
         <p id="jugend-feedback" class="jugend-feedback"></p>
     </section>
+
+    <dialog id="jugend-confirm-dialog" class="jugend-dialog" aria-labelledby="jugend-confirm-title" aria-describedby="jugend-confirm-text">
+        <form method="dialog" class="jugend-dialog__form">
+            <h2 id="jugend-confirm-title"><?php p($l->t('Nachricht senden?')); ?></h2>
+            <p id="jugend-confirm-text" class="jugend-dialog__text"></p>
+            <div class="jugend-dialog__actions">
+                <button type="submit" class="button" value="cancel"><?php p($l->t('Abbrechen')); ?></button>
+                <button type="submit" class="primary" value="confirm"><?php p($l->t('Jetzt senden')); ?></button>
+            </div>
+        </form>
+    </dialog>
 </div>
 </div>

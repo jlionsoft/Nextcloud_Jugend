@@ -21,6 +21,8 @@
     const feedback = document.getElementById('jugend-feedback');
     const resultPanel = document.getElementById('jugend-result-panel');
     const button = document.getElementById('jugend-send-button');
+    const dialog = document.getElementById('jugend-confirm-dialog');
+    const dialogText = document.getElementById('jugend-confirm-text');
 
     function segments(value) {
         if (!value) return 0;
@@ -36,11 +38,31 @@
         button.disabled = !message.value.trim();
     }
 
+    // Confirmation before sending. Uses the native <dialog> (styled like a Nextcloud dialog) and
+    // falls back to window.confirm() where <dialog> is not supported.
+    function confirmSend() {
+        if (!dialog || typeof dialog.showModal !== 'function') {
+            return Promise.resolve(window.confirm(strings.confirmSend));
+        }
+        dialogText.textContent = strings.confirmSend;
+        // returnValue keeps its previous value when the dialog is closed with Escape, so reset it.
+        dialog.returnValue = '';
+        return new Promise((resolve) => {
+            dialog.addEventListener('close', () => resolve(dialog.returnValue === 'confirm'), {once: true});
+            dialog.showModal();
+        });
+    }
+
+    // Clicking the backdrop (the dialog element itself, it has no padding) cancels.
+    dialog?.addEventListener('click', (event) => {
+        if (event.target === dialog) dialog.close('cancel');
+    });
+
     message.addEventListener('input', update);
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (!message.value.trim()) return;
-        if (!window.confirm(strings.confirmSend)) return;
+        if (!(await confirmSend())) return;
 
         button.disabled = true;
         resultPanel.hidden = false;
@@ -69,6 +91,7 @@
             const failed = (result.sms?.failed || []).map((item) => item.recipient + ': ' + item.error).join('\n');
             const smsError = result.sms?.error || '';
             feedback.textContent = [talk, matrix, matrixError, matrixFailed, sms, smsError, failed].filter(Boolean).join('\n');
+            // Delivery finished but at least one channel/recipient failed: warning. Request failed: error.
             feedback.classList.toggle('success', !!result.success);
             feedback.classList.toggle('warning', !result.success);
             if (result.success) {
@@ -77,7 +100,7 @@
             }
         } catch (error) {
             feedback.textContent = error.message || strings.unknownError;
-            feedback.classList.add('warning');
+            feedback.classList.add('error');
         } finally {
             button.disabled = !message.value.trim();
         }
