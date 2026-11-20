@@ -159,9 +159,24 @@ class ResourceProvisioningService {
             return;
         }
         $periodId = (int)$active['id'];
-        $this->provisionTalkRooms($periodId, 'system');
-        $this->provisionGroupFolders($periodId, 'system');
-        $this->provisionCalendars($periodId, 'system');
+        $errors = [];
+        foreach ([
+            'Talk' => fn() => $this->provisionTalkRooms($periodId, 'system'),
+            'Groupfolders' => fn() => $this->provisionGroupFolders($periodId, 'system'),
+            'Kalender' => fn() => $this->provisionCalendars($periodId, 'system'),
+        ] as $label => $operation) {
+            try {
+                $result = $operation();
+                foreach (($result['failed'] ?? []) as $failure) {
+                    $errors[] = $label . ' / ' . ($failure['groupName'] ?? 'Gruppe') . ': ' . ($failure['message'] ?? 'Unbekannter Fehler');
+                }
+            } catch (\Throwable $e) {
+                $errors[] = $label . ': ' . $e->getMessage();
+            }
+        }
+        if ($errors !== []) {
+            throw new \RuntimeException(implode(' | ', array_slice($errors, 0, 10)));
+        }
     }
 
     /**
