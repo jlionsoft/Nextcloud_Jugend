@@ -180,18 +180,18 @@ class AuthorizationService {
         $name = trim($name);
         $description = trim($description);
         if (!preg_match('/^[a-z][a-z0-9_.-]{1,63}$/', $roleKey) || $roleKey === self::ROLE_KEY) {
-            throw new \\InvalidArgumentException('Der Rollenschlüssel ist ungültig oder reserviert.');
+            throw new \InvalidArgumentException('Der Rollenschlüssel ist ungültig oder reserviert.');
         }
         if ($name === '' || mb_strlen($name) > 128 || mb_strlen($description) > 2000) {
-            throw new \\InvalidArgumentException('Bitte gib einen gültigen Rollennamen und eine gültige Beschreibung an.');
+            throw new \InvalidArgumentException('Bitte gib einen gültigen Rollennamen und eine gültige Beschreibung an.');
         }
         $permissionKeys = array_values(array_unique(array_map('strval', $permissionKeys)));
         $known = array_column($this->listPermissions(), 'permission_key');
         if ($permissionKeys === [] || array_diff($permissionKeys, $known) !== []) {
-            throw new \\InvalidArgumentException('Die Rolle muss mindestens eine gültige Berechtigung enthalten.');
+            throw new \InvalidArgumentException('Die Rolle muss mindestens eine gültige Berechtigung enthalten.');
         }
         if (!$allowPrivilegePermissions && in_array('roles.manage', $permissionKeys, true)) {
-            throw new \\InvalidArgumentException('Die Berechtigung zur Rollenverwaltung darf nur durch globale Nextcloud-Administratoren vergeben werden.');
+            throw new \InvalidArgumentException('Die Berechtigung zur Rollenverwaltung darf nur durch globale Nextcloud-Administratoren vergeben werden.');
         }
 
         if ($roleId !== null) {
@@ -200,17 +200,17 @@ class AuthorizationService {
                 ->where($qb->expr()->eq('id', $qb->createNamedParameter($roleId)));
             $existing = $qb->executeQuery()->fetch();
             if (!$existing || (bool)$existing['is_system']) {
-                throw new \\InvalidArgumentException('Diese Systemrolle kann nicht bearbeitet werden.');
+                throw new \InvalidArgumentException('Diese Systemrolle kann nicht bearbeitet werden.');
             }
             if ($existing['role_key'] !== $roleKey) {
-                throw new \\InvalidArgumentException('Der Rollenschlüssel kann nach dem Anlegen nicht geändert werden.');
+                throw new \InvalidArgumentException('Der Rollenschlüssel kann nach dem Anlegen nicht geändert werden.');
             }
         } else {
             $qb = $this->db->getQueryBuilder();
             $qb->select('id')->from('jugend_roles')
                 ->where($qb->expr()->eq('role_key', $qb->createNamedParameter($roleKey)));
             if ($qb->executeQuery()->fetchOne() !== false) {
-                throw new \\InvalidArgumentException('Dieser Rollenschlüssel ist bereits vergeben.');
+                throw new \InvalidArgumentException('Dieser Rollenschlüssel ist bereits vergeben.');
             }
         }
 
@@ -253,7 +253,7 @@ class AuthorizationService {
             }
             $this->audit($actor, $action, (string)$roleId, ['roleKey' => $roleKey, 'permissions' => $permissionKeys]);
             $this->db->commit();
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             $this->db->rollBack();
             throw $e;
         }
@@ -266,19 +266,19 @@ class AuthorizationService {
                 return $role;
             }
         }
-        throw new \\InvalidArgumentException('Die Rolle wurde nicht gefunden.');
+        throw new \InvalidArgumentException('Die Rolle wurde nicht gefunden.');
     }
 
     public function deleteRole(int $roleId, string $actor): void {
         $role = $this->getRole($roleId);
         if ($role['is_system']) {
-            throw new \\InvalidArgumentException('Systemrollen können nicht gelöscht werden.');
+            throw new \InvalidArgumentException('Systemrollen können nicht gelöscht werden.');
         }
         $qb = $this->db->getQueryBuilder();
         $qb->select('id')->from('jugend_user_roles')
             ->where($qb->expr()->eq('role_id', $qb->createNamedParameter($roleId)));
         if ($qb->executeQuery()->fetchOne() !== false) {
-            throw new \\InvalidArgumentException('Die Rolle ist noch zugewiesen. Entferne zuerst alle Zuweisungen.');
+            throw new \InvalidArgumentException('Die Rolle ist noch zugewiesen. Entferne zuerst alle Zuweisungen.');
         }
         $this->db->beginTransaction();
         try {
@@ -290,7 +290,7 @@ class AuthorizationService {
             $qb->executeStatement();
             $this->audit($actor, 'role.deleted', (string)$roleId, ['roleKey' => $role['role_key']]);
             $this->db->commit();
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             $this->db->rollBack();
             throw $e;
         }
@@ -299,18 +299,18 @@ class AuthorizationService {
     private function validateScope(string $scopeType, ?int $scopeId): void {
         if ($scopeType === 'global') {
             if ($scopeId !== null) {
-                throw new \\InvalidArgumentException('Globale Rollen dürfen keine Scope-ID besitzen.');
+                throw new \InvalidArgumentException('Globale Rollen dürfen keine Scope-ID besitzen.');
             }
             return;
         }
         if (!in_array($scopeType, ['period', 'group'], true) || $scopeId === null || $scopeId < 1) {
-            throw new \\InvalidArgumentException('Der Geltungsbereich ist ungültig.');
+            throw new \InvalidArgumentException('Der Geltungsbereich ist ungültig.');
         }
         $table = $scopeType === 'period' ? 'jugend_periods' : 'jugend_groups';
         $qb = $this->db->getQueryBuilder();
         $qb->select('id')->from($table)->where($qb->expr()->eq('id', $qb->createNamedParameter($scopeId)));
         if ($qb->executeQuery()->fetchOne() === false) {
-            throw new \\InvalidArgumentException('Der ausgewählte Geltungsbereich existiert nicht.');
+            throw new \InvalidArgumentException('Der ausgewählte Geltungsbereich existiert nicht.');
         }
     }
 
@@ -318,7 +318,7 @@ class AuthorizationService {
         $role = $this->getRole($roleId);
         $this->validateScope($scopeType, $scopeId);
         if (!$allowPrivilegePermissions && in_array('roles.manage', $role['permissions'], true)) {
-            throw new \\InvalidArgumentException('Rollen mit Verwaltungsrechten dürfen nur globale Nextcloud-Administratoren zuweisen.');
+            throw new \InvalidArgumentException('Rollen mit Verwaltungsrechten dürfen nur globale Nextcloud-Administratoren zuweisen.');
         }
         $qb = $this->db->getQueryBuilder();
         $qb->select('id')->from('jugend_user_roles')
@@ -353,10 +353,10 @@ class AuthorizationService {
             ->where($qb->expr()->eq('ur.id', $qb->createNamedParameter($assignmentId)));
         $assignment = $qb->executeQuery()->fetch();
         if (!$assignment) {
-            throw new \\InvalidArgumentException('Die Rollenzuweisung wurde nicht gefunden.');
+            throw new \InvalidArgumentException('Die Rollenzuweisung wurde nicht gefunden.');
         }
         if ((bool)$assignment['is_system']) {
-            throw new \\InvalidArgumentException('Systemrollen müssen über die dafür vorgesehene Administration verwaltet werden.');
+            throw new \InvalidArgumentException('Systemrollen müssen über die dafür vorgesehene Administration verwaltet werden.');
         }
         $qb = $this->db->getQueryBuilder();
         $qb->delete('jugend_user_roles')->where($qb->expr()->eq('id', $qb->createNamedParameter($assignmentId)));
