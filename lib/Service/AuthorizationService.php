@@ -75,19 +75,23 @@ class AuthorizationService {
         // only while their owning period is active. Global grants (notably
         // organization administrators) remain effective for draft planning.
         $scopeIsActive = true;
+        $targetPeriodId = null;
         if ($scopeType === 'period' && $scopeId !== null) {
             $periodQuery = $this->db->getQueryBuilder();
             $periodQuery->select('id')->from('jugend_periods')
                 ->where($periodQuery->expr()->eq('id', $periodQuery->createNamedParameter($scopeId)))
                 ->andWhere($periodQuery->expr()->eq('status', $periodQuery->createNamedParameter('active')));
             $scopeIsActive = $periodQuery->executeQuery()->fetchOne() !== false;
+            $targetPeriodId = $scopeIsActive ? $scopeId : null;
         } elseif ($scopeType === 'group' && $scopeId !== null) {
             $groupQuery = $this->db->getQueryBuilder();
-            $groupQuery->select('g.id')->from('jugend_groups', 'g')
+            $groupQuery->select('g.period_id')->from('jugend_groups', 'g')
                 ->innerJoin('g', 'jugend_periods', 'p', $groupQuery->expr()->eq('g.period_id', 'p.id'))
                 ->where($groupQuery->expr()->eq('g.id', $groupQuery->createNamedParameter($scopeId)))
                 ->andWhere($groupQuery->expr()->eq('p.status', $groupQuery->createNamedParameter('active')));
-            $scopeIsActive = $groupQuery->executeQuery()->fetchOne() !== false;
+            $groupRow = $groupQuery->executeQuery()->fetch();
+            $scopeIsActive = $groupRow !== false;
+            $targetPeriodId = $scopeIsActive ? (int)$groupRow['period_id'] : null;
         }
 
         // The leader flag is a convenient built-in scoped grant. It is evaluated
@@ -122,6 +126,13 @@ class AuthorizationService {
                 $qb->expr()->eq('ur.scope_type', $qb->createNamedParameter($scopeType)),
                 $qb->expr()->eq('ur.scope_id', $qb->createNamedParameter($scopeId))
             );
+            // A period-scoped grant covers every group in that period.
+            if ($scopeType === 'group' && $targetPeriodId !== null) {
+                $scopeConditions[] = $qb->expr()->andX(
+                    $qb->expr()->eq('ur.scope_type', $qb->createNamedParameter('period')),
+                    $qb->expr()->eq('ur.scope_id', $qb->createNamedParameter($targetPeriodId))
+                );
+            }
         }
         $qb->andWhere($qb->expr()->orX(...$scopeConditions));
         return $qb->executeQuery()->fetchOne() !== false;
