@@ -24,6 +24,15 @@ class GroupController extends Controller {
         parent::__construct($appName, $request);
     }
 
+    private function hasManagedGroups(string $uid): bool {
+        foreach ($this->organization->listActiveGroups() as $group) {
+            if ($this->authorization->can($uid, 'group.members.manage', 'group', (int)$group['id'])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private function currentUid(): ?string {
         return $this->session->getUser()?->getUID();
     }
@@ -35,25 +44,13 @@ class GroupController extends Controller {
             return new JSONResponse(['error' => 'unauthenticated'], 401);
         }
 
-        if ($this->authorization->isAppAdmin($uid)) {
-            $groups = [];
-            foreach ($this->organization->listPeriods() as $period) {
-                if ($period['status'] !== 'active') {
-                    continue;
-                }
-                foreach ($this->organization->listGroups((int)$period['id']) as $group) {
-                    $group['period_title'] = $period['title'];
-                    $groups[] = $group;
-                }
+        $groups = [];
+        foreach ($this->organization->listActiveGroups() as $group) {
+            if ($this->authorization->can($uid, 'group.members.manage', 'group', (int)$group['id'])) {
+                $group['resources'] = $this->resources->getGroupResourceLinks((int)$group['id']);
+                $groups[] = $group;
             }
-        } else {
-            $groups = $this->organization->listGroupsForLeader($uid);
         }
-
-        foreach ($groups as &$group) {
-            $group['resources'] = $this->resources->getGroupResourceLinks((int)$group['id']);
-        }
-        unset($group);
         return new JSONResponse(['groups' => $groups]);
     }
 
@@ -63,7 +60,7 @@ class GroupController extends Controller {
         if ($uid === null) {
             return new JSONResponse(['error' => 'unauthenticated'], 401);
         }
-        if (!$this->authorization->isAppAdmin($uid) && $this->organization->listGroupsForLeader($uid) === []) {
+        if (!$this->hasManagedGroups($uid)) {
             return new JSONResponse(['error' => 'forbidden'], 403);
         }
         return new JSONResponse(['users' => $this->organization->listNextcloudUsers()]);
