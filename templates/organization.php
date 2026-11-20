@@ -27,11 +27,19 @@ declare(strict_types=1);
                     <p id="jugend-rollover-status" class="jugend-muted">Die Vorschau prüft Gruppen, Mitgliedschaften und Gruppenleitungen.</p>
                     <div id="jugend-rollover-errors" role="alert"></div>
                     <div id="jugend-rollover-summary" class="jugend-period-list"></div>
+                    <section class="jugend-organization-form" aria-labelledby="jugend-period-preparation-heading">
+                        <h4 id="jugend-period-preparation-heading">Ressourcen vor dem Wechsel vorbereiten</h4>
+                        <p class="jugend-muted">Talk-Räume, Gruppenordner und Kalender werden bereits im Entwurf angelegt, aber noch nicht für Gruppenmitglieder freigegeben. Die Zugriffsrechte werden erst nach der Aktivierung synchronisiert.</p>
+                        <div class="jugend-form-actions">
+                            <button type="button" id="jugend-period-prepare-resources" class="secondary">Ressourcen vorbereiten / erneut versuchen</button>
+                        </div>
+                        <div id="jugend-period-preparation-status" class="jugend-period-list" role="status" aria-live="polite"></div>
+                    </section>
                     <div class="jugend-form-actions">
                         <button type="button" id="jugend-rollover-refresh" class="secondary">Vorschau aktualisieren</button>
                         <button type="button" id="jugend-rollover-activate" class="primary" disabled>Periode aktivieren</button>
                     </div>
-                    <p class="jugend-muted">Die Aktivierung erfolgt bewusst manuell am gewünschten Wechseltermin – unabhängig vom Kalenderjahr. Dabei wird die bisher aktive Periode archiviert. Talk, Dateiordner und Kalender werden anschließend separat bereitgestellt.</p>
+                    <p class="jugend-muted">Die Aktivierung erfolgt manuell am gewünschten Wechseltermin. Sie ist erst möglich, wenn alle Ressourcen erfolgreich vorbereitet wurden. Beim Wechsel wird die bisher aktive Periode archiviert und die vorbereiteten Ressourcen werden anschließend für die vorgesehenen Gruppen freigegeben.</p>
                 </section>
 
                 <section id="jugend-resource-provisioning" class="jugend-organization-form" hidden>
