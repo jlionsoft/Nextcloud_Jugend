@@ -71,32 +71,28 @@ class AuthorizationService {
         }
         $this->ensureDefinitions();
 
-        // Period/group-scoped capabilities are effective only while their
-        // owning period is active. Assignments can be prepared in drafts and
-        // will become effective on activation, but archived leadership never
-        // keeps write access to the former organization.
+        // Scoped grants and the built-in group-leader capability are effective
+        // only while their owning period is active. Global grants (notably
+        // organization administrators) remain effective for draft planning.
+        $scopeIsActive = true;
         if ($scopeType === 'period' && $scopeId !== null) {
             $periodQuery = $this->db->getQueryBuilder();
             $periodQuery->select('id')->from('jugend_periods')
                 ->where($periodQuery->expr()->eq('id', $periodQuery->createNamedParameter($scopeId)))
                 ->andWhere($periodQuery->expr()->eq('status', $periodQuery->createNamedParameter('active')));
-            if ($periodQuery->executeQuery()->fetchOne() === false) {
-                return false;
-            }
+            $scopeIsActive = $periodQuery->executeQuery()->fetchOne() !== false;
         } elseif ($scopeType === 'group' && $scopeId !== null) {
             $groupQuery = $this->db->getQueryBuilder();
             $groupQuery->select('g.id')->from('jugend_groups', 'g')
                 ->innerJoin('g', 'jugend_periods', 'p', $groupQuery->expr()->eq('g.period_id', 'p.id'))
                 ->where($groupQuery->expr()->eq('g.id', $groupQuery->createNamedParameter($scopeId)))
                 ->andWhere($groupQuery->expr()->eq('p.status', $groupQuery->createNamedParameter('active')));
-            if ($groupQuery->executeQuery()->fetchOne() === false) {
-                return false;
-            }
+            $scopeIsActive = $groupQuery->executeQuery()->fetchOne() !== false;
         }
 
         // The leader flag is a convenient built-in scoped grant. It is evaluated
-        // against the current membership row, so removing leadership revokes access.
-        if ($permission === 'group.members.manage' && $scopeType === 'group' && $scopeId !== null) {
+        // against the current membership row and only for active groups.
+        if ($scopeIsActive && $permission === 'group.members.manage' && $scopeType === 'group' && $scopeId !== null) {
             $leaderQuery = $this->db->getQueryBuilder();
             $leaderQuery->select('id')->from('jugend_members')
                 ->where($leaderQuery->expr()->eq('group_id', $leaderQuery->createNamedParameter($scopeId)))
@@ -108,8 +104,8 @@ class AuthorizationService {
             }
         }
 
-        // Generic RBAC evaluation: a user role must carry the requested
-        // permission and match either global scope or the exact requested scope.
+        // Generic RBAC evaluation: global grants apply in every period state.
+        // Exact period/group assignments are considered only for active scopes.
         $qb = $this->db->getQueryBuilder();
         $qb->select('ur.id')
             ->from('jugend_user_roles', 'ur')
@@ -121,7 +117,7 @@ class AuthorizationService {
             $qb->expr()->eq('ur.scope_type', $qb->createNamedParameter('global')),
             $qb->expr()->isNull('ur.scope_id')
         )];
-        if ($scopeType !== null && $scopeId !== null) {
+        if ($scopeIsActive && $scopeType !== null && $scopeId !== null) {
             $scopeConditions[] = $qb->expr()->andX(
                 $qb->expr()->eq('ur.scope_type', $qb->createNamedParameter($scopeType)),
                 $qb->expr()->eq('ur.scope_id', $qb->createNamedParameter($scopeId))
