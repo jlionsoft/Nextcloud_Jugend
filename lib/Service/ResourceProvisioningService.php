@@ -143,6 +143,27 @@ class ResourceProvisioningService {
         return $result;
     }
 
+    /** Reconcile all external resources for the active period. */
+    public function reconcileAllResources(): void {
+        if (!$this->client->isConfigured()) {
+            return;
+        }
+        $active = null;
+        foreach ($this->organization->listPeriods() as $period) {
+            if ($period['status'] === 'active') {
+                $active = $period;
+                break;
+            }
+        }
+        if ($active === null) {
+            return;
+        }
+        $periodId = (int)$active['id'];
+        $this->provisionTalkRooms($periodId, 'system');
+        $this->provisionGroupFolders($periodId, 'system');
+        $this->provisionCalendars($periodId, 'system');
+    }
+
     /**
      * Creates a private Groupfolder per active work group. The provisioning
      * account remains the only native group member on the folder; actual
@@ -212,6 +233,10 @@ class ResourceProvisioningService {
             }
             try {
                 $relativePath = $this->groupFolderPath((string)$resource['period_key'], (string)$resource['group_slug']);
+                $this->clearArchivedAuthentikGroup(
+                    ['id' => $archivedPeriodId, 'period_key' => $resource['period_key']],
+                    ['id' => $groupId, 'slug' => $resource['group_slug']],
+                );
                 $departmentGroup = $this->client->getDepartmentGroupId();
                 $expected = ['1:' . $departmentGroup => ['type' => 1, 'with' => $departmentGroup, 'permissions' => 1]];
                 $changes = $this->reconcileGroupFolderShares('/' . $relativePath, $expected);
@@ -393,6 +418,10 @@ class ResourceProvisioningService {
             }
             try {
                 $uri = $this->calendarUri($archivedPeriodId, $groupId);
+                $this->clearArchivedAuthentikGroup(
+                    ['id' => $archivedPeriodId, 'period_key' => $resource['period_key']],
+                    ['id' => $groupId, 'slug' => $resource['group_slug']],
+                );
                 $principal = 'principal:principals/groups/' . rawurlencode($departmentGroup);
                 $changes = $this->reconcileCalendarShares($uri, [$principal], true);
                 if ($changes['errors'] !== []) {
@@ -448,7 +477,7 @@ class ResourceProvisioningService {
 
     private function listArchivedCalendarResources(): array {
         $qb = $this->db->getQueryBuilder();
-        $qb->select('r.group_id', 'r.resource_url', 'g.name AS group_name', 'p.id AS period_id', 'p.title AS period_title')
+        $qb->select('r.group_id', 'r.resource_url', 'g.slug AS group_slug', 'g.name AS group_name', 'p.id AS period_id', 'p.period_key', 'p.title AS period_title')
             ->from('jugend_resources', 'r')
             ->innerJoin('r', 'jugend_groups', 'g', $qb->expr()->eq('r.group_id', 'g.id'))
             ->innerJoin('g', 'jugend_periods', 'p', $qb->expr()->eq('g.period_id', 'p.id'))
@@ -524,6 +553,11 @@ class ResourceProvisioningService {
      * Authentik group. The configured Authentik-to-Nextcloud group sync then
      * becomes the authoritative ACL for active group resources.
      */
+    private function clearArchivedAuthentikGroup(array $period, array $group): void {
+        $name = 'jugend-' . $period['period_key'] . '-' . $group['slug'];
+        $this->authentik->syncWorkgroupGroup($name, (int)$period['id'], (int)$group['id'], []);
+    }
+
     private function ensureAuthentikWorkgroupGroup(array $period, array $group, array $currentMembers): string {
         $name = 'jugend-' . $period['period_key'] . '-' . $group['slug'];
         $userPks = [];
