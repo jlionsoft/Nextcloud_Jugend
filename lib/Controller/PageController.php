@@ -61,7 +61,7 @@ class PageController extends Controller {
         $organizationUrl = $isAppAdmin ? $this->urlGenerator->linkToRoute('jugend.organizationPage.index') : null;
         $canManageAnyGroup = false;
         if ($userId !== null) {
-            foreach ($this->organization->listActiveGroups() as $group) {
+            foreach ($this->organization->listManageableGroups() as $group) {
                 if ($this->authorization->can($userId, 'group.members.manage', 'group', (int)$group['id'])) {
                     $canManageAnyGroup = true;
                     break;
