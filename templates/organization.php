@@ -95,5 +95,71 @@ declare(strict_types=1);
                 <button type="submit" class="primary"><?php p($l->t('Berechtigung vergeben')); ?></button>
             </form>
         </section>
+
+        <section id="jugend-role-management" class="jugend-panel" hidden>
+            <h2><?php p($l->t('Rollen und Berechtigungen')); ?></h2>
+            <p class="jugend-muted"><?php p($l->t('Erstelle eigene Rollen, kombiniere Berechtigungen und weise sie Personen global, für eine Periode oder für eine Arbeitsgruppe zu. Systemrollen bleiben geschützt.')); ?></p>
+            <div class="jugend-organization-layout">
+                <div>
+                    <h3><?php p($l->t('Vorhandene Rollen')); ?></h3>
+                    <div id="jugend-role-list" class="jugend-period-list"></div>
+                    <form id="jugend-role-form" class="jugend-organization-form">
+                        <h3 id="jugend-role-form-title"><?php p($l->t('Neue Rolle erstellen')); ?></h3>
+                        <input type="hidden" name="roleId" id="jugend-role-id" value="0">
+                        <div class="jugend-fields">
+                            <div class="jugend-field">
+                                <label for="jugend-role-key"><?php p($l->t('Technischer Schlüssel')); ?></label>
+                                <input id="jugend-role-key" name="roleKey" required maxlength="64" pattern="[a-z][a-z0-9_.-]{1,63}" placeholder="gruppenleitung">
+                            </div>
+                            <div class="jugend-field">
+                                <label for="jugend-role-name"><?php p($l->t('Rollenname')); ?></label>
+                                <input id="jugend-role-name" name="name" required maxlength="128" placeholder="Gruppenleitung">
+                            </div>
+                            <div class="jugend-field jugend-field--wide">
+                                <label for="jugend-role-description"><?php p($l->t('Beschreibung')); ?></label>
+                                <input id="jugend-role-description" name="description" maxlength="2000">
+                            </div>
+                        </div>
+                        <fieldset class="jugend-role-permissions">
+                            <legend><?php p($l->t('Berechtigungen')); ?></legend>
+                            <div id="jugend-role-permission-list"></div>
+                        </fieldset>
+                        <div class="jugend-form-actions">
+                            <button type="submit" class="primary"><?php p($l->t('Rolle speichern')); ?></button>
+                            <button type="button" id="jugend-role-cancel" class="secondary"><?php p($l->t('Abbrechen')); ?></button>
+                        </div>
+                    </form>
+                </div>
+                <div>
+                    <h3><?php p($l->t('Rolle zuweisen')); ?></h3>
+                    <form id="jugend-role-assignment-form" class="jugend-organization-form">
+                        <div class="jugend-field">
+                            <label for="jugend-assignment-user"><?php p($l->t('Person')); ?></label>
+                            <select id="jugend-assignment-user" name="userId" required><option value=""><?php p($l->t('Person auswählen …')); ?></option></select>
+                        </div>
+                        <div class="jugend-field">
+                            <label for="jugend-assignment-role"><?php p($l->t('Rolle')); ?></label>
+                            <select id="jugend-assignment-role" name="roleId" required><option value=""><?php p($l->t('Rolle auswählen …')); ?></option></select>
+                        </div>
+                        <div class="jugend-field">
+                            <label for="jugend-assignment-scope"><?php p($l->t('Geltungsbereich')); ?></label>
+                            <select id="jugend-assignment-scope" name="scopeType">
+                                <option value="global"><?php p($l->t('Global')); ?></option>
+                                <option value="period"><?php p($l->t('Organisationsperiode')); ?></option>
+                                <option value="group"><?php p($l->t('Arbeitsgruppe')); ?></option>
+                            </select>
+                        </div>
+                        <div class="jugend-field" id="jugend-assignment-scope-id-wrap" hidden>
+                            <label for="jugend-assignment-scope-id"><?php p($l->t('ID des Geltungsbereichs')); ?></label>
+                            <input id="jugend-assignment-scope-id" name="scopeId" type="number" min="1" step="1">
+                            <small class="jugend-muted"><?php p($l->t('Die ID findest du in der jeweiligen Organisationsperiode bzw. Arbeitsgruppe.')); ?></small>
+                        </div>
+                        <button type="submit" class="primary"><?php p($l->t('Rolle zuweisen')); ?></button>
+                    </form>
+                    <h3><?php p($l->t('Aktive Zuweisungen')); ?></h3>
+                    <div id="jugend-role-assignment-list" class="jugend-period-list"></div>
+                </div>
+            </div>
+        </section>
     </div>
 </div>
