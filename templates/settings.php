@@ -88,7 +88,7 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
                 <div class="jugend-field">
                     <label for="provisioning_group_id"><?php p($l->t('Dienstgruppe für Groupfolders')); ?></label>
                     <input class="input-field" id="provisioning_group_id" name="provisioning_group_id" value="<?php p($values['provisioning_group_id']); ?>" placeholder="jugend-provisioner">
-                    <p class="settings-hint"><?php p($l->t('Nextcloud-Gruppe, in der ausschließlich das Dienstkonto Mitglied ist und die einmalig als Groupfolders-Administratorgruppe freigeschaltet wird.')); ?></p>
+                    <p class="settings-hint"><?php p($l->t('Nextcloud-Gruppe, in der ausschließlich das Dienstkonto Mitglied ist. Diese Gruppe erhält Zugriff auf den Stamm-Groupfolder.')); ?></p>
                 </div>
                 <div class="jugend-field">
                     <label for="provisioning_groupfolder_root"><?php p($l->t('Name des bestehenden Groupfolders')); ?></label>
@@ -98,7 +98,7 @@ $talkWebhookUrl = $_['talkWebhookUrl'];
                 <div class="jugend-field">
                     <label for="department_group_id"><?php p($l->t('Nextcloud-Zugriffsgruppe der Abteilung')); ?></label>
                     <input class="input-field" id="department_group_id" name="department_group_id" value="<?php p($values['department_group_id']); ?>" placeholder="jugend">
-                    <p class="settings-hint"><?php p($l->t('Authentik-synchronisierte Nextcloud-Gruppe. Sie erhält Zugriff auf archivierte Groupfolders und Kalender.')); ?></p>
+                    <p class="settings-hint"><?php p($l->t('Authentik-synchronisierte Nextcloud-Gruppe. Sie erhält Zugriff auf archivierte Dateiordner und Kalender.')); ?></p>
                 </div>
                 <div class="jugend-field jugend-field--wide">
                     <label for="provisioning_app_password"><?php p($l->t('App-Passwort')); ?></label>
