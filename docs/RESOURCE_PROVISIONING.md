@@ -11,7 +11,7 @@ Die App verwendet für Provisioning-Aufgaben ein separates Nextcloud-Dienstkonto
 - Groupfolder-Stamm: Name eines bereits angelegten Groupfolders, standardmäßig `Jugend`
 - Abteilungsgruppe: Authentik-synchronisierte Nextcloud-Gruppe, die den regulären App-Zugriff begrenzt (globale Nextcloud-Administratoren behalten administrativen Wiederherstellungszugriff)
 
-Das App-Passwort wird über den verschlüsselten Nextcloud-App-Config-Speicher (IAppConfig, verschlüsselter Wert) gespeichert. Es wird nicht an den Browser zurückgegeben. Die Verbindung verwendet HTTP Basic Authentication über TLS und den OCS-Header `OCS-APIRequest: true`.
+Das App-Passwort wird als sensibler Wert in der Nextcloud-App-Konfiguration (IAppConfig) gespeichert und nicht an den Browser zurückgegeben. Die Kennzeichnung als sensibel schützt vor der Ausgabe in gefilterten Konfigurationslisten, ist aber keine Verschlüsselung. Die Verbindung verwendet HTTP Basic Authentication über TLS und den OCS-Header `OCS-APIRequest: true`.
 
 **Einmalige Einrichtung durch einen Nextcloud-Administrator:**
 
@@ -54,7 +54,7 @@ Die Aktivierung wird serverseitig abgewiesen, solange nicht für jede Arbeitsgru
 - Bei Archivierung werden die früheren Authentik-Arbeitsgruppen geleert; historische Inhalte werden stattdessen für alle aktuellen Abteilungsmitglieder freigegeben.
 - Der Provisionierungsstatus wird je Periode und Arbeitsgruppe dauerhaft gespeichert (nicht begonnen, läuft, erfolgreich, fehlgeschlagen).
 - Fehlgeschlagene Einladungen/Freigaben und letzte Fehlermeldung bleiben sichtbar. App-Admins können den Abgleich manuell erneut starten.
-- Der 15-Minuten-Hintergrundjob protokolliert Start, Abschluss, letzten erfolgreichen Lauf und den letzten Fehler dauerhaft. Die Organisations-API stellt diese Statuswerte für berechtigte App-Administratoren bereit; eine sichtbare Statusanzeige in der Organisationsoberfläche ist gesondert zu prüfen.
+- Der 15-Minuten-Hintergrundjob protokolliert Start, Abschluss, letzten erfolgreichen Lauf und den letzten Fehler dauerhaft. Die Organisations-API stellt diese Statuswerte für berechtigte App-Administratoren bereit; die Organisationsoberfläche zeigt Status, letzten erfolgreichen Lauf und den letzten Fehler an.
 - Audit-Ereignisse werden bei erfolgreicher Ressourcenregistrierung geschrieben.
 
 Die Ressourcen werden soweit möglich bereits vor der Aktivierung angelegt. Die Aktivierung selbst führt weiterhin keine externen API-Aufrufe aus: Sie prüft nur den lokal gespeicherten Vorbereitungsstatus und schaltet die Organisationsperiode transaktional um. Die eigentliche Berechtigungs- und Mitgliedschaftssynchronisierung läuft danach als separater, wiederholbarer Schritt.
