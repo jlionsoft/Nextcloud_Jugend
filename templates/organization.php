@@ -80,5 +80,20 @@ declare(strict_types=1);
             </section>
         </main>
 
+        <section id="jugend-app-admin-panel" class="jugend-panel" hidden>
+            <h2><?php p($l->t('App-Administratoren')); ?></h2>
+            <p class="jugend-muted"><?php p($l->t('App-Administratoren dürfen die Organisationsstruktur verwalten, benötigen dafür aber keine globalen Nextcloud-Administratorrechte. Zuweisungen können nur globale Nextcloud-Administratoren ändern.')); ?></p>
+            <div id="jugend-app-admin-list" class="jugend-period-list"></div>
+            <form id="jugend-app-admin-form" class="jugend-organization-form">
+                <h3><?php p($l->t('App-Administrator hinzufügen')); ?></h3>
+                <div class="jugend-field">
+                    <label for="jugend-app-admin-user"><?php p($l->t('Nextcloud-Benutzer')); ?></label>
+                    <select id="jugend-app-admin-user" name="userId" required>
+                        <option value=""><?php p($l->t('Benutzer auswählen …')); ?></option>
+                    </select>
+                </div>
+                <button type="submit" class="primary"><?php p($l->t('Berechtigung vergeben')); ?></button>
+            </form>
+        </section>
     </div>
 </div>
