@@ -11,7 +11,7 @@
     }
 
     const urls = loadState('groupUrls');
-    const token = () => document.head.dataset.requesttoken || '';
+    const token = () => OC.requestToken || '';
     const groupList = document.getElementById('jugend-leader-group-list');
     const selectedLabel = document.getElementById('jugend-leader-selected-group');
     const editor = document.getElementById('jugend-leader-membership-form');
