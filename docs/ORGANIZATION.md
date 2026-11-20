@@ -18,7 +18,7 @@ Authentik steuert den Eintritt in die App. Die App darf keine eigenen Benutzerko
 
 Die Organisationsmitgliedschaft ist periodengebunden. Ein Benutzer kann mehreren Arbeitsgruppen angehören. Pro Arbeitsgruppe müssen genau zwei aktive Gruppenleiter festgelegt sein, bevor eine Periode aktiviert werden kann. Beide Leitungen sind gleichberechtigt. Ihre App-Rechte sind auf die jeweilige Arbeitsgruppe begrenzt.
 
-Rollen bestehen aus Berechtigungen (Capability Keys). Zuweisungen besitzen einen Geltungsbereich: global, period oder group. Die Autorisierung prüft sowohl die Berechtigung als auch den Scope des angefragten Objekts. Rollenbezeichnungen allein dürfen niemals eine Autorisierungsentscheidung auslösen.
+Rollen bestehen aus Berechtigungen (Capability Keys). Zuweisungen besitzen einen Geltungsbereich: global, period oder group. Die Autorisierung prüft sowohl die Berechtigung als auch den Scope des angefragten Objekts. Rollenbezeichnungen allein dürfen niemals eine Autorisierungsentscheidung auslösen. Eine periodengebundene Berechtigung gilt für alle Arbeitsgruppen dieser aktiven Periode; eine gruppengebundene Berechtigung gilt nur für die konkrete aktive Arbeitsgruppe. Globale App-Admin-Berechtigungen gelten auch beim Planen von Entwurfsperioden.
 
 ## Zeitliche Semantik der Organisationsperioden
 
@@ -77,6 +77,7 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 - Die App verwendet serverseitige Capability-Prüfungen mit globalen, Perioden- und Gruppen-Scopes. Perioden-/Gruppenrechte sind nur wirksam, solange die zugehörige Periode aktiv ist; beim Archivieren enden damit insbesondere dynamische Gruppenleitungsrechte.
 - App-Administratoren und frei definierbare Rollen werden unterstützt. Die Systemrolle `app_admin` bleibt geschützt.
 - Rollenänderungen und Organisationsaktionen werden im Audit-Log erfasst.
+- Gruppenleitungen erhalten einen eigenen Arbeitsbereich. Er zeigt ihre aktiven Arbeitsgruppen sowie gleichnamige Gruppen in Entwurfsperioden. Die Leitungsberechtigung wird über den stabilen Gruppenslug auf den passenden Entwurf übertragen; Gruppenleitungen können dort Mitglieder und die beiden Leitungsrollen für die nächste Periode planen. Änderungen werden historisiert. Bei aktiven Gruppen übernimmt der reguläre Ressourcenabgleich die Änderungen; Entwurfsgruppen werden erst beim späteren Wechsel provisioniert.
 
 ### Organisationswechsel
 
@@ -88,7 +89,7 @@ Die Datenbankmigration legt zunächst das persistente Schema an. Die externe Res
 
 ### Noch ausstehende Schritte
 
-1. Eigener Gruppenleitungs-Arbeitsbereich mit ausschließlich gruppenbezogenen Verwaltungsaktionen.
+
 2. Vollständige Laufzeit- und Integrationstests auf der Zielinstanz mit Nextcloud Hub 26 / Server 35.
 3. Automatische Kompensation verwaister Remote-Ressourcen, falls ein externer Dienst eine Ressource erstellt, aber die lokale Datenbankregistrierung fehlschlägt.
 4. Überwachung und sichtbarer Gesamtstatus des Hintergrundjobs einschließlich des letzten erfolgreichen Laufs.
