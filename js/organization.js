@@ -174,6 +174,7 @@
                 rolloverSummary.append(element('p', 'jugend-muted', 'Keine Gruppen- oder Mitgliedschaftsänderungen gegenüber der aktiven Periode.'));
             }
             const preparation = preview.resourcePreparation || {ready: false, groups: [], missing: []};
+            document.getElementById('jugend-period-prepare-resources').disabled = !preview.valid;
             const preparationTarget = document.getElementById('jugend-period-preparation-status');
             preparationTarget.replaceChildren();
             const preparationLabels = {talk: 'Talk-Raum', groupfolder: 'Gruppenordner', calendar: 'Kalender'};
