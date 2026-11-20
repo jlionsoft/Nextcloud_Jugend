@@ -118,76 +118,41 @@ class ProvisioningService {
         }
     }
 
+    public function getProvisioningGroupFolderRoot(): string {
+        $root = trim($this->config->getValueString('jugend', 'provisioning_groupfolder_root'));
+        if ($root === '' || str_contains($root, '/') || in_array($root, ['.', '..'], true)) {
+            throw new RuntimeException('Der Groupfolder-Stammordner ist nicht korrekt konfiguriert.');
+        }
+        return $root;
+    }
+
     /**
-     * Create a Groupfolder. The service account must be a delegated Groupfolders
-     * administrator and have a confirmed password session for this OCS action.
+     * Creates nested directories inside the pre-created Groupfolder root via
+     * WebDAV MKCOL. This avoids Groupfolders admin endpoints that require an
+     * interactive password-confirmation session and cannot be called with an
+     * app password.
      */
-    public function createGroupFolder(string $mountpoint): int {
-        $mountpoint = trim($mountpoint);
-        if ($mountpoint === '' || str_contains($mountpoint, '/') || mb_strlen($mountpoint) > 64) {
-            throw new \InvalidArgumentException('Der Groupfolder-Mountpoint ist ungültig.');
+    public function ensureGroupFolderPath(string $relativePath): void {
+        $parts = array_values(array_filter(explode('/', trim($relativePath, '/')), static fn(string $part): bool => $part !== ''));
+        if ($parts === []) {
+            throw new \InvalidArgumentException('Der Groupfolder-Pfad darf nicht leer sein.');
         }
-        $response = $this->request('POST', '/ocs/v2.php/apps/groupfolders/folders', [
-            'mountpoint' => $mountpoint,
-            'acl_default_no_permission' => 'true',
-        ]);
-        $data = $this->ocsData($response);
-        $id = (int)($data['id'] ?? 0);
-        if ($id <= 0) {
-            throw new RuntimeException('Groupfolders hat keine gültige Ordner-ID zurückgegeben.');
-        }
-        return $id;
-    }
-
-    public function getProvisioningGroupId(): string {
-        return trim($this->config->getValueString('jugend', 'provisioning_group_id'));
-    }
-
-    public function getDepartmentGroupId(): string {
-        return trim($this->config->getValueString('jugend', 'department_group_id'));
-    }
-
-    /** Ensures that the service-only group is mapped to the folder with full rights. */
-    public function ensureGroupFolderServiceGroup(array $folder, string $groupId): void {
-        $folderId = (int)($folder['id'] ?? 0);
-        if ($folderId <= 0 || $groupId === '') {
-            throw new \InvalidArgumentException('Groupfolder oder Dienstgruppe ist ungültig.');
-        }
-        $groups = $folder['groups'] ?? [];
-        if (!array_key_exists($groupId, $groups)) {
-            $this->ocsData($this->request('POST', '/ocs/v2.php/apps/groupfolders/folders/' . $folderId . '/groups', [
-                'group' => $groupId,
-            ]));
-        }
-        $this->ocsData($this->request('POST', '/ocs/v2.php/apps/groupfolders/folders/' . $folderId . '/groups/' . rawurlencode($groupId), [
-            'permissions' => 31,
-        ]));
-    }
-
-    /** Grants the dedicated provisioning group full access to its managed folder. */
-    public function assignGroupFolderServiceGroup(int $folderId, string $groupId): void {
-        if ($folderId <= 0 || trim($groupId) === '') {
-            throw new \InvalidArgumentException('Groupfolder-ID und Dienstgruppe müssen gesetzt sein.');
-        }
-        $this->ocsData($this->request('POST', '/ocs/v2.php/apps/groupfolders/folders/' . $folderId . '/groups', [
-            'group' => $groupId,
-        ]));
-        $this->ocsData($this->request('POST', '/ocs/v2.php/apps/groupfolders/folders/' . $folderId . '/groups/' . rawurlencode($groupId), [
-            'permissions' => 31,
-        ]));
-    }
-
-    /** Returns Groupfolders matching an exact mountpoint. */
-    public function findGroupFolder(string $mountpoint): ?array {
-        $path = '/ocs/v2.php/apps/groupfolders/folders?format=json&mountpoint=' . rawurlencode($mountpoint);
-        $response = $this->request('GET', $path);
-        $data = $this->ocsData($response);
-        foreach ($data as $folder) {
-            if (($folder['mount_point'] ?? '') === $mountpoint) {
-                return $folder;
+        $path = '';
+        foreach ($parts as $part) {
+            if ($part === '.' || $part === '..' || !preg_match('/^[\pL\pN _.-]{1,64}$/u', $part)) {
+                throw new \InvalidArgumentException('Der Groupfolder-Pfad enthält einen ungültigen Abschnitt.');
+            }
+            $path .= '/' . rawurlencode($part);
+            $davPath = '/remote.php/dav/files/' . rawurlencode($this->getServiceAccountUid()) . $path;
+            $response = $this->requestRaw('MKCOL', $davPath, '', [], [201, 405]);
+            if ($response->getStatusCode() === 405) {
+                $probe = '<?xml version="1.0"?><d:propfind xmlns:d="DAV:"><d:prop><d:resourcetype/></d:prop></d:propfind>';
+                $this->requestRaw('PROPFIND', $davPath, $probe, [
+                    'Depth' => '0',
+                    'Content-Type' => 'application/xml; charset=utf-8',
+                ], [207]);
             }
         }
-        return null;
     }
 
     /** Returns direct file shares for a path created by this service account. */
