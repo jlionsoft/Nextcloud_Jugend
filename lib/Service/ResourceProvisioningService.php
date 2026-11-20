@@ -252,7 +252,22 @@ class ResourceProvisioningService {
         $errors = [];
         foreach ($expected as $key => $share) {
             if (isset($existingByKey[$key])) {
+                $shareId = $existingByKey[$key];
                 unset($existingByKey[$key]);
+                $current = null;
+                foreach ($existing as $candidate) {
+                    if ((int)($candidate['id'] ?? 0) === $shareId) {
+                        $current = (int)($candidate['permissions'] ?? 0);
+                        break;
+                    }
+                }
+                if ($current !== (int)$share['permissions'] && $shareId > 0) {
+                    try {
+                        $this->client->updateFileSharePermissions($shareId, (int)$share['permissions']);
+                    } catch (\Throwable $e) {
+                        $errors[] = ['share' => $key, 'action' => 'update', 'message' => $e->getMessage()];
+                    }
+                }
                 continue;
             }
             try {
@@ -418,12 +433,14 @@ class ResourceProvisioningService {
         $added = [];
         $removed = [];
         $errors = [];
-        if ($toAdd !== []) {
+        if ($expected !== []) {
             try {
-                $this->client->shareCalendar($calendarUri, $toAdd, $readOnly);
+                // Re-send existing shares as well: Nextcloud replaces their
+                // permission level, which is important when a calendar becomes archived.
+                $this->client->shareCalendar($calendarUri, $expected, $readOnly);
                 $added = $toAdd;
             } catch (\Throwable $e) {
-                $errors[] = ['action' => 'add', 'principals' => $toAdd, 'message' => $e->getMessage()];
+                $errors[] = ['action' => 'add_or_update', 'principals' => $expected, 'message' => $e->getMessage()];
             }
         }
         if ($toRemove !== []) {
