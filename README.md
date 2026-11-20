@@ -58,7 +58,7 @@ The app must be installed and tested on a staging instance first. The CI workflo
 
 ## Organisationsverwaltung und Ressourcen
 
-Die Organisationsverwaltung ist unter `/apps/jugend/organization` verfügbar und App-Administratoren vorbehalten. Die App verwendet Organisationsperioden, Arbeitsgruppen, historische Mitgliedschaftsintervalle und genau zwei Gruppenleitungen je Arbeitsgruppe.
+Die Organisationsverwaltung ist unter `/apps/jugend/organization` verfügbar und App-Administratoren vorbehalten. Die App verwendet Organisationsperioden, Arbeitsgruppen, historische Mitgliedschaftsintervalle und genau zwei Gruppenleitungen je Arbeitsgruppe. Gruppenleitungen nutzen `/apps/jugend/groups` für ihre aktiven Arbeitsgruppen und passende Entwürfe.
 
 ### Implementierter Funktionsumfang
 
@@ -85,7 +85,7 @@ Die Aktivierung wird serverseitig blockiert, solange nicht für jede Arbeitsgrup
 
 ### Noch offene Arbeiten und Grenzen
 
-- Ein eigener Arbeitsbereich für Gruppenleitungen fehlt noch. Die vorhandenen gruppenbezogenen Berechtigungen müssen mit einem passenden UI- und Bearbeitungsworkflow verbunden werden.
+- Gruppenleitungen sehen ihre aktiven Arbeitsgruppen und gleichnamige Gruppen in Entwurfsperioden. Über den stabilen Gruppenslug können sie Mitglieder und die zwei Leitungsrollen für den nächsten Organisationswechsel planen.
 - Vollständige Laufzeit- und Integrationstests gegen die konkrete Nextcloud-35-/Talk-/Groupfolders-/Calendar-/Authentik-Installation stehen aus.
 - Eine automatische Kompensation verwaister Remote-Ressourcen nach teilweise fehlgeschlagenen API-/Datenbankoperationen fehlt.
 - Eine sichtbare Gesamtüberwachung des Hintergrundjobs einschließlich des letzten erfolgreichen Laufs fehlt.
