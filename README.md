@@ -56,36 +56,41 @@ The Nextcloud server must be able to reach both Authentik and the MikroTik gatew
 
 The app must be installed and tested on a staging instance first. The CI workflow checks syntax and metadata only; it does not replace a live Nextcloud app installation test.
 
-## Organisation management (foundation in progress)
+## Organisationsverwaltung und Ressourcen
 
-The database schema, architecture decisions and current implementation status for period-based work groups are documented in [`docs/ORGANIZATION.md`](docs/ORGANIZATION.md). Period/group planning, scoped authorization and custom role management are implemented as a foundation; period activation, resource provisioning and archival synchronization remain future work.
+Die Organisationsverwaltung ist unter `/apps/jugend/organization` verfügbar und App-Administratoren vorbehalten. Die App verwendet Organisationsperioden, Arbeitsgruppen, historische Mitgliedschaftsintervalle und genau zwei Gruppenleitungen je Arbeitsgruppe.
 
-- Authentik's existing app-access group remains the outer access gate. Removing a person from that group revokes access to the app and department archives; historical records are retained.
-- The app will own annual organisation periods, work groups, memberships, two equal group leaders per group, app roles and scoped permissions.
-- Each period will receive separate Talk, Files and Calendar resources. Archived Files and Calendar content is read-only for current department members; each period has a separate Talk conversation.
+### Implementierter Funktionsumfang
 
-## Deliberately out of scope
+- Organisationsperioden mit frei wählbaren, optionalen Start- und Enddaten; der Wechsel wird immer manuell bestätigt.
+- Entwürfe können unabhängig von der aktiven Periode vorbereitet und aus einer bestehenden Periode kopiert werden.
+- Gruppen, Mitglieder und zwei gleichberechtigte Gruppenleitungen werden verwaltet.
+- Aktivierungsvorschau mit Gruppen-, Mitgliedschafts- und Leitungsänderungen sowie serverseitiger Validierung.
+- RBAC mit App-Administratoren, benutzerdefinierten Rollen, Berechtigungen und globalen, Perioden- und Gruppen-Scopes.
+- Audit-Log für zentrale Organisations-, Rollen- und Provisionierungsaktionen.
+- Authentik-Arbeitsgruppengruppen, Nextcloud-Gruppenfreigaben, Talk-Räume, Groupfolder-Unterordner und CalDAV-Kalender.
+- Wiederholbare Provisionierungsjobs mit persistiertem Status, Fehlertext, Versuchsanzahl und Lease-Fencing.
+- Archivierte Dateiordner und Kalender werden lesend für die aktuelle Abteilungsgruppe freigegeben; historische Talk-Räume werden mit aktuellen Abteilungsmitgliedern abgeglichen.
 
-- Matrix room encryption is not implemented. The app sends standard unencrypted Matrix room messages; do not use encrypted rooms for the bot.
-- Separate Blazor/Authentik login.
-- Native mobile client. The API is versioned at `/api/v1` to leave room for one later.
+### Vorbereiteter Organisationswechsel
 
+Eine geplante Periode kann vor dem Wechsel bereits ihre drei Ressourcen je Arbeitsgruppe anlegen:
 
-## Organisation planning (implementation in progress)
+- Talk-Raum wird erstellt, aber noch nicht mit Gruppenmitgliedern geteilt.
+- Groupfolder-Unterordner wird erstellt, aber noch nicht freigegeben.
+- Kalender wird erstellt, aber noch nicht geteilt.
+- Authentik-Arbeitsgruppen werden vor der Aktivierung noch nicht angelegt oder befüllt.
 
-The organisation page is available at `/apps/jugend/organization` to Nextcloud administrators in this first iteration. It currently supports creating draft periods, adding work groups, selecting users from the configured Authentik access group, and assigning exactly two group leaders per group. Membership intervals are retained in the database history.
+Die Aktivierung wird serverseitig blockiert, solange nicht für jede Arbeitsgruppe alle drei Ressourcen erfolgreich vorbereitet und lokal registriert sind. Nach der Aktivierung synchronisiert der reguläre Abgleich die Authentik-Mitgliedschaften, Talk-Teilnehmer und Datei-/Kalenderfreigaben.
 
-The management page is available to app administrators. Global Nextcloud administrators remain bootstrap principals and can grant/revoke app-admin access. The role editor supports custom roles and global, period and group assignments. Group leaders currently have a server-side scoped membership capability, but a dedicated group-leader workspace is not yet available. Period activation, Nextcloud group provisioning, Talk room creation, Files group folders, Calendar provisioning and archival resource permissions are not implemented yet. Do not use this iteration to roll out a live annual organization change.
+### Noch offene Arbeiten und Grenzen
 
+- Ein eigener Arbeitsbereich für Gruppenleitungen fehlt noch. Die vorhandenen gruppenbezogenen Berechtigungen müssen mit einem passenden UI- und Bearbeitungsworkflow verbunden werden.
+- Vollständige Laufzeit- und Integrationstests gegen die konkrete Nextcloud-35-/Talk-/Groupfolders-/Calendar-/Authentik-Installation stehen aus.
+- Eine automatische Kompensation verwaister Remote-Ressourcen nach teilweise fehlgeschlagenen API-/Datenbankoperationen fehlt.
+- Eine sichtbare Gesamtüberwachung des Hintergrundjobs einschließlich des letzten erfolgreichen Laufs fehlt.
+- Die Vorbereitung kann Talk-Räume nicht atomar mit der lokalen Datenbankregistrierung erstellen. Bei einem Fehler genau zwischen Remote-Erstellung und lokaler Speicherung kann ein verwaister Raum entstehen.
 
-## App-Rollen und Berechtigungen (erste RBAC-Stufe)
+Die CI prüft Syntax und Metadaten, ersetzt aber keine Integrationstests auf der Zielinstanz. Bis diese Tests erfolgreich durchgeführt wurden, ist die Ressourcenorchestrierung nicht als produktiv verifiziert zu betrachten.
 
-- Organisationsverwaltung wird serverseitig über die Berechtigung `organization.manage` geschützt. Diese erhalten globale Nextcloud-Administratoren als Bootstrap-Principals sowie explizit zugewiesene App-Administratoren.
-- App-Administratoren werden in `jugend_user_roles` mit globalem Scope gespeichert. Die Zuweisung und Entziehung ist in dieser Stufe ausschließlich globalen Nextcloud-Administratoren über die API `/api/v1/organization/app-admins` gestattet (POST mit `userId`, DELETE mit `userId`).
-- Aktive Gruppenleiter erhalten dynamisch `group.members.manage` für ihre eigene Arbeitsgruppe. Das wird bei jedem Request anhand einer aktiven Mitgliedschaft mit `is_leader=1` geprüft; eine Rollenbezeichnung oder ein clientseitiger Zustand genügt nicht.
-- Die Systemrolle `app_admin` und ihre Capability-Zuordnungen werden idempotent durch den AuthorizationService angelegt.
-- Die Organisationsseite bleibt App-Administratoren vorbehalten. Gruppenleiter können über die API nur die Mitgliedschaften ihrer eigenen Gruppe ändern, sofern die Periode noch ein Entwurf ist.
-- Die Rollenoberfläche unterstützt benutzerdefinierte Rollen, Berechtigungssets und Zuweisungen mit globalem, Perioden- oder Gruppen-Scope. Die Systemrolle `app_admin` bleibt geschützt; `roles.manage` kann nur durch globale Nextcloud-Administratoren delegiert werden. Globale Nextcloud-Administratoren bleiben Bootstrap- und Notfalladministratoren.
-
-- Zuweisung und Entzug von App-Administratorrechten werden zusätzlich im bestehenden Audit-Log protokolliert.
-- Die Organisationsseite enthält eine Delegationsoberfläche für globale Nextcloud-Administratoren; App-Administratoren ohne globale Rechte sehen diese Sektion nicht.
+Die bestehende Authentik-Zugriffsgruppe bleibt die äußere Zugangskontrolle. Das Entfernen einer Person aus dieser Gruppe entzieht den App-Zugang; historische Mitgliedschafts- und Organisationsdatensätze bleiben erhalten.
