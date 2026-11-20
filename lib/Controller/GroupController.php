@@ -25,7 +25,7 @@ class GroupController extends Controller {
     }
 
     private function hasManagedGroups(string $uid): bool {
-        foreach ($this->organization->listActiveGroups() as $group) {
+        foreach ($this->organization->listManageableGroups() as $group) {
             if ($this->authorization->can($uid, 'group.members.manage', 'group', (int)$group['id'])) {
                 return true;
             }
@@ -77,10 +77,12 @@ class GroupController extends Controller {
         }
 
         try {
-            return new JSONResponse([
-                'group' => $this->organization->setMembers($groupId, $members, $leaders, $uid),
-                'message' => 'Die Mitgliedschaften wurden gespeichert. Externe Gruppen- und Ressourcenrechte werden innerhalb des nächsten Synchronisationslaufs aktualisiert.',
-            ]);
+            $group = $this->organization->setMembers($groupId, $members, $leaders, $uid);
+            $period = $this->organization->getPeriod((int)$group['period_id']);
+            $message = $period['status'] === 'draft'
+                ? 'Die Planung wurde gespeichert. Ressourcen werden erst im Rahmen der Vorab-Bereitstellung und nach der Aktivierung freigegeben.'
+                : 'Die Mitgliedschaften wurden gespeichert. Externe Gruppen- und Ressourcenrechte werden innerhalb des nächsten Synchronisationslaufs aktualisiert.';
+            return new JSONResponse(['group' => $group, 'message' => $message]);
         } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'invalid_input', 'message' => $e->getMessage()], 400);
         } catch (\Throwable $e) {
