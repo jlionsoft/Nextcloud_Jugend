@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace OCA\Jugend\Controller;
 
+use OCA\Jugend\AppInfo\Application;
 use OCA\Jugend\Service\OrganizationService;
 use OCA\Jugend\Service\ResourceProvisioningService;
 use OCA\Jugend\Service\AuthorizationService;
@@ -10,6 +11,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
+use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\IUserManager;
@@ -24,6 +26,7 @@ class OrganizationController extends Controller {
         private IGroupManager $groups,
         private IUserManager $users,
         private IUserSession $session,
+        private IAppConfig $appConfig,
     ) {
         parent::__construct($appName, $request);
     }
@@ -34,6 +37,20 @@ class OrganizationController extends Controller {
             return new JSONResponse(['error' => 'forbidden', 'message' => 'Keine Berechtigung für die Organisationsverwaltung.'], 403);
         }
         return null;
+    }
+
+    #[NoAdminRequired]
+    public function resourceSyncStatus(): JSONResponse {
+        if ($denied = $this->requirePermission('organization.manage')) { return $denied; }
+        $appId = Application::APP_ID;
+        $status = $this->appConfig->getValueString($appId, 'resource_sync_status');
+        return new JSONResponse([
+            'status' => $status !== '' ? $status : 'never',
+            'startedAt' => (int)$this->appConfig->getValueString($appId, 'resource_sync_started_at'),
+            'finishedAt' => (int)$this->appConfig->getValueString($appId, 'resource_sync_finished_at'),
+            'lastSuccessAt' => (int)$this->appConfig->getValueString($appId, 'resource_sync_last_success_at'),
+            'lastError' => $this->appConfig->getValueString($appId, 'resource_sync_last_error'),
+        ]);
     }
 
     #[NoAdminRequired]
