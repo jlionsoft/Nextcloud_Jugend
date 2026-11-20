@@ -73,7 +73,7 @@ class GroupController extends Controller {
             return new JSONResponse(['error' => 'unauthenticated'], 401);
         }
         if (!$this->authorization->can($uid, 'group.members.manage', 'group', $groupId)) {
-            return new JSONResponse(['error' => 'forbidden', 'message' => 'Du darfst nur die Mitgliedschaften deiner eigenen Arbeitsgruppen verwalten.'], 403);
+            return new JSONResponse(['error' => 'forbidden', 'message' => 'Du darfst nur die Mitgliedschaften von Arbeitsgruppen verwalten, für die du berechtigt bist.'], 403);
         }
 
         try {
