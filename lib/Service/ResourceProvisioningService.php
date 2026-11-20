@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace OCA\Jugend\Service;
 
-use OCP\DB\IDBConnection;
+use OCP\IDBConnection;
 
 class ResourceProvisioningService {
     private const JOB_STALE_AFTER = 900;
