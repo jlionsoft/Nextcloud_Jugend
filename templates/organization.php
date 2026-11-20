@@ -99,7 +99,6 @@ declare(strict_types=1);
                             </select>
                             <small class="jugend-muted"><?php p($l->t('Optional: Gruppen, Mitglieder und Gruppenleitungen aus einer bestehenden Periode übernehmen.')); ?></small>
                         </div>
-                    </div>
                     <button type="submit" class="primary"><?php p($l->t('Entwurf erstellen')); ?></button>
                 </form>
             </section>
@@ -125,6 +124,7 @@ declare(strict_types=1);
                             <label for="jugend-group-description"><?php p($l->t('Beschreibung')); ?></label>
                             <input id="jugend-group-description" name="description" maxlength="500">
                         </div>
+                    </div>
                     </div>
                     <button type="submit" class="primary"><?php p($l->t('Gruppe anlegen')); ?></button>
                 </form>

@@ -5,14 +5,18 @@
   <name>Jugend</name>
   <summary>Organisationsverwaltung und Kommunikation für die Jugendabteilung</summary>
   <description>Verwaltet Organisationsperioden, Arbeitsgruppen und Kommunikation der Jugendabteilung.</description>
-  <version>0.12.0</version>
-  <licence>agpl</licence>
+  <version>0.12.1</version>
+  <licence>AGPL-3.0-or-later</licence>
   <author>jlionsoft</author>
   <namespace>Jugend</namespace>
   <category>organization</category>
   <website>https://github.com/jlionsoft/Nextcloud_Jugend</website>
   <bugs>https://github.com/jlionsoft/Nextcloud_Jugend/issues</bugs>
   <repository type="git">https://github.com/jlionsoft/Nextcloud_Jugend.git</repository>
+  <documentation>
+    <admin>https://github.com/jlionsoft/Nextcloud_Jugend#readme</admin>
+    <developer>https://github.com/nextcloud/documentation/tree/master/developer_manual</developer>
+  </documentation>
   <dependencies>
     <nextcloud min-version="35" max-version="35" />
   </dependencies>

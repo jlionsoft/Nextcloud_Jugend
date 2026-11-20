@@ -11,6 +11,7 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
@@ -25,6 +26,7 @@ class OrganizationPageController extends Controller {
         private IUserSession $userSession,
         private IInitialState $initialState,
         private IURLGenerator $urlGenerator,
+        private IL10N $l,
     ) {
         parent::__construct($appName, $request);
     }

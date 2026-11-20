@@ -11,12 +11,6 @@
  *  - Type scale: 15px body (--default-font-size), 13px secondary, 20px headings, 24px titles.
  */
 
-/* Nextcloud's #content is a fixed-height, non-scrolling container; #app-content is the scroll area. */
-#app-content.jugend-app-content {
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
 /* ---------------------------------------------------------------------------
  * Tokens (derived from the Nextcloud variables)
  * ------------------------------------------------------------------------- */
@@ -524,3 +518,19 @@
 #jugend-rollover-summary { margin:var(--jugend-space-3) 0; }
 #jugend-rollover-summary strong { display:block; margin-top:var(--jugend-space-2); }
 #jugend-rollover-summary p { margin:var(--jugend-space-1) 0; overflow-wrap:anywhere; }
+
+
+/* Native Nextcloud-style navigation and grouped settings */
+.jugend-settings-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--jugend-space-2);
+    margin: 0 0 var(--jugend-space-6);
+    padding: var(--jugend-space-3) 0;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.jugend-settings-nav a {
+    text-decoration: none;
+}

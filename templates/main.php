@@ -21,7 +21,6 @@ declare(strict_types=1);
         </div>
     </header>
 
-
     <main class="jugend-main-layout">
         <section class="jugend-panel jugend-composer" aria-labelledby="jugend-composer-title">
             <div class="jugend-panel__heading">
