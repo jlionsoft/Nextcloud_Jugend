@@ -18,6 +18,27 @@ declare(strict_types=1);
         <?php } ?>
     </header>
 
+    <nav class="jugend-workspace-nav" aria-label="<?php p($l->t('App-Bereiche')); ?>">
+        <?php if (!empty($_['organizationUrl'])) { ?>
+            <a class="jugend-workspace-link" href="<?php p($_['organizationUrl']); ?>">
+                <span class="jugend-workspace-link__title"><?php p($l->t('Organisation')); ?></span>
+                <span class="jugend-workspace-link__description"><?php p($l->t('Perioden, Arbeitsgruppen und Berechtigungen verwalten')); ?></span>
+            </a>
+        <?php } ?>
+        <?php if (!empty($_['groupsUrl'])) { ?>
+            <a class="jugend-workspace-link" href="<?php p($_['groupsUrl']); ?>">
+                <span class="jugend-workspace-link__title"><?php p($l->t('Meine Arbeitsgruppen')); ?></span>
+                <span class="jugend-workspace-link__description"><?php p($l->t('Mitglieder und Gruppenleitungen organisieren')); ?></span>
+            </a>
+        <?php } ?>
+        <?php if (!empty($_['settingsUrl'])) { ?>
+            <a class="jugend-workspace-link" href="<?php p($_['settingsUrl']); ?>">
+                <span class="jugend-workspace-link__title"><?php p($l->t('Einstellungen')); ?></span>
+                <span class="jugend-workspace-link__description"><?php p($l->t('Verbindungen und Zugangsdaten konfigurieren')); ?></span>
+            </a>
+        <?php } ?>
+    </nav>
+
     <main class="jugend-main-layout">
         <section class="jugend-panel jugend-composer" aria-labelledby="jugend-composer-title">
             <div class="jugend-panel__heading">
