@@ -41,6 +41,7 @@ class SettingsController extends Controller {
         string $matrix_bot_token = '',
         string $provisioning_url = '', string $provisioning_user = '', string $provisioning_app_password = '',
         string $provisioning_group_id = '', string $provisioning_groupfolder_root = 'Jugend', string $department_group_id = '',
+        string $accounting_treasurers = '',
         bool $clear_provisioning_app_password = false,
         bool $clear_authentik_token = false,
         bool $clear_talk_bot_secret = false,
@@ -78,6 +79,7 @@ class SettingsController extends Controller {
             'provisioning_group_id' => trim($provisioning_group_id),
             'provisioning_groupfolder_root' => trim($provisioning_groupfolder_root) ?: 'Jugend',
             'department_group_id' => trim($department_group_id),
+            'accounting_treasurers' => trim($accounting_treasurers),
         ];
         foreach ($plain as $key => $value) {
             $this->appConfig->setValueString($this->appName, $key, $value);

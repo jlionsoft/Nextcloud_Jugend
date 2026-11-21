@@ -65,6 +65,10 @@ class GroupPageController extends Controller {
                 'organization' => $this->authorization->isAppAdmin($uid)
                     ? $this->urlGenerator->linkToRoute('jugend.organizationPage.index')
                     : null,
+                'accountingManage' => $this->authorization->canManageAccounting($uid)
+                    ? $this->urlGenerator->linkToRoute('jugend.accountingPage.manage')
+                    : null,
+                'accountingPersonal' => $this->urlGenerator->linkToRoute('jugend.accountingPage.personal'),
                 'settings' => $this->groupManager->isAdmin($uid)
                     ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => 'jugend'])
                     : null,

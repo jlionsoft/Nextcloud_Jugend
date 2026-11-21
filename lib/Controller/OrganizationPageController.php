@@ -83,6 +83,10 @@ class OrganizationPageController extends Controller {
             'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
             'organization' => $this->urlGenerator->linkToRoute('jugend.organizationPage.index'),
             'groups' => $groupsUrl,
+            'accountingManage' => $this->authorization->canManageAccounting($uid)
+                ? $this->urlGenerator->linkToRoute('jugend.accountingPage.manage')
+                : null,
+            'accountingPersonal' => $this->urlGenerator->linkToRoute('jugend.accountingPage.personal'),
             'settings' => $this->groupManager->isAdmin($uid)
                 ? $this->urlGenerator->linkToRoute('settings.AdminSettings.index', ['section' => 'jugend'])
                 : null,

@@ -13,5 +13,9 @@ if (!empty($_['navigation']['groups'])) {
 if (!empty($_['navigation']['settings'])) {
     $navigation[] = ['label' => $l->t('Einstellungen'), 'url' => $_['navigation']['settings'], 'icon' => 'icon-settings', 'active' => false];
 }
+if (!empty($_['navigation']['accountingManage'])) {
+    $navigation[] = ['label' => $l->t('Buchhaltung verwalten'), 'url' => $_['navigation']['accountingManage'], 'icon' => 'icon-category-workflow', 'active' => false];
+}
+$navigation[] = ['label' => $l->t('Mein Kontostand'), 'url' => $_['navigation']['accountingPersonal'], 'icon' => 'icon-paypal', 'active' => false];
 ?>
 <div id="jugend-vue-root" data-navigation="<?php p(json_encode($navigation, JSON_UNESCAPED_SLASHES)); ?>"></div>

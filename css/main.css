@@ -423,3 +423,47 @@
 
 
 /* Native Nextcloud-style navigation and grouped settings */
+
+/* Accounting */
+.jugend-accounting {
+    display: grid;
+    gap: var(--jugend-space-5);
+}
+.jugend-accounting-form form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--jugend-space-4);
+}
+.jugend-accounting-form .jugend-form-actions {
+    grid-column: 1 / -1;
+}
+.jugend-accounting-balances {
+    display: grid;
+    gap: var(--jugend-space-2);
+}
+.jugend-accounting-balance-row,
+.jugend-accounting-entry {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--jugend-space-3);
+    padding: var(--jugend-space-3);
+    border-bottom: 1px solid var(--color-border);
+}
+.jugend-accounting-balance {
+    font-size: var(--jugend-font-title);
+    text-align: center;
+    padding: var(--jugend-space-5);
+}
+.jugend-accounting-entries-heading {
+    margin-top: var(--jugend-space-5);
+}
+.jugend-accounting-entry {
+    grid-template-columns: 120px minmax(120px, 0.6fr) minmax(0, 1fr) auto;
+}
+@media (max-width: 650px) {
+    .jugend-accounting-form form,
+    .jugend-accounting-entry {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
