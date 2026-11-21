@@ -43,7 +43,7 @@
 					<form @submit.prevent="addEvent">
 						<NcTextField v-model="eventName" :label="tr('Ereignisname')" :placeholder="tr('z. B. Sommerlager')" />
 						<NcTextField v-model="eventAmount" type="number" step="0.01" label-outside :label="tr('Betrag je Person in Euro')" :placeholder="'25.00'" />
-						<NcTextField v-model="eventDate" type="text" :label="tr('Ereignisdatum')" placeholder="YYYY-MM-DD" />
+						<NcTextField v-model="eventDate" type="date" :label="tr('Ereignisdatum')" />
 						<NcTextField v-model="eventSearch" :label="tr('Teilnehmer suchen')" :placeholder="tr('Name oder Benutzer-ID')" />
 						<div class="jugend-accounting-event-users">
 							<NcCheckboxRadioSwitch v-for="user in filteredEventUsers" :key="user.uid" v-model="selectedEventUsers" type="checkbox" :value="user.uid">
