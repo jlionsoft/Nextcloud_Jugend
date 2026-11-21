@@ -84,6 +84,7 @@ secretNames.forEach((name) => { form[name] = ''; removing[name] = false })
 const sections = [
 	{ id: 'jugend-settings-accounting', title: 'Buchhaltung', hint: tr('Diese Nextcloud-Benutzer dürfen Bargeld-Buchungen verwalten. Mehrere Benutzer-IDs durch Kommas trennen.'), fields: [
 		{ name: 'accounting_treasurers', label: tr('Buchhalter (Benutzer-IDs)'), wide: true, placeholder: 'buchhalter1, buchhalter2' },
+		{ name: 'accounting_monthly_fee_cents', label: tr('Monatlicher Beitrag in Cent'), type: 'number', wide: false, placeholder: '1500' },
 	] },
 	{ id: 'jugend-settings-authentik', title: 'Authentik – Zugriff und Empfänger', hint: tr('Diese Gruppe bestimmt die zugelassenen Benutzer der Jugend-App und die Empfänger der Nachrichten.'), channel: 'authentik', testLabel: tr('Authentik-Verbindung testen'), fields: [
 		{ name: 'authentik_url', label: tr('Authentik-URL'), type: 'url', placeholder: 'https://auth.example.org' },

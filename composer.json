@@ -5,5 +5,8 @@
     "scripts": {
         "lint": "find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l",
         "test": "phpunit"
+    },
+    "require": {
+        "dompdf/dompdf": "^3.1"
     }
 }
