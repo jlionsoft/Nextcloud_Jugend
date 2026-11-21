@@ -4,7 +4,6 @@ declare(strict_types=1);
     ?>
     <?php
     $navigation = [
-        ['label' => $l->t('Nachrichten'), 'url' => $_['navigation']['home'], 'icon' => 'icon-comment', 'active' => false],
     ];
     if (!empty($_['navigation']['organization'])) {
         $navigation[] = ['label' => $l->t('Organisation'), 'url' => $_['navigation']['organization'], 'icon' => 'icon-category-monitoring', 'active' => false];

@@ -70,7 +70,6 @@ class OrganizationPageController extends Controller {
             'revokeRole' => $this->urlGenerator->linkToRoute('jugend.organization.revokeRole'),
             'manageRoles' => $this->authorization->can($uid, 'roles.manage'),
             'manageAppAdmins' => $this->groupManager->isAdmin($uid),
-            'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
         ]);
         $groupsUrl = null;
         foreach ($this->organization->listManageableGroups() as $group) {
@@ -80,7 +79,6 @@ class OrganizationPageController extends Controller {
             }
         }
         $navigation = [
-            'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
             'organization' => $this->urlGenerator->linkToRoute('jugend.organizationPage.index'),
             'groups' => $groupsUrl,
             'settings' => $this->groupManager->isAdmin($uid)

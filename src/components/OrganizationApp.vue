@@ -11,7 +11,6 @@
 			<div class="jugend-page jugend-organization">
 				<header class="jugend-page__header">
 					<div><h1>{{ tr('Organisationsverwaltung') }}</h1><p>{{ tr('Plane Organisationsperioden und stelle Arbeitsgruppen für den nächsten Zeitraum zusammen.') }}</p></div>
-					<NcButton @click="navigate(urls.home)">{{ tr('Zur Nachrichtenübersicht') }}</NcButton>
 				</header>
 				<NcNoteCard v-if="feedback" :type="feedbackType">{{ feedback }}</NcNoteCard>
 				<main class="jugend-organization-layout">
