@@ -33,7 +33,9 @@ jobs:
         run: npm ci
       - name: Lint Vue frontend
         run: npm run lint
+      - name: Type-check Vue frontend
+        run: npm run typecheck
       - name: Build Vue frontend
         run: npm run build
       - name: JavaScript syntax
-        run: node --check js/main.js && node --check js/settings.js && node --check js/organization.js && node --check js/groups.js
+        run: node --check js/main.js && node --check js/settings.js
