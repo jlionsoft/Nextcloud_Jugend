@@ -21,7 +21,7 @@ class SmsServiceTest extends TestCase {
         $this->assertSame(['Hallo Welt'], $this->service->split('Hallo Welt'));
     }
 
-    public function testMessageIsSplitAtGsmSevenLimit(): void {
+    public function testMessageIsSplitAtConfiguredPayloadLimit(): void {
         $parts = $this->service->split(str_repeat('A', 151));
 
         $this->assertCount(2, $parts);
