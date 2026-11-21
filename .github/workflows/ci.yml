@@ -16,6 +16,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: PHP syntax
         run: composer lint
+      - name: Set up PHP and PHPUnit
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.3'
+          tools: 'phpunit:10.5'
+          coverage: none
+      - name: Run PHP unit tests
+        run: composer test
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
