@@ -467,3 +467,31 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+.jugend-accounting-member-list,
+.jugend-accounting-event-users {
+    max-height: 420px;
+    overflow: auto;
+    display: grid;
+    gap: var(--jugend-space-1);
+    margin-top: var(--jugend-space-3);
+}
+.jugend-accounting-member-row {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) 180px auto;
+    align-items: center;
+    gap: var(--jugend-space-3);
+    padding: var(--jugend-space-2) 0;
+    border-bottom: 1px solid var(--color-border);
+}
+.jugend-accounting-member-row small {
+    color: var(--color-text-maxcontrast);
+}
+.jugend-accounting-member-row input[type="month"] {
+    min-height: 36px;
+}
+@media (max-width: 650px) {
+    .jugend-accounting-member-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

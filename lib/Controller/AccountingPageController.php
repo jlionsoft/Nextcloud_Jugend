@@ -58,6 +58,9 @@ class AccountingPageController extends Controller {
             'overview' => $this->urlGenerator->linkToRoute('jugend.accounting.overview'),
             'addEntry' => $this->urlGenerator->linkToRoute('jugend.accounting.addEntry'),
             'personal' => $this->urlGenerator->linkToRoute('jugend.accounting.personal'),
+            'setStart' => $this->urlGenerator->linkToRoute('jugend.accounting.setStart'),
+            'addEvent' => $this->urlGenerator->linkToRoute('jugend.accounting.addEvent'),
+            'report' => $this->urlGenerator->linkToRoute('jugend.accounting.report'),
         ]);
         $manageUrl = $this->authorization->canManageAccounting($uid)
             ? $this->urlGenerator->linkToRoute('jugend.accountingPage.manage')
