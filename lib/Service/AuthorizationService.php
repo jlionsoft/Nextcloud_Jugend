@@ -5,6 +5,7 @@ namespace OCA\Jugend\Service;
 
 use OCP\IDBConnection;
 use OCP\IGroupManager;
+use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
 class AuthorizationService {
@@ -21,6 +22,7 @@ class AuthorizationService {
         private IGroupManager $groups,
         private AuthentikService $authentik,
         private LoggerInterface $logger,
+        private IAppConfig $appConfig,
     ) {}
 
     /**
@@ -209,6 +211,23 @@ class AuthorizationService {
 
     public function isAppAdmin(string $uid): bool {
         return $this->can($uid, 'organization.manage');
+    }
+
+    public function isTreasurer(string $uid): bool {
+        if ($uid === '') {
+            return false;
+        }
+        $configured = $this->appConfig->getValueString('jugend', 'accounting_treasurers');
+        foreach (preg_split('/[,;\s]+/', $configured) ?: [] as $treasurer) {
+            if (trim($treasurer) === $uid) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function canManageAccounting(string $uid): bool {
+        return $this->groups->isAdmin($uid) || $this->isAppAdmin($uid) || $this->isTreasurer($uid);
     }
 
     public function grantAppAdmin(string $uid, string $actor): void {

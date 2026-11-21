@@ -22,6 +22,7 @@ class Admin implements ISettings {
         'sms_gateway_url', 'sms_username', 'sms_interface',
         'matrix_homeserver', 'matrix_server_name', 'matrix_bot_user_id',
         'provisioning_url', 'provisioning_user', 'provisioning_group_id', 'provisioning_groupfolder_root', 'department_group_id',
+        'accounting_treasurers',
     ];
 
     public function __construct(

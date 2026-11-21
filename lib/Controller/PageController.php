@@ -108,6 +108,20 @@ class PageController extends Controller {
                 'active' => false,
             ];
         }
+        if ($this->authorization->canManageAccounting($userId)) {
+            $navigation[] = [
+                'label' => $this->l->t('Buchhaltung verwalten'),
+                'url' => $this->urlGenerator->linkToRoute('jugend.accountingPage.manage'),
+                'icon' => 'icon-category-workflow',
+                'active' => false,
+            ];
+        }
+        $navigation[] = [
+            'label' => $this->l->t('Mein Kontostand'),
+            'url' => $this->urlGenerator->linkToRoute('jugend.accountingPage.personal'),
+            'icon' => 'icon-paypal',
+            'active' => false,
+        ];
 
         return new TemplateResponse($this->appName, 'main', [
             'homeUrl' => $this->urlGenerator->linkToRoute('jugend.page.index'),

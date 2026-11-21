@@ -6,6 +6,7 @@ webpackConfig.entry = {
 	groups: path.resolve(__dirname, 'src/groups.js'),
 	organization: path.resolve(__dirname, 'src/organization.js'),
 	settings: path.resolve(__dirname, 'src/settings.js'),
+	accounting: path.resolve(__dirname, 'src/accounting.js'),
 }
 webpackConfig.output.filename = '[name].js'
 webpackConfig.output.chunkFilename = 'chunks/[name]-[contenthash].js'
