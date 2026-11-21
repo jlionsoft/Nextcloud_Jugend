@@ -11,7 +11,6 @@
 			<div class="jugend-page jugend-organization">
 				<header class="jugend-page__header">
 					<div><h1>{{ tr('Meine Arbeitsgruppen') }}</h1><p>{{ tr('Verwalte die Mitglieder und die beiden Gruppenleitungen deiner aktiven und geplanten Arbeitsgruppen.') }}</p></div>
-					<NcButton @click="navigate(homeUrl)">{{ tr('Zurück') }}</NcButton>
 				</header>
 				<NcNoteCard v-if="feedback" :type="feedbackType">{{ feedback }}</NcNoteCard>
 				<main class="jugend-organization-layout">
@@ -72,7 +71,6 @@ import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwit
 const props = defineProps({ navigation: { type: Array, required: true } })
 const tr = (text) => t('jugend', text)
 const urls = loadState('jugend', 'groupUrls')
-const homeUrl = urls.home
 const groups = ref([])
 const users = ref([])
 const selectedGroup = ref(null)

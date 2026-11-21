@@ -56,11 +56,8 @@ class GroupPageController extends Controller {
             'setMembers' => $this->urlGenerator->linkToRoute('jugend.group.setMembers'),
             'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
         ]);
-        $homeUrl = $this->urlGenerator->linkToRoute('jugend.page.index');
         return new TemplateResponse(Application::APP_ID, 'groups', [
-            'homeUrl' => $this->urlGenerator->linkToRoute('jugend.page.index'),
             'navigation' => [
-                'home' => $this->urlGenerator->linkToRoute('jugend.page.index'),
                 'groups' => $this->urlGenerator->linkToRoute('jugend.groupPage.index'),
                 'organization' => $this->authorization->isAppAdmin($uid)
                     ? $this->urlGenerator->linkToRoute('jugend.organizationPage.index')
