@@ -2,13 +2,11 @@ const path = require('path')
 const webpackConfig = require('@nextcloud/webpack-vue-config')
 
 webpackConfig.entry = {
-	main: path.resolve(__dirname, 'src/main.js'),
-	groups: path.resolve(__dirname, 'src/groups.js'),
-	organization: path.resolve(__dirname, 'src/organization.js'),
-	settings: path.resolve(__dirname, 'src/settings.js'),
-	accounting: path.resolve(__dirname, 'src/accounting.js'),
+	main: path.resolve(__dirname, 'src/main.ts'),
+	settings: path.resolve(__dirname, 'src/settings.ts'),
 }
 webpackConfig.output.filename = '[name].js'
 webpackConfig.output.chunkFilename = 'chunks/[name]-[contenthash].js'
+webpackConfig.resolve.extensions = ['.ts', '.js', '.vue', '.json']
 
 module.exports = webpackConfig

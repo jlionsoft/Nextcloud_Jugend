@@ -52,7 +52,7 @@ class AccountingPageController extends Controller {
     }
 
     private function render(string $mode, string $uid): TemplateResponse {
-        Util::addScript(Application::APP_ID, 'accounting');
+        Util::addScript(Application::APP_ID, 'main');
         Util::addStyle(Application::APP_ID, 'main');
         $this->initialState->provideInitialState('accountingUrls', [
             'overview' => $this->urlGenerator->linkToRoute('jugend.accounting.overview'),

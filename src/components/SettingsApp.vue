@@ -65,8 +65,8 @@ const props = defineProps({
 	talkWebhookUrl: { type: String, required: true },
 })
 const tr = (text) => t('jugend', text)
-const urls = loadState('jugend', 'urls')
-const strings = loadState('jugend', 'strings')
+const urls = loadState('jugend', 'urls', {})
+const strings = loadState('jugend', 'strings', {})
 const form = reactive({ ...props.values })
 const configured = reactive({ ...props.configured })
 const removing = reactive({})

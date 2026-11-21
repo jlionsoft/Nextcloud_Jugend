@@ -1,13 +1,4 @@
 <template>
-	<NcContent app-name="jugend">
-		<NcAppNavigation :aria-label="tr('App-Navigation')">
-			<template #list>
-				<NcAppNavigationItem v-for="item in navigation" :key="item.url" :name="item.label" :href="item.url" :active="item.active" @click.prevent="navigate(item.url)">
-					<template #icon><span :class="[item.icon]" aria-hidden="true" /></template>
-				</NcAppNavigationItem>
-			</template>
-		</NcAppNavigation>
-		<NcAppContent :page-heading="mode === 'manage' ? tr('Buchhaltung verwalten') : tr('Mein Kontostand')">
 			<div class="jugend-page jugend-accounting">
 				<header class="jugend-page__header">
 					<div>
@@ -23,7 +14,7 @@
 						<NcSelect v-model="selectedUser" :options="userOptions" label="displayName" :placeholder="tr('Person auswählen')" />
 						<NcTextField v-model="amount" type="number" step="0.01" label-outside :label="tr('Betrag in Euro')" :placeholder="'10.00'" />
 						<NcTextField v-model="description" :label="tr('Verwendungszweck')" :placeholder="tr('optional')" />
-						<NcTextField v-model="bookedAt" type="date" :label="tr('Buchungsdatum')" />
+						<NcTextField v-model="bookedAt" type="text" :label="tr('Buchungsdatum')" placeholder="YYYY-MM-DD" />
 						<div class="jugend-form-actions">
 							<NcButton type="submit" variant="primary" :disabled="saving">{{ tr('Buchung speichern') }}</NcButton>
 						</div>
@@ -52,7 +43,7 @@
 					<form @submit.prevent="addEvent">
 						<NcTextField v-model="eventName" :label="tr('Ereignisname')" :placeholder="tr('z. B. Sommerlager')" />
 						<NcTextField v-model="eventAmount" type="number" step="0.01" label-outside :label="tr('Betrag je Person in Euro')" :placeholder="'25.00'" />
-						<NcTextField v-model="eventDate" type="date" :label="tr('Ereignisdatum')" />
+						<NcTextField v-model="eventDate" type="text" :label="tr('Ereignisdatum')" placeholder="YYYY-MM-DD" />
 						<NcTextField v-model="eventSearch" :label="tr('Teilnehmer suchen')" :placeholder="tr('Name oder Benutzer-ID')" />
 						<div class="jugend-accounting-event-users">
 							<NcCheckboxRadioSwitch v-for="user in filteredEventUsers" :key="user.uid" v-model="selectedEventUsers" type="checkbox" :value="user.uid">
@@ -118,8 +109,6 @@
 					</div>
 				</section>
 			</div>
-		</NcAppContent>
-	</NcContent>
 </template>
 
 <script setup>
@@ -127,10 +116,6 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { loadState } from '@nextcloud/initial-state'
 import axios from '@nextcloud/axios'
 import { t } from '@nextcloud/l10n'
-import NcContent from '@nextcloud/vue/components/NcContent'
-import NcAppNavigation from '@nextcloud/vue/components/NcAppNavigation'
-import NcAppNavigationItem from '@nextcloud/vue/components/NcAppNavigationItem'
-import NcAppContent from '@nextcloud/vue/components/NcAppContent'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
 import NcTextField from '@nextcloud/vue/components/NcTextField'
@@ -138,11 +123,10 @@ import NcSelect from '@nextcloud/vue/components/NcSelect'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
 
 const props = defineProps({
-	navigation: { type: Array, required: true },
 	mode: { type: String, required: true },
 })
 const tr = (text) => t('jugend', text)
-const urls = loadState('jugend', 'accountingUrls')
+const urls = loadState('jugend', 'accountingUrls', {})
 const users = ref([])
 const userOptions = ref([])
 const selectedUser = ref(null)
@@ -166,7 +150,6 @@ const saving = ref(false)
 const feedback = ref('')
 const feedbackType = ref('info')
 
-function navigate(url) { window.location.assign(url) }
 function show(message, type = 'info') { feedback.value = message; feedbackType.value = type }
 function formatMoney(cents) {
 	return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' }).format((Number(cents) || 0) / 100)

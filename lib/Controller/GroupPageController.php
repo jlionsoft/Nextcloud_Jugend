@@ -48,7 +48,7 @@ class GroupPageController extends Controller {
             return new TemplateResponse(Application::APP_ID, 'forbidden', [], 'error');
         }
 
-        Util::addScript(Application::APP_ID, 'groups');
+        Util::addScript(Application::APP_ID, 'main');
         Util::addStyle(Application::APP_ID, 'main');
         $this->initialState->provideInitialState('groupUrls', [
             'groups' => $this->urlGenerator->linkToRoute('jugend.group.groups'),

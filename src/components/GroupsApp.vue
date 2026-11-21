@@ -1,13 +1,4 @@
 <template>
-	<NcContent app-name="jugend">
-		<NcAppNavigation :aria-label="tr('App-Navigation')">
-			<template #list>
-				<NcAppNavigationItem v-for="item in navigation" :key="item.url" :name="item.label" :href="item.url" :active="item.active" @click.prevent="navigate(item.url)">
-					<template #icon><span :class="[item.icon]" aria-hidden="true" /></template>
-				</NcAppNavigationItem>
-			</template>
-		</NcAppNavigation>
-		<NcAppContent :page-heading="tr('Meine Arbeitsgruppen')">
 			<div class="jugend-page jugend-organization">
 				<header class="jugend-page__header">
 					<div><h1>{{ tr('Meine Arbeitsgruppen') }}</h1><p>{{ tr('Verwalte die Mitglieder und die beiden Gruppenleitungen deiner aktiven und geplanten Arbeitsgruppen.') }}</p></div>
@@ -51,8 +42,6 @@
 					</section>
 				</main>
 			</div>
-		</NcAppContent>
-	</NcContent>
 </template>
 
 <script setup>
@@ -60,17 +49,12 @@ import { onMounted, ref } from 'vue'
 import { loadState } from '@nextcloud/initial-state'
 import axios from '@nextcloud/axios'
 import { t } from '@nextcloud/l10n'
-import NcContent from '@nextcloud/vue/components/NcContent'
-import NcAppNavigation from '@nextcloud/vue/components/NcAppNavigation'
-import NcAppNavigationItem from '@nextcloud/vue/components/NcAppNavigationItem'
-import NcAppContent from '@nextcloud/vue/components/NcAppContent'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
 
-const props = defineProps({ navigation: { type: Array, required: true } })
 const tr = (text) => t('jugend', text)
-const urls = loadState('jugend', 'groupUrls')
+const urls = loadState('jugend', 'groupUrls', {})
 const groups = ref([])
 const users = ref([])
 const selectedGroup = ref(null)
@@ -83,10 +67,9 @@ const feedbackType = ref('info')
 const loading = ref(true)
 const saving = ref(false)
 
-function navigate(url) { window.location.assign(url) }
 function show(message, type = 'info') { feedback.value = message; feedbackType.value = type }
 
-async function request(url, method = 'get', data) {
+async function request(url, method = 'get', data = null) {
 	let body
 	if (data) {
 		body = new URLSearchParams()
