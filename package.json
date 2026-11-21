@@ -6,17 +6,24 @@
     "dev": "webpack --node-env development --progress",
     "watch": "webpack --node-env development --progress --watch",
     "lint": "eslint --max-warnings=0 src webpack.config.js",
-    "lint:vue": "eslint --max-warnings=0 src"
+    "lint:vue": "eslint --max-warnings=0 src",
+    "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
     "@nextcloud/axios": "^2.6.0",
     "@nextcloud/initial-state": "^3.0.0",
     "@nextcloud/l10n": "^3.4.0",
     "@nextcloud/vue": "^9.14.1",
-    "vue": "^3.5.46"
+    "@types/node": "^24.19.2",
+    "typescript": "^5.9.3",
+    "vue": "^3.5.46",
+    "vue-router": "^4.6.5",
+    "vue-tsc": "^3.3.14"
   },
   "devDependencies": {
     "@nextcloud/webpack-vue-config": "^7.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.73.0",
+    "@typescript-eslint/parser": "^8.73.0",
     "eslint": "^10.15.0",
     "eslint-plugin-vue": "^10.12.1",
     "globals": "^17.14.0"

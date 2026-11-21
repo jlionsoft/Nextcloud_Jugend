@@ -1,22 +1,5 @@
 <template>
-	<NcContent app-name="jugend">
-		<NcAppNavigation :aria-label="tr('App-Navigation')">
-			<template #list>
-				<NcAppNavigationItem
-					v-for="item in navigation"
-					:key="item.url"
-					:name="item.label"
-					:href="item.url"
-					:active="item.active"
-					@click.prevent="navigate(item.url)">
-					<template #icon>
-						<span :class="[item.icon]" aria-hidden="true" />
-					</template>
-				</NcAppNavigationItem>
-			</template>
-		</NcAppNavigation>
-		<NcAppContent :page-heading="tr('Jugend-Nachricht versenden')">
-			<div class="jugend-page">
+	<div class="jugend-page">
 				<header class="jugend-page__header">
 					<div>
 						<h1>{{ tr('Jugend-Nachricht versenden') }}</h1>
@@ -70,35 +53,27 @@
 						</div>
 					</div>
 				</NcModal>
-			</div>
-		</NcAppContent>
-	</NcContent>
+	</div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
+import { loadState } from '@nextcloud/initial-state'
 import axios from '@nextcloud/axios'
 import { t } from '@nextcloud/l10n'
-import NcContent from '@nextcloud/vue/components/NcContent'
-import NcAppNavigation from '@nextcloud/vue/components/NcAppNavigation'
-import NcAppNavigationItem from '@nextcloud/vue/components/NcAppNavigationItem'
-import NcAppContent from '@nextcloud/vue/components/NcAppContent'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcTextArea from '@nextcloud/vue/components/NcTextArea'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
 import NcModal from '@nextcloud/vue/components/NcModal'
 
-const props = defineProps({
-	navigation: { type: Array, required: true },
-	urls: { type: Object, required: true },
-	strings: { type: Object, required: true },
-})
+const urls = loadState('jugend', 'urls', {})
+const strings = loadState('jugend', 'strings', {})
 const tr = (text) => t('jugend', text)
 const message = ref('')
 const sending = ref(false)
 const confirming = ref(false)
 const feedback = ref('')
-const feedbackType = ref('')
+const feedbackType = ref('info')
 
 const smsSegments = computed(() => {
 	const extended = '^{}\\\\[~]|€'
@@ -106,27 +81,23 @@ const smsSegments = computed(() => {
 	for (const char of message.value) slots += extended.includes(char) ? 2 : 1
 	return slots <= 160 ? 1 : Math.ceil(slots / 153)
 })
-const smsEstimate = computed(() => props.strings.smsEstimate.replace('{count}', String(smsSegments.value)))
-
-function navigate(url) {
-	window.location.assign(url)
-}
+const smsEstimate = computed(() => strings.smsEstimate.replace('{count}', String(smsSegments.value)))
 
 async function confirmAndSend() {
 	confirming.value = false
 	if (!message.value.trim()) return
 	sending.value = true
-	feedback.value = props.strings.sending
-	feedbackType.value = ''
+	feedback.value = strings.sending
+	feedbackType.value = 'info'
 	try {
-		const { data: result } = await axios.post(props.urls.send, new URLSearchParams({ message: message.value }))
+		const { data: result } = await axios.post(urls.send, new URLSearchParams({ message: message.value }))
 		const talk = result.talk?.ok
-			? props.strings.talkOk
-			: props.strings.talkFailed.replace('{error}', result.talk?.error || props.strings.unknown)
-		const matrix = props.strings.matrixSummary
+			? strings.talkOk
+			: strings.talkFailed.replace('{error}', result.talk?.error || strings.unknown)
+		const matrix = strings.matrixSummary
 			.replace('{sent}', String(result.matrix?.sent || 0))
 			.replace('{total}', String(result.matrix?.total || 0))
-		const sms = props.strings.smsSummary
+		const sms = strings.smsSummary
 			.replace('{sent}', String(result.sms?.sent || 0))
 			.replace('{total}', String(result.sms?.total || 0))
 		const matrixFailed = (result.matrix?.failed || []).map((item) => item.recipient + ': ' + item.error)
@@ -135,7 +106,7 @@ async function confirmAndSend() {
 		feedbackType.value = result.success ? 'success' : 'warning'
 		if (result.success) message.value = ''
 	} catch (error) {
-		feedback.value = error.response?.data?.message || props.strings.unknownError
+		feedback.value = error.response?.data?.message || strings.unknownError
 		feedbackType.value = 'error'
 	} finally {
 		sending.value = false

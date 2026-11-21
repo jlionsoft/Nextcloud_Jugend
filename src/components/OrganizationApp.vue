@@ -1,13 +1,4 @@
 <template>
-	<NcContent app-name="jugend">
-		<NcAppNavigation :aria-label="tr('App-Navigation')">
-			<template #list>
-				<NcAppNavigationItem v-for="item in navigation" :key="item.url" :name="item.label" :href="item.url" :active="item.active" @click.prevent="navigate(item.url)">
-					<template #icon><span :class="[item.icon]" aria-hidden="true" /></template>
-				</NcAppNavigationItem>
-			</template>
-		</NcAppNavigation>
-		<NcAppContent :page-heading="tr('Organisationsverwaltung')">
 			<div class="jugend-page jugend-organization">
 				<header class="jugend-page__header">
 					<div><h1>{{ tr('Organisationsverwaltung') }}</h1><p>{{ tr('Plane Organisationsperioden und stelle Arbeitsgruppen für den nächsten Zeitraum zusammen.') }}</p></div>
@@ -56,8 +47,8 @@
 							<div class="jugend-fields">
 								<div class="jugend-field"><NcTextField v-model="periodForm.key" :label="tr('Schlüssel')" label-outside required maxlength="32" /></div>
 								<div class="jugend-field"><NcTextField v-model="periodForm.title" :label="tr('Bezeichnung')" label-outside required maxlength="128" /></div>
-								<div class="jugend-field"><NcTextField v-model="periodForm.startsOn" :label="tr('Beginn')" label-outside type="date" /></div>
-								<div class="jugend-field"><NcTextField v-model="periodForm.endsOn" :label="tr('Ende')" label-outside type="date" /></div>
+								<div class="jugend-field"><NcTextField v-model="periodForm.startsOn" :label="tr('Beginn')" label-outside type="text" placeholder="YYYY-MM-DD" /></div>
+								<div class="jugend-field"><NcTextField v-model="periodForm.endsOn" :label="tr('Ende')" label-outside type="text" placeholder="YYYY-MM-DD" /></div>
 								<div class="jugend-field jugend-field--wide"><NcSelect v-model="periodTemplate" :options="periodTemplateOptions" label="title" :input-label="tr('Vorlage')" label-outside /></div>
 							</div>
 							<NcButton type="submit" variant="primary" :disabled="periodSaving">{{ tr('Entwurf erstellen') }}</NcButton>
@@ -129,8 +120,6 @@
 					</form>
 				</section>
 			</div>
-		</NcAppContent>
-	</NcContent>
 </template>
 
 <script setup>
@@ -138,10 +127,6 @@ import { reactive, ref, onMounted, watch, computed } from 'vue'
 import { loadState } from '@nextcloud/initial-state'
 import axios from '@nextcloud/axios'
 import { t } from '@nextcloud/l10n'
-import NcContent from '@nextcloud/vue/components/NcContent'
-import NcAppNavigation from '@nextcloud/vue/components/NcAppNavigation'
-import NcAppNavigationItem from '@nextcloud/vue/components/NcAppNavigationItem'
-import NcAppContent from '@nextcloud/vue/components/NcAppContent'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
 import NcTextField from '@nextcloud/vue/components/NcTextField'
@@ -149,9 +134,8 @@ import NcSelect from '@nextcloud/vue/components/NcSelect'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
 import NcModal from '@nextcloud/vue/components/NcModal'
 
-const props = defineProps({ navigation: { type: Array, required: true } })
 const tr = (text) => t('jugend', text)
-const urls = loadState('jugend', 'organizationUrls')
+const urls = loadState('jugend', 'organizationUrls', {})
 const periods = ref([])
 const groups = ref([])
 const users = ref([])
@@ -201,7 +185,6 @@ const assignmentScopeTypeOptions = [
 	{ id: 'group', label: 'Arbeitsgruppe' },
 ]
 
-function navigate(url) { window.location.assign(url) }
 function show(message, type = 'info') { feedback.value = message; feedbackType.value = type }
 async function request(url, method = 'get', data = null) {
 	let body

@@ -41,7 +41,7 @@ class OrganizationPageController extends Controller {
             return new TemplateResponse(Application::APP_ID, 'forbidden', [], 'error');
         }
 
-        Util::addScript(Application::APP_ID, 'organization');
+        Util::addScript(Application::APP_ID, 'main');
         Util::addStyle(Application::APP_ID, 'main');
         $this->initialState->provideInitialState('organizationUrls', [
             'periods' => $this->urlGenerator->linkToRoute('jugend.organization.periods'),
